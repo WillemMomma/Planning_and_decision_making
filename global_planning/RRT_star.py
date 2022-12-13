@@ -59,7 +59,7 @@ class RRT_star:
         self.maxIter = 100
         self.threshold = 4 #radius of accepted area within goal
         self.maxExpansion = 5 #max distance to expand each collision free step
-        
+        self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization 
     def planning(self):
         '''
         Path planning using RRT star algorithm
@@ -76,6 +76,9 @@ class RRT_star:
                     continue
                 nearestNode = self.getNearestNode(self.nodeList, qRand) 
                 newNode = self.steeringFunction(nearestNode, qRand) 
+                neighborList = self.findNeighbors(newNode)
+                cost = self.distanceStartNode(newNode,neighborList)
+                self.changePath(newNode, cost)
                 if self.lineCollisionCheck(newNode, self.obstacleList):
                     self.nodeList.append(newNode)
                 self.plotGraph(self.nodeList)
@@ -83,6 +86,15 @@ class RRT_star:
         self.plotFinalPath(path)
         plt.show()
         return path, trajectory
+
+    def findNeighbors(self, node):
+        pass
+
+    def distanceStartNode(self, node, neighborList):
+        pass
+
+    def changePath(self, newNode, cost):
+        pass
 
     def getRandomPoint(self):
         '''
