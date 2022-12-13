@@ -1,14 +1,13 @@
 
 import random 
 import math
+import numpy as np
 import matplotlib.pyplot as plt
-from shapely.geometry import Polygon, Point, LineString
-
-
+from shapely.geometry import Polygon, LineString
 
 class obstacleSquare:
     '''
-    Class for squared obstacles
+    Class for squared obstacles used in RRT star planning
     Input:  x, y: center of obstacle
             size: length of side of obstacle
     '''
@@ -52,11 +51,16 @@ class RRT_star:
         '''
 
         self.start = self.Node(start[0], start[1])
-        self.end = self.Node(goal[0], goal[1])
+        self.end = self.Node(goal[0], goal[1]) 
         self.minRand = randArea[0]
         self.maxRand = randArea[1]
-        self.maxIter = 100
         self.obstacleList = obstacleList
+    
+        #alter behavior of RRT
+        self.maxIter = 100
+        self.threshold = 4 #radius of accepted area within goal
+        self.maxExpansion = 5 #max distance to expand towards random point, if distance is bigger, expand towards random point with maxExpansion distance
+        self.searchRadius = 10 
         
     def planning(self):
         '''
@@ -66,20 +70,23 @@ class RRT_star:
         If no collision, finds neighbors in radius neighbor_radius, chooses parent, rewire tree, add node to node list
         Output: path as a list of nodes [[x1, y1], [x2, y2], ...]
         '''
-        self.nodeList = [self.start] # initialize node list with start node
+        self.nodeList = [self.start] 
         for i in range(self.maxIter):
-            qRand = self.getRandomPoint()
-            if qRand == None:
-                continue
-            else:
-                nearestNode = self.getNearestNode(self.nodeList, qRand) #find nearest node from random point to existing nodes            
-                newNode = self.steeringFunction(nearestNode, qRand) #create new node by steering towards random point
+            while self.goalCheck(self.nodeList[-1]):    
+                qRand = self.getRandomPoint()
+                if qRand == None:
+                    continue
+                if self.getNearestNode(self.nodeList, qRand) == None:
+                    continue
+                nearestNode = self.getNearestNode(self.nodeList, qRand) 
+                newNode = self.steeringFunction(nearestNode, qRand) 
                 if self.lineCollisionCheck(newNode, self.obstacleList):
                     self.nodeList.append(newNode)
-                    self.plotGraph(self.nodeList)
+                self.plotGraph(self.nodeList)
+        path, trajectory = self.finalPath()
+        self.plotFinalPath(path)
         plt.show()
-        path = self.nodeList
-        return path
+        return path, trajectory
 
     def getRandomPoint(self):
         '''
@@ -97,11 +104,11 @@ class RRT_star:
     
     def euclideanDistance(self, node1, node2):
         '''
-        Euclidean distance between two nodes
+        Euclidean distance between two nodes, measure for distance in R^2
         Input: node1, node2
         Output: distance between node1 and node2
         '''
-        return math.sqrt((node1.x - node2.x)**2 + (node1.y - node2.y)**2)
+        return math.dist([node1.x,node1.y],[node2.x,node2.y])
 
     def getNearestNode(self, allNodes, newNode):
         '''
@@ -111,7 +118,11 @@ class RRT_star:
         Output: nearestNode: node in allNodes closest to newNode
         '''
         euclideanDistances = [self.euclideanDistance(node, newNode) for node in allNodes]
-        minDistanceIndex = euclideanDistances.index(min(euclideanDistances))
+        minDist = min(euclideanDistances)
+        # if minDist > self.neighborRadius:
+        #     return None 
+        # else:
+        minDistanceIndex = euclideanDistances.index(minDist)
         nearestNode = allNodes[minDistanceIndex]
         return nearestNode
     
@@ -122,13 +133,27 @@ class RRT_star:
                 toNode: node towards which steering is done
         Output: newNode: node after steering, includes path from fromNode to newNode
         '''
-        newNode = self.Node(toNode.x, toNode.y)
-        newNode.path_x = [fromNode.x, toNode.x]
-        newNode.path_y = [fromNode.y, toNode.y]
+        theta = math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x)
+        dist = self.euclideanDistance(fromNode, toNode)
+        if dist > self.maxExpansion:
+            newNode = self.Node(fromNode.x, fromNode.y)
+            newNode.x += self.maxExpansion * math.cos(theta)
+            newNode.y += self.maxExpansion * math.sin(theta)
+        else:    
+            newNode = self.Node(toNode.x, toNode.y)
+        newNode.path_x = [fromNode.x, newNode.x]
+        newNode.path_y = [fromNode.y, newNode.y]
         newNode.parent = fromNode
-        
-
         return newNode
+    
+    def goalCheck(self, node):
+        '''
+        Check if goal is reached within specified radius of endpoint 
+        Input: node: latest generated node 
+        Output: boolean True if goal reached 
+        '''
+        if ((node.x - self.end.x)**2 + (node.y - self.end.y)**2 >= self.threshold**2):
+            return True
     
     def lineCollisionCheck(self, newNode, obstacleList):
         '''
@@ -146,18 +171,23 @@ class RRT_star:
                 return False
         return True
 
-    def findNeighbors(self, newNode):
-        pass
-    
-    def chooseParent(self, node, neighbors):
-        pass
-
-    def rewire(self, node, neighbors):
-        pass
-
-    def generateFinalPath(self, nodeList, goal):
-        pass
-
+    def finalPath(self):
+        '''
+        Generate final path from start to goal
+        Input:  nodeList: list of all nodes
+                goal: goal node
+        Output: path: list of nodes from start to goal
+        '''
+        path = []
+        trajectory = []
+        node = self.nodeList[-1]
+        while node.parent:
+            path.append(node)
+            trajectory.append(np.array([node.x, node.y]))
+            node = node.parent
+        path.append(self.start)
+        trajectory.append(np.array([self.start.x, self.start.y]))
+        return path, trajectory
         
     def plotGraph(self, nodeList):
         '''
@@ -181,8 +211,35 @@ class RRT_star:
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
         plt.pause(0.01)
+    
+    def plotFinalPath(self, path):
+        '''
+        Plot the final path
+        Input:  path: list of nodes from start to goal
+        Output: None
+        '''
+        plt.clf()
+        plt.plot([self.start.x], self.start.y, 'ro')
+        plt.plot([self.end.x],self.end.y, 'go')
+
+        for node in path:
+            plt.plot(node.x,node.y, 'yo')
+            if node.parent:
+                plt.plot(node.path_x, node.path_y, 'r-')
+
+        for obs in self.obstacleList:
+            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
+        
+        plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
+        plt.grid(True)
+        plt.pause(0.01)
 
 def main(): 
+    '''
+    Main function
+    Specify start, goal, obstacles, and random area
+    trajectorty: list of arrays with x, y coordinates of trajectory
+    '''
     obstacle1 = obstacleSquare(12,5,5)
     obstacle2 = obstacleSquare(20,20,10)
     obstacle3 = obstacleSquare(32,40,8)
@@ -192,8 +249,8 @@ def main():
     goal = [45, 43]
     randArea = [0,50]
     rrt = RRT_star(start, goal, obstacleList, randArea)
-    path = rrt.planning()
-    
+    path, trajectory = rrt.planning()
+    print(trajectory)
 
 if __name__ == '__main__':
     main()

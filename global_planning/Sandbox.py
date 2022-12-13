@@ -276,11 +276,95 @@ if __name__ == '__main__':
     main()
 """
 
-import random 
-import math
-import matplotlib.pyplot as plt
+# import random 
+# import math
+# import matplotlib.pyplot as plt
 
-class Node:
+# class Node:
+#     '''
+#     Class to define the Nodes (i.e. vertices)
+#     Also specifies parent Node and path from parent to child 
+#     Input:  x, y: node coordinates
+#     '''
+#     def __init__(self, x, y):
+#         self.x = x
+#         self.y = y
+#         self.path_x = []
+#         self.path_y = []
+#         self.parent = None
+
+# class obstacleSquare:
+#     '''
+#     Class for squared obstacles
+#     Input:  x, y: center of obstacle
+#             size: length of side of obstacle
+#     '''
+#     def __init__(self, x, y, size):
+#         self.x = x
+#         self.y = y
+#         self.size = size
+#         self.x1 = x - size/2
+#         self.x2 = x + size/2
+#         self.y1 = y - size/2
+#         self.y2 = y + size/2
+
+# def drawGraph(start, goal, randArea, obstacleList, nodeList):
+#     plt.clf()
+#     plt.plot([start[0]],start[1], 'ro')
+#     plt.plot([goal[0]],goal[1], 'go')
+
+#     for node in nodeList:
+#         plt.plot(node.x,node.y, 'yo')
+
+#     for obs in obstacleList:
+#         plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
+    
+#     plt.axis([randArea[0], randArea[1], randArea[0], randArea[1]])
+#     plt.grid(True)
+#     plt.pause(0.01)
+
+# def getRandomPoint(obstacleList):
+#     '''
+#     Samples random node within the random sampling area, discards them if they collide with obstacles
+#     Input: obstacleList: list of obstacles
+#     Output: qRand: random node
+#     '''
+#     randomx = random.uniform(0, 50)
+#     randomy = random.uniform(0, 50)
+#     for obs in obstacleList:
+#         if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
+#             return None
+#     qRand = Node(randomx, randomy)
+#     return qRand
+
+# def main(): 
+#     obstacle1 = obstacleSquare(12,5,5)
+#     obstacle2 = obstacleSquare(20,20,10)
+#     obstacle3 = obstacleSquare(32,40,8)
+#     obstacle4 = obstacleSquare(35,10,7)
+#     obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4]
+#     nodeList = []
+#     infolist = []
+#     start = [2,2]
+#     goal = [45, 43]
+#     randArea = [0,50]
+#     print(2**4)
+#     for i in range(100):
+#         node = getRandomPoint(obstacleList)
+#         infolist.append(node)
+#         if node == None:
+#             continue 
+#         else:
+#             nodeList.append(node)
+#         drawGraph(start,goal,randArea,obstacleList,nodeList)
+#     plt.show()
+
+# if __name__ == '__main__':
+#     main()
+
+import math 
+
+class node:
     '''
     Class to define the Nodes (i.e. vertices)
     Also specifies parent Node and path from parent to child 
@@ -289,77 +373,21 @@ class Node:
     def __init__(self, x, y):
         self.x = x
         self.y = y
-        self.path_x = []
-        self.path_y = []
-        self.parent = None
 
-class obstacleSquare:
+def euclideanDistance(node1, node2):
     '''
-    Class for squared obstacles
-    Input:  x, y: center of obstacle
-            size: length of side of obstacle
+    Euclidean distance between two nodes, measure for distance in R^2
+    Input: node1, node2
+    Output: distance between node1 and node2
     '''
-    def __init__(self, x, y, size):
-        self.x = x
-        self.y = y
-        self.size = size
-        self.x1 = x - size/2
-        self.x2 = x + size/2
-        self.y1 = y - size/2
-        self.y2 = y + size/2
+    return math.sqrt((node1.x - node2.x)**2 + (node1.y - node2.y)**2)
 
-def drawGraph(start, goal, randArea, obstacleList, nodeList):
-    plt.clf()
-    plt.plot([start[0]],start[1], 'ro')
-    plt.plot([goal[0]],goal[1], 'go')
+def mathdist(node1,node2):
+    return math.dist([node1.x,node1.y],[node2.x,node2.y])
 
-    for node in nodeList:
-        plt.plot(node.x,node.y, 'yo')
+node1 = node(12,115)
+node2 = node(-9,32)
 
-    for obs in obstacleList:
-        plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
-    
-    plt.axis([randArea[0], randArea[1], randArea[0], randArea[1]])
-    plt.grid(True)
-    plt.pause(0.01)
-
-def getRandomPoint(obstacleList):
-    '''
-    Samples random node within the random sampling area, discards them if they collide with obstacles
-    Input: obstacleList: list of obstacles
-    Output: qRand: random node
-    '''
-    randomx = random.uniform(0, 50)
-    randomy = random.uniform(0, 50)
-    for obs in obstacleList:
-        if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
-            return None
-    qRand = Node(randomx, randomy)
-    return qRand
-
-def main(): 
-    obstacle1 = obstacleSquare(12,5,5)
-    obstacle2 = obstacleSquare(20,20,10)
-    obstacle3 = obstacleSquare(32,40,8)
-    obstacle4 = obstacleSquare(35,10,7)
-    obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4]
-    nodeList = []
-    infolist = []
-    start = [2,2]
-    goal = [45, 43]
-    randArea = [0,50]
-
-    for i in range(100):
-        node = getRandomPoint(obstacleList)
-        infolist.append(node)
-        if node == None:
-            continue 
-        else:
-            nodeList.append(node)
-        drawGraph(start,goal,randArea,obstacleList,nodeList)
-    plt.show()
-
-if __name__ == '__main__':
-    main()
-
+print(euclideanDistance(node1,node2))
+print(mathdist(node1,node2))
 
