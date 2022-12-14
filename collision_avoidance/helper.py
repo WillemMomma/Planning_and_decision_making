@@ -12,3 +12,7 @@ def polar2cart(mag, direction):
     y = mag * np.sin(direction)
     cart = np.array([x, y])
     return cart
+
+# Turn degree into radian
+def deg2radian(angle):
+    return angle * np.pi / 180

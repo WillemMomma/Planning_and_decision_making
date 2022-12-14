@@ -6,19 +6,19 @@ from shapely.geometry import Point
 from robot_class import Robot
 from collision_check_functions import detect, collision_check, resolve
 
-# Setting 1
-robot1 = Robot(0, 0, 1, 0, 0.5, True)
-robot2 = Robot(-10, 10, 1, 0.5, 0, False)
-robot3 = Robot(3, 5, 1, 0, 0, False)
-robot4 = Robot(10, 15, 1, -0.5, 0, False)
-robot_list = [robot1, robot2, robot3, robot4]
-
-# # Setting 2
+# # Setting 1
 # robot1 = Robot(0, 0, 1, 0, 0.5, True)
-# robot2 = Robot(0, 15, 1, 0, 0, False)
-# robot3 = Robot(10, 17, 1, -0.5, 0, False)
-# robot4 = Robot(-10, 13, 1, 0.5, 0, False)
+# robot2 = Robot(-10, 10, 1, 0.5, 0, False)
+# robot3 = Robot(3, 5, 1, 0, 0, False)
+# robot4 = Robot(10, 15, 1, -0.5, 0, False)
 # robot_list = [robot1, robot2, robot3, robot4]
+
+# Setting 2
+robot1 = Robot(0, 0, 1, 0, 0.5, True)
+robot2 = Robot(0, 15, 1, 0, 0, False)
+robot3 = Robot(10, 17, 1, -0.5, 0, False)
+robot4 = Robot(-10, 13, 1, 0.5, 0, False)
+robot_list = [robot1, robot2, robot3, robot4]
 
 
 # Setup plot
@@ -73,7 +73,7 @@ for t in range(N):
         robot.draw(plt)
         robot.move(dt)
 
-    plt.plot(block='False')
+    plt.plot()
     plt.pause(0.001)
 
 plt.show()
