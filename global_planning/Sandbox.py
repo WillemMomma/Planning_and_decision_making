@@ -363,7 +363,7 @@ if __name__ == '__main__':
 #     main()
 
 import math 
-
+import random
 class node:
     '''
     Class to define the Nodes (i.e. vertices)
@@ -390,4 +390,5 @@ node2 = node(-9,32)
 
 print(euclideanDistance(node1,node2))
 print(mathdist(node1,node2))
+print(random.random())
 

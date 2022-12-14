@@ -57,6 +57,7 @@ class RRT_star:
     
         #behavior settings for RRT
         self.maxIter = 100
+        self.probGoal = 0.1 #probability to sample goal 
         self.threshold = 4 #radius of accepted area within goal
         self.maxExpansion = 5 #max distance to expand each collision free step
         self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization 
@@ -76,7 +77,7 @@ class RRT_star:
                     continue
                 nearestNode = self.getNearestNode(self.nodeList, qRand) 
                 newNode = self.steeringFunction(nearestNode, qRand) 
-                neighborList = self.findNeighbors(newNode)
+                neighborList = self.findNeighbors(self.nodeList, newNode)
                 cost = self.distanceStartNode(newNode,neighborList)
                 self.changePath(newNode, cost)
                 if self.lineCollisionCheck(newNode, self.obstacleList):
@@ -87,10 +88,30 @@ class RRT_star:
         plt.show()
         return path, trajectory
 
-    def findNeighbors(self, node):
-        pass
+    def findNeighbors(self, allNodes, newNode):
+        '''
+        Find neighbors of the new node within a radius of searchRadius
+        Input:  allNodes: list of all nodes
+                newNode: node to be compared with all nodes
+                Output: neighborList: list of nodes within searchRadius of newNode
+        '''
+        euclideanDistances = [self.euclideanDistance(node, newNode) for node in allNodes]
+        neighborList = []
+        for i in range(len(euclideanDistances)):
+            if euclideanDistances[i] < self.searchRadius:
+                neighborList.append(allNodes[i])
+        return neighborList
+
 
     def distanceStartNode(self, node, neighborList):
+        '''
+        Find the cost of the path from the start node to the new node
+        Input:  node: new node
+                neighborList: list of nodes within searchRadius of newNode
+        Output: cost: cost of path from start node to newNode
+        '''
+        #  for neighborNode in neighborList: 
+        #      while 
         pass
 
     def changePath(self, newNode, cost):
@@ -102,13 +123,17 @@ class RRT_star:
         Input: None
         Output: q_rand: random node
         '''
-        randomx = random.uniform(self.minRand, self.maxRand)
-        randomy = random.uniform(self.minRand, self.maxRand)
-        for obs in self.obstacleList:
-            if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
-                return None
-        qRand = self.Node(randomx, randomy)
-        return qRand
+        if random.random() <= self.probGoal: 
+            qRand = self.end
+            return qRand
+        else:
+            randomx = random.uniform(self.minRand, self.maxRand)
+            randomy = random.uniform(self.minRand, self.maxRand)
+            for obs in self.obstacleList:
+                if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
+                    return None
+            qRand = self.Node(randomx, randomy)
+            return qRand
     
     def euclideanDistance(self, node1, node2):
         '''

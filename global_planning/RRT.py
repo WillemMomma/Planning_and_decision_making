@@ -56,7 +56,8 @@ class RRT_star:
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 100
+        self.probGoal = 0.3 #probability to sample goal 
+        self.maxIter = 100 #maximum number of iterations
         self.threshold = 4 #radius of accepted area within goal
         self.maxExpansion = 5 #max distance to expand each collision free step
         
@@ -90,13 +91,17 @@ class RRT_star:
         Input: None
         Output: q_rand: random node
         '''
-        randomx = random.uniform(self.minRand, self.maxRand)
-        randomy = random.uniform(self.minRand, self.maxRand)
-        for obs in self.obstacleList:
-            if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
-                return None
-        qRand = self.Node(randomx, randomy)
-        return qRand
+        if random.random() <= self.probGoal: 
+            qRand = self.end
+            return qRand
+        else:
+            randomx = random.uniform(self.minRand, self.maxRand)
+            randomy = random.uniform(self.minRand, self.maxRand)
+            for obs in self.obstacleList:
+                if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
+                    return None
+            qRand = self.Node(randomx, randomy)
+            return qRand
     
     def euclideanDistance(self, node1, node2):
         '''
