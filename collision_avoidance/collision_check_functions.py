@@ -83,7 +83,7 @@ def resolve(our_robot, cones):
     # Range in which to sample for new velocities
     min_velocity = -1.5
     max_velocity = 1.5
-    max_angle = deg2radian(2)
+    max_angle = deg2radian(15)
 
     # Desired velocity
     v_desired = np.array([our_robot.desired_vx, our_robot.desired_vy])
