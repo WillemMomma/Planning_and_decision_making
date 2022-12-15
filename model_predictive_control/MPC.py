@@ -3,13 +3,10 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
-# Inintialize variables
-dt = 0.1
-start = 0 
-stop = 10 
-dummyDataX = np.arange(start ,stop ,dt)
-dummyDataY = np.ones(len(dummyDataX))
-dummyDataY = np.sin(dummyDataX)
+
+# dummyDataX = np.arange(start ,stop ,dt)
+# dummyDataY = np.ones(len(dummyDataX))
+# dummyDataY = np.sin(dummyDataX)
 
 class vehicleDynamicsJap:
     """
@@ -102,7 +99,7 @@ def mpcControl(vehicle, N, xInit, xTarget):
     return u[:, 0].value, x[:, 1].value, x[:, :].value, None
 
 
-def dummyRun():
+def Run(t, curentState = False, path = [0]):
     """
     Start simulating the run of the model and plot the results 
     
@@ -110,11 +107,22 @@ def dummyRun():
     output-> Plots
     """
 
+    # Inintialize variables
+    dt = 0.1
+    start = 0
+    stop = 10
+
     lookahead = 10
-    state_ = np.array([1,0,0,0])
-    input_ = np.array([[0],[0],[0],[0]])
+
+    if t == 0:
+        curentState = np.array([[0], [0], [0], [0]])
+    if len(path) == 1:
+        path = np.array([[0], [0], [0], [0]])
+
+    assert len(curentState) > 3, "current state has the incorrect length"
+    assert len(path) > 3, "current path has the incorrect length"
+
     vehicle = vehicleDynamicsJap(dt)
-    target = np.zeros((4,4)) 
 
     # Saving data 
     TakingInputs = []
@@ -122,42 +130,43 @@ def dummyRun():
     error = []
     desiredState = []
 
-    for i in tqdm(range(len(dummyDataX))):
 
-        # Get the next state
-        state_ = vehicle.nextX(state_ , input_)
+    # Get the next state
+    # state_ = vehicle.nextX(state_ , input_)
 
-        # Reshaping data
-        X = np.reshape(dummyDataX, (dummyDataX.shape[0], 1))
-        velX = np.zeros(X.shape)
-        Y = np.reshape(dummyDataY, (dummyDataY.shape[0], 1))
-        velY = np.zeros(Y.shape)
-        target = np.concatenate((X,velX,Y,velY), axis= 1)
+    # Reshaping data
+    # X = np.reshape(dummyDataX, (dummyDataX.shape[0], 1))
+    # velX = np.zeros(X.shape)
+    # Y = np.reshape(dummyDataY, (dummyDataY.shape[0], 1))
+    # velY = np.zeros(Y.shape)
+    # target = np.concatenate((X,velX,Y,velY), axis= 1)
 
-        # Calculate control input
-        input_   = mpcControl(vehicle, 10, state_, target[i,:])
-        input_ = np.array(input_[0])
-        input_ = np.reshape(input_, (input_.shape[0], 1))
+    # Calculate control input
+    print(f"we are in the mpc file this is the shape of currentPath; {curentState.shape}")
+    print(f"we are in the mpc file this is the shape of path; { path[t,:].shape}")
+    input_   = mpcControl(vehicle, 10, curentState, path[:,t].reshape((path.shape[0],1)))
+    input_ = np.array(input_[0])
+    input_ = np.reshape(input_, (input_.shape[0], 1))
 
-        #Append to the lists
-        TakingInputs.append(input_)
-        NextState.append(state_)
-        error.append(state_ - target[i,:] )
-        desiredState.append(target[i,:])
+    #Append to the lists
+    # TakingInputs.append(input_)
+    # NextState.append(state_)
+    # error.append(state_ - target[i,:] )
+    # desiredState.append(target[i,:])
+    #
 
-
-    fig, axs = plt.subplots(2, figsize=(15, 15))
-    fig.suptitle('MPC implementation vehicle dynamics')
-    time = np.arange(0,len(np.array(NextState)[:,0]),1)
-    axs[0].plot(np.array(NextState)[:,0],np.array(NextState)[:,2] , label = "Position robot")
-    axs[0].plot(np.array(desiredState)[:,0],np.array(desiredState)[:,2] , label = "Desired Postion")
-
-    axs[1].plot(np.array(NextState)[:,1],np.array(NextState)[:,3] , label = "Vel robot")
-    axs[1].plot(np.array(desiredState)[:,1],np.array(desiredState)[:,3] , label = "Desired Vel")
-    # axs[0].plot(target[:,0],target[:,1], label = "Desired position")
-    # axs[1].plot(np.arange(0, len(sumErrorOverColumns),1),sumErrorOverColumns, label = "Error" )
-
-    axs[0].legend()
-    axs[1].legend()
+    # fig, axs = plt.subplots(2, figsize=(15, 15))
+    # fig.suptitle('MPC implementation vehicle dynamics')
+    # time = np.arange(0,len(np.array(NextState)[:,0]),1)
+    # axs[0].plot(np.array(NextState)[:,0],np.array(NextState)[:,2] , label = "Position robot")
+    # axs[0].plot(np.array(desiredState)[:,0],np.array(desiredState)[:,2] , label = "Desired Postion")
+    #
+    # axs[1].plot(np.array(NextState)[:,1],np.array(NextState)[:,3] , label = "Vel robot")
+    # axs[1].plot(np.array(desiredState)[:,1],np.array(desiredState)[:,3] , label = "Desired Vel")
+    # # axs[0].plot(target[:,0],target[:,1], label = "Desired position")
+    # # axs[1].plot(np.arange(0, len(sumErrorOverColumns),1),sumErrorOverColumns, label = "Error" )
+    #
+    # axs[0].legend()
+    # axs[1].legend()
     
-    return
+    return input_

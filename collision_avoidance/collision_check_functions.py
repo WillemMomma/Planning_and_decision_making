@@ -6,7 +6,7 @@ from shapely.geometry import Point
 from shapely.geometry.polygon import Polygon
 
 # Import from other .py files
-from helper import cart2polar, polar2cart, deg2radian
+from collision_avoidance.helper import cart2polar, polar2cart, deg2radian
 
 
 # Cone creator

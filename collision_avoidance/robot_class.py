@@ -3,16 +3,17 @@ import matplotlib.pyplot as plt
 
 class Robot():
 
-    def __init__(self, x, y, r, v_x, v_y, our):
+    def __init__(self, x, y, r, v_x, v_y, theta, our):
         self.x = x
         self.y = y
         self.r = r
-        self.desired_vx = v_x
-        self.desired_vy = v_y
+        self.desired_vx = np.cos(theta) * 1
+        self.desired_vy = np.sin(theta) * 1
         self.previous_vx = v_x
         self.previous_vy = v_y
         self.output_vx = v_x
         self.output_vy = v_y
+        self.theta = theta
         self.our = our
 
     def move(self, dt):

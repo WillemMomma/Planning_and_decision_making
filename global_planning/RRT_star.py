@@ -182,7 +182,7 @@ class RRT_star:
         plt.grid(True)
         plt.pause(0.01)
 
-def main(): 
+def main_rrt():
     obstacle1 = obstacleSquare(12,5,5)
     obstacle2 = obstacleSquare(20,20,10)
     obstacle3 = obstacleSquare(32,40,8)
@@ -193,6 +193,7 @@ def main():
     randArea = [0,50]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     path = rrt.planning()
+    return path
     
 
 if __name__ == '__main__':
