@@ -4,6 +4,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString
+from matplotlib.patches import Circle
 
 class obstacleSquare:
     '''
@@ -38,6 +39,7 @@ class RRT_star:
             self.path_x = []
             self.path_y = []
             self.parent = None
+            self.cost = 0
 
     def __init__(self, start, goal, obstacleList, randArea):
         '''
@@ -56,11 +58,12 @@ class RRT_star:
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 100
-        self.probGoal = 0.1 #probability to sample goal 
-        self.threshold = 4 #radius of accepted area within goal
+        self.maxIter = 200 #maximum number of iterations
+        self.probGoal = 0.0 #probability to sample goal 
+        self.threshold = 2 #radius of accepted area within goal
         self.maxExpansion = 5 #max distance to expand each collision free step
-        self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization 
+        self.searchRadius = 5 #radius to find nearest neighbors for RRT* optimilization 
+    
     def planning(self):
         '''
         Path planning using RRT star algorithm
@@ -78,15 +81,15 @@ class RRT_star:
                 nearestNode = self.getNearestNode(self.nodeList, qRand) 
                 newNode = self.steeringFunction(nearestNode, qRand) 
                 neighborList = self.findNeighbors(self.nodeList, newNode)
-                cost = self.distanceStartNode(newNode,neighborList)
-                self.changePath(newNode, cost)
+                newNode = self.optimizeTree(newNode,neighborList)
                 if self.lineCollisionCheck(newNode, self.obstacleList):
                     self.nodeList.append(newNode)
                 self.plotGraph(self.nodeList)
-        path, trajectory = self.finalPath()
+        finalNode = self.nodeList[-1]
+        path = self.finalPath(finalNode)
         self.plotFinalPath(path)
         plt.show()
-        return path, trajectory
+        return path
 
     def findNeighbors(self, allNodes, newNode):
         '''
@@ -100,23 +103,39 @@ class RRT_star:
         for i in range(len(euclideanDistances)):
             if euclideanDistances[i] < self.searchRadius:
                 neighborList.append(allNodes[i])
+            else:
+                continue
         return neighborList
 
 
-    def distanceStartNode(self, node, neighborList):
+    def optimizeTree(self, newNode, neighborList):
         '''
-        Find the cost of the path from the start node to the new node
-        Input:  node: new node
+        First connects newNode to neighbors, then checks if there is a better parent for each neighbor
+        If there is a better parent, rewire the tree
+        Input:  newNode: node to be connected to neighbors
                 neighborList: list of nodes within searchRadius of newNode
-        Output: cost: cost of path from start node to newNode
+        Output: None
         '''
-        #  for neighborNode in neighborList: 
-        #      while 
-        pass
+        for neighbor in neighborList:
+            placer = self.steeringFunction(neighbor, newNode) #connect all neighbors to newNode
+            if self.lineCollisionCheck(placer, self.obstacleList): #check for collision
+                if placer.cost < newNode.cost: #if there is a better parent, rewire the tree
+                    newNode.parent = neighbor
+                    newNode.path_x = [newNode.x, newNode.parent.x]
+                    newNode.path_y = [newNode.y, newNode.parent.y]
+                    newNode.cost = newNode.cost + self.euclideanDistance(newNode, newNode.parent)
 
-    def changePath(self, newNode, cost):
-        pass
+        for neighbor in neighborList:
+            placer = self.steeringFunction(newNode, neighbor)
+            if self.lineCollisionCheck(placer, self.obstacleList):
+                if placer.cost < neighbor.cost:
+                    neighbor.parent = newNode
+                    neighbor.path_x = [neighbor.x, neighbor.parent.x]
+                    neighbor.path_y = [neighbor.y, neighbor.parent.y]
+                    neighbor.cost = neighbor.cost + self.euclideanDistance(neighbor, neighbor.parent)
+        return newNode
 
+            
     def getRandomPoint(self):
         '''
         Samples random node from the collision free configuration space 
@@ -174,6 +193,7 @@ class RRT_star:
         newNode.path_x = [fromNode.x, newNode.x]
         newNode.path_y = [fromNode.y, newNode.y]
         newNode.parent = fromNode
+        newNode.cost = fromNode.cost + self.euclideanDistance(fromNode, newNode)
         return newNode
     
     def goalCheck(self, node):
@@ -193,7 +213,7 @@ class RRT_star:
                 obstacleList: list of obstacles as polygons [obstacle1, obstacle2, ...]
         Output: True if no collision, False if collision
         '''
-        #generate line object 
+        #create line object 
         line = LineString([(newNode.path_x[0], newNode.path_y[0]), (newNode.path_x[1], newNode.path_y[1])])
         for obs in obstacleList:
             polygon = Polygon([(obs.x1, obs.y1), (obs.x2, obs.y1), (obs.x2, obs.y2), (obs.x1, obs.y2)])
@@ -201,7 +221,7 @@ class RRT_star:
                 return False
         return True
 
-    def finalPath(self):
+    def finalPath(self, finalNode):
         '''
         Generate final path from start to goal
         Input:  nodeList: list of all nodes
@@ -210,7 +230,7 @@ class RRT_star:
         '''
         path = []
         trajectory = []
-        node = self.nodeList[-1]
+        node = finalNode
         while node.parent:
             path.append(node)
             trajectory.append(np.array([node.x, node.y]))
@@ -232,6 +252,7 @@ class RRT_star:
 
         for node in nodeList:
             plt.plot(node.x,node.y, 'yo')
+
             if node.parent:
                 plt.plot(node.path_x, node.path_y, 'y-')
 
@@ -239,6 +260,7 @@ class RRT_star:
             plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
+        plt.figtext(0.5, 0.01, 'RRT*, cost =' + str(round(nodeList[-1].cost,1)), wrap=True, horizontalalignment='center', fontsize=12)
         plt.grid(True)
         plt.pause(0.01)
     
@@ -278,9 +300,9 @@ def main():
     goal = [45, 43]
     randArea = [0,50]
     rrt = RRT_star(start, goal, obstacleList, randArea)
-    path, trajectory = rrt.planning()
-    print(trajectory)
-
+    path = rrt.planning()
+    for node in path: 
+        print(node.x,node.y)
 if __name__ == '__main__':
     main()
 

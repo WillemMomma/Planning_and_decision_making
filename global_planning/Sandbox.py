@@ -391,4 +391,7 @@ node2 = node(-9,32)
 print(euclideanDistance(node1,node2))
 print(mathdist(node1,node2))
 print(random.random())
+a=1
+b=2
+print(a,b)
 
