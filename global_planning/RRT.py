@@ -80,10 +80,10 @@ class RRT_star:
                 if self.lineCollisionCheck(newNode, self.obstacleList):
                     self.nodeList.append(newNode)
                 self.plotGraph(self.nodeList)
-        path, trajectory = self.finalPath()
+        path = self.finalPath()
         self.plotFinalPath(path)
         plt.show()
-        return path, trajectory
+        return path
 
     def getRandomPoint(self):
         '''
@@ -177,15 +177,12 @@ class RRT_star:
         Output: path: list of nodes from start to goal
         '''
         path = []
-        trajectory = []
         node = self.nodeList[-1]
         while node.parent:
             path.append(node)
-            trajectory.append(np.array([node.x, node.y]))
             node = node.parent
         path.append(self.start)
-        trajectory.append(np.array([self.start.x, self.start.y]))
-        return path, trajectory
+        return path
         
     def plotGraph(self, nodeList):
         '''
@@ -235,7 +232,6 @@ def main():
     '''
     Main function
     Specify start, goal, obstacles, and random area
-    trajectorty: list of arrays with x, y coordinates of trajectory
     '''
     obstacle1 = obstacleSquare(12,5,5)
     obstacle2 = obstacleSquare(20,20,10)
@@ -246,11 +242,9 @@ def main():
     goal = [45, 43]
     randArea = [0,50]
     rrt = RRT_star(start, goal, obstacleList, randArea)
-    path, trajectory = rrt.planning()
-    print(trajectory)
+    path = rrt.planning()
 
 if __name__ == '__main__':
     main()
-
 
 

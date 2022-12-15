@@ -40,6 +40,7 @@ class RRT_star:
             self.path_y = []
             self.parent = None
             self.cost = 0
+    
 
     def __init__(self, start, goal, obstacleList, randArea):
         '''
@@ -59,10 +60,10 @@ class RRT_star:
     
         #behavior settings for RRT
         self.maxIter = 200 #maximum number of iterations
-        self.probGoal = 0.0 #probability to sample goal 
+        self.probGoal = 0.01 #probability to sample goal 
         self.threshold = 2 #radius of accepted area within goal
         self.maxExpansion = 5 #max distance to expand each collision free step
-        self.searchRadius = 5 #radius to find nearest neighbors for RRT* optimilization 
+        self.searchRadius = 7 #radius to find nearest neighbors for RRT* optimilization 
     
     def planning(self):
         '''
@@ -80,10 +81,18 @@ class RRT_star:
                     continue
                 nearestNode = self.getNearestNode(self.nodeList, qRand) 
                 newNode = self.steeringFunction(nearestNode, qRand) 
-                neighborList = self.findNeighbors(self.nodeList, newNode)
-                newNode = self.optimizeTree(newNode,neighborList)
-                if self.lineCollisionCheck(newNode, self.obstacleList):
+                if self.lineCollisionCheck(newNode, nearestNode):
+                    neighbors = self.findNeighbors(self.nodeList, newNode)
                     self.nodeList.append(newNode)
+                    costs = []
+                    for neighbor in neighbors:
+                        costs.append(self.cost(neighbor) + self.euclideanDistance(newNode, neighbor))
+                    newNode.parent = neighbors[np.argmin(costs)]
+
+                    for neighbor in neighbors:
+                        if self.cost(neighbor) > self.cost(newNode) + self.euclideanDistance(newNode,neighbor):
+                            neighbor.parent = newNode
+
                 self.plotGraph(self.nodeList)
         finalNode = self.nodeList[-1]
         path = self.finalPath(finalNode)
@@ -107,35 +116,6 @@ class RRT_star:
                 continue
         return neighborList
 
-
-    def optimizeTree(self, newNode, neighborList):
-        '''
-        First connects newNode to neighbors, then checks if there is a better parent for each neighbor
-        If there is a better parent, rewire the tree
-        Input:  newNode: node to be connected to neighbors
-                neighborList: list of nodes within searchRadius of newNode
-        Output: None
-        '''
-        for neighbor in neighborList:
-            placer = self.steeringFunction(neighbor, newNode) #connect all neighbors to newNode
-            if self.lineCollisionCheck(placer, self.obstacleList): #check for collision
-                if placer.cost < newNode.cost: #if there is a better parent, rewire the tree
-                    newNode.parent = neighbor
-                    newNode.path_x = [newNode.x, newNode.parent.x]
-                    newNode.path_y = [newNode.y, newNode.parent.y]
-                    newNode.cost = newNode.cost + self.euclideanDistance(newNode, newNode.parent)
-
-        for neighbor in neighborList:
-            placer = self.steeringFunction(newNode, neighbor)
-            if self.lineCollisionCheck(placer, self.obstacleList):
-                if placer.cost < neighbor.cost:
-                    neighbor.parent = newNode
-                    neighbor.path_x = [neighbor.x, neighbor.parent.x]
-                    neighbor.path_y = [neighbor.y, neighbor.parent.y]
-                    neighbor.cost = neighbor.cost + self.euclideanDistance(neighbor, neighbor.parent)
-        return newNode
-
-            
     def getRandomPoint(self):
         '''
         Samples random node from the collision free configuration space 
@@ -190,10 +170,7 @@ class RRT_star:
             newNode.y += self.maxExpansion * math.sin(theta)
         else:    
             newNode = self.Node(toNode.x, toNode.y)
-        newNode.path_x = [fromNode.x, newNode.x]
-        newNode.path_y = [fromNode.y, newNode.y]
-        newNode.parent = fromNode
-        newNode.cost = fromNode.cost + self.euclideanDistance(fromNode, newNode)
+        newNode.parent = fromNode 
         return newNode
     
     def goalCheck(self, node):
@@ -205,7 +182,7 @@ class RRT_star:
         if ((node.x - self.end.x)**2 + (node.y - self.end.y)**2 >= self.threshold**2):
             return True
     
-    def lineCollisionCheck(self, newNode, obstacleList):
+    def lineCollisionCheck(self, node1, node2):
         '''
         Check if line between two nodes collides with any obstacle
         Input:  node1: start node
@@ -214,8 +191,8 @@ class RRT_star:
         Output: True if no collision, False if collision
         '''
         #create line object 
-        line = LineString([(newNode.path_x[0], newNode.path_y[0]), (newNode.path_x[1], newNode.path_y[1])])
-        for obs in obstacleList:
+        line = LineString([(node1.x, node1.y), (node2.x, node2.y)])
+        for obs in self.obstacleList:
             polygon = Polygon([(obs.x1, obs.y1), (obs.x2, obs.y1), (obs.x2, obs.y2), (obs.x1, obs.y2)])
             if polygon.intersects(line):
                 return False
@@ -229,15 +206,12 @@ class RRT_star:
         Output: path: list of nodes from start to goal
         '''
         path = []
-        trajectory = []
         node = finalNode
         while node.parent:
             path.append(node)
-            trajectory.append(np.array([node.x, node.y]))
             node = node.parent
         path.append(self.start)
-        trajectory.append(np.array([self.start.x, self.start.y]))
-        return path, trajectory
+        return path
         
     def plotGraph(self, nodeList):
         '''
@@ -254,16 +228,23 @@ class RRT_star:
             plt.plot(node.x,node.y, 'yo')
 
             if node.parent:
-                plt.plot(node.path_x, node.path_y, 'y-')
+                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'g-')
 
         for obs in self.obstacleList:
             plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
-        plt.figtext(0.5, 0.01, 'RRT*, cost =' + str(round(nodeList[-1].cost,1)), wrap=True, horizontalalignment='center', fontsize=12)
+        plt.figtext(0.5, 0.01, 'RRT*, cost =' + str(self.cost(nodeList[-1])), wrap=True, horizontalalignment='center', fontsize=12)
         plt.grid(True)
-        plt.pause(0.01)
+        plt.pause(0.2)
     
+    def cost(self,node):
+        cost = 0
+        while node.parent:
+            cost += self.euclideanDistance(node, node.parent)
+            node = node.parent
+        return cost
+
     def plotFinalPath(self, path):
         '''
         Plot the final path
@@ -276,7 +257,7 @@ class RRT_star:
         for node in path:
             plt.plot(node.x,node.y, 'yo')
             if node.parent:
-                plt.plot(node.path_x, node.path_y, 'r-')
+                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'r--')
         
         for obs in self.obstacleList:
             plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
@@ -289,7 +270,6 @@ def main():
     '''
     Main function
     Specify start, goal, obstacles, and random area
-    trajectorty: list of arrays with x, y coordinates of trajectory
     '''
     obstacle1 = obstacleSquare(12,5,5)
     obstacle2 = obstacleSquare(20,20,10)
