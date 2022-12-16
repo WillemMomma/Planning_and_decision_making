@@ -4,10 +4,6 @@ import numpy as np
 from tqdm import tqdm
 
 
-# dummyDataX = np.arange(start ,stop ,dt)
-# dummyDataY = np.ones(len(dummyDataX))
-# dummyDataY = np.sin(dummyDataX)
-
 class vehicleDynamicsJap:
     """
     Defining the vehicle dynamics, on unicycle model is assumed which is capable of instant acceleration
@@ -73,10 +69,22 @@ def mpcControl(vehicle, N, xInit, xTarget):
     x = cp.Variable((4, N + 1)) # cp.Variable((dim_1, dim_2))
     u = cp.Variable((4, N))
     
+    print(f"this is xinit: {xInit} and this is the shape: {xInit.shape}")
+    
     constraints += [x[:, 0] == xInit]
         
     for k in range(N):
-        # State space
+        """
+        Normally we would have an LTI, but now we have an LTV therefore
+        x[t+1] = A*x + B*u*dt
+        
+        The state of the bot is [x, y, xvel, yvel, theta] 
+        Therefore A is the identity matrix 
+        u = [x , y, xvel, yvel, (xvel - yvel) ]
+
+        B = [0,0,1,1,0] <- for this we can also use simple contraints
+        """
+        
         state_ = vehicle.A@x[:,k]
         input_ = u[:, k]
         
@@ -98,6 +106,14 @@ def mpcControl(vehicle, N, xInit, xTarget):
     # We return the MPC input and the next state (and also the plan for visualization)
     return u[:, 0].value, x[:, 1].value, x[:, :].value, None
 
+def errorFunction(t, curentState , path):
+    """
+    This function calculates the error of the robot
+    """
+
+    headingError, postionError, velocityError = [0,0,0]
+
+    return headingError, postionError, velocityError
 
 def Run(t, curentState = False, path = [0]):
     """
@@ -106,6 +122,8 @@ def Run(t, curentState = False, path = [0]):
     input ->  None
     output-> Plots
     """
+
+    # headingError, postionError, velocityError = errorFunction(t, curentState , path)
 
     # Inintialize variables
     dt = 0.1
@@ -142,9 +160,10 @@ def Run(t, curentState = False, path = [0]):
     # target = np.concatenate((X,velX,Y,velY), axis= 1)
 
     # Calculate control input
-    print(f"we are in the mpc file this is the shape of currentPath; {curentState.shape}")
+    print(f"we are in the mpc file this is the shape of currentPath; {curentState.reshape((4,)).shape}")
     print(f"we are in the mpc file this is the shape of path; { path[t,:].shape}")
-    input_   = mpcControl(vehicle, 10, curentState, path[:,t].reshape((path.shape[0],1)))
+    
+    input_   = mpcControl(vehicle, 10, curentState.reshape((4,)), path[t, :])
     input_ = np.array(input_[0])
     input_ = np.reshape(input_, (input_.shape[0], 1))
 
