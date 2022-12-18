@@ -3,6 +3,37 @@ import matplotlib.pyplot as plt
 import numpy as np
 from tqdm import tqdm
 
+class UniCycleModel:
+    """
+    Defining the vehicle dynamics as an LTV
+    """
+
+    def __init__(self, dt):
+        # Euler discretization
+        self.A = np.eye(3)
+        self.X = np.zeros((3,1))
+        self.B = np.array([ [np.cos(self.X[2])[0],0],
+                            [0,np.sin(self.X[2])[0]],
+                            [0,1]])
+
+        self.dt = dt
+
+        
+    def nextX(self, u):
+        """
+        Iterate over to the next x
+        
+        x -> current state  : np.array
+        u -> input : np.array
+        return -> next state : np.array
+        """
+
+        # Updating the arrays
+        self.X = self.A.dot(self.X) + self.B.dot(u.T) * self.dt
+        self.B = np.array([ [np.cos(self.X[2])[0],0],
+                            [0,np.sin(self.X[2])[0]],
+                            [0,1]])
+        return self.X
 
 def mpcControl(error, N, xInit, xTarget):
     """
@@ -71,7 +102,7 @@ def errorFunction(t,dt,  currentState , path):
     previousPositionPath = path[t - 1 ,:2]
     velocityPath = ((currentPostionPath[0] -previousPositionPath[0])**2 - (currentPostionPath[1] -previousPositionPath[1])**2)**0.5
 
-    assert type(velocityPath) == np.float64, "velocityPath is not a float" 
+    velocityPath = 1
 
     currentAngleBot = np.tan(currentState[t + 1 ,1] - currentState[t,1]/currentState[t + 1 ,0] - currentState[t,0] )
     previousAngleBot = np.tan(currentState[t ,1] - currentState[t -1 ,1]/currentState[t ,0] - currentState[t - 1 ,0] )
@@ -114,16 +145,49 @@ def Run(t, curentState = False, path = [0]):
     
     return input_
 
-def tester():
+def plot(ax,input):
+   
+    input = input[2:]
+
+    for i in range(len(input)):
+        ax.plot(input[:i,0],input[:i,1])
+        # Note that using time.sleep does *not* work here!
+        plt.pause(0.1)
+
+def testerMPC():
     dummyDataX = np.arange(0 ,10 ,0.1)
     dummyDataY = np.arange(0 ,1 ,0.01)
     target = np.concatenate((dummyDataX,dummyDataY), axis=0).reshape((100,2))
 
-    timestep = 0 
-    for i in range(10):
-        print(i)
-        input = Run(timestep, target, target )
-        print(f"this is the input: {input}")
-        timestep += 1 
+    fig, ax = plt.subplots()
 
-tester()
+    timestep = 0 
+
+    inputHistory = []
+    for i in range(40):
+        input = Run(timestep, target, target )
+        inputHistory.append(input)
+        timestep += 1 
+    
+    # Plotting 
+    return inputHistory
+
+def testerUni():
+
+    model = UniCycleModel(0.1)
+    input = testerMPC()
+    fig, ax = plt.subplots()
+    stateHistory = []
+    for i in range(2,35):
+        # input = np.array([[1,2]])
+        state = model.nextX(input[i][0])
+        print(input[i][0])
+
+        stateHistory.append(state)
+    stateHistory = (np.array(stateHistory))
+
+
+    plot(ax,stateHistory )
+
+# testerUni()
+
