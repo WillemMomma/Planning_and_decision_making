@@ -4,99 +4,45 @@ import numpy as np
 from tqdm import tqdm
 
 
-class vehicleDynamicsJap:
-    """
-    Defining the vehicle dynamics, on unicycle model is assumed which is capable of instant acceleration
-    """
-
-    def __init__(self, dt):
-
-        self.aC = np.array([
-            [0, 1,0,0],
-            [0.,0,0,0],
-            [0.,0,0,1],
-            [0.,0,0,0]])
-
-        self.bC = np.array([
-            [0],
-            [1],
-            [0],
-            [1]])
-
-        self.cC = np.array([
-            [1, 0]])
-
-        self.dC = np.array([
-            [0.]])
-        
-    
-        # Euler discretization
-        self.A = np.eye(4) + self.aC * dt
-        self.B = self.bC * dt
-        self.C = self.cC
-        self.D = self.dC
-
-        
-    def nextX(self, x, u):
-        """
-        Iterate over to the next x
-        
-        x -> current state  : np.array
-        u -> input : np.array
-        return -> next state : np.array
-        """
-        return self.A.dot(x) + self.B.dot(u.T).diagonal()
-    
-    
-def mpcControl(vehicle, N, xInit, xTarget):
+def mpcControl(error, N, xInit, xTarget):
     """
     Control the vehicle using MPC it is assumed that the operater can only alter the acceleration
     
-    vehicle -> model of the dynamics : object vehicleDynamicsJap
-    N -> look ahead horizon : Int
-    xInit -> current state : np.array
-    xTarget -> desired state : np.array
-    returns -> next input : list    
-    """
+\
+    Normally we would have an LTI, but now we have an LTV therefore
+    x[t+1] = A*x + B*u
     
-    weightInput = np.array([[0,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]])    # Weight on the input
-    weightTracking = np.array([[1,0,0,0],[0,1,0,0],[0,0,1,0],[0,0,0,1]]) # Weight on the tracking state
+    The state of the bot   ->  [x, y, theta] 
+    X represents the error -> [xError, yError, thereError]
+    U represents the input -> [v,theta]
+
+    A end B are error matrices packaged in the error variable
+
+    """
+
+    print("we are in the mpcController")
+    
+    weightInput = np.array([[1,0],[0,1]])    # Weight on the input
+    weightTracking = np.array([[1,0,0],[0,1,0],[0,0,1]]) # Weight on the tracking state
     
     cost = 0.
     constraints = []
     
     # Create the optimization variables
-    x = cp.Variable((4, N + 1)) # cp.Variable((dim_1, dim_2))
-    u = cp.Variable((4, N))
-    
-    print(f"this is xinit: {xInit} and this is the shape: {xInit.shape}")
-    
-    constraints += [x[:, 0] == xInit]
+    x = cp.Variable((3, N + 1)) # cp.Variable((dim_1, dim_2))
+    u = cp.Variable((2, N))
+    constraints += [x[:, 0] == error[1].reshape((3,))]  
         
     for k in range(N):
-        """
-        Normally we would have an LTI, but now we have an LTV therefore
-        x[t+1] = A*x + B*u*dt
         
-        The state of the bot is [x, y, xvel, yvel, theta] 
-        Therefore A is the identity matrix 
-        u = [x , y, xvel, yvel, (xvel - yvel) ]
+        nextError = error[0].reshape((3,3))@x[:,k] + error[2].reshape((3,2))@u[:, k]
 
-        B = [0,0,1,1,0] <- for this we can also use simple contraints
-        """
-        
-        state_ = vehicle.A@x[:,k]
-        input_ = u[:, k]
-        
         # constraints
-        constraints += [x[:, k+1] == state_ + input_]
-        constraints += [u[0, k] == 0]
-        constraints += [u[2, k] == 0]
+        constraints += [x[:, k+1] == nextError]
 
         # Minimize the cost function
         cost += cp.quad_form(u[:, k], weightInput)
-        cost += cp.quad_form((xTarget - x[:, k+1] ), weightTracking)
-
+        cost += cp.quad_form((x[:, k+1] ), weightTracking)
 
     
     # Solves the problem
@@ -106,14 +52,48 @@ def mpcControl(vehicle, N, xInit, xTarget):
     # We return the MPC input and the next state (and also the plan for visualization)
     return u[:, 0].value, x[:, 1].value, x[:, :].value, None
 
-def errorFunction(t, curentState , path):
+def errorFunction(t,dt,  currentState , path):
     """
-    This function calculates the error of the robot
+    Retruns the error matrix A, B for the error dynamics
+
+    path input must be [x,y,vx,vy]
+
+    curentState
     """
 
-    headingError, postionError, velocityError = [0,0,0]
+    # initialize the first point
 
-    return headingError, postionError, velocityError
+    currentAnglePath = np.tan(path[t + 1 ,1] - path[t,1]/path[t + 1 ,0] - path[t,0] )
+    previousAnglePath = np.tan(path[t ,1] - path[t -1 ,1]/path[t ,0] - path[t - 1 ,0] )
+    angularVelocityPath = (currentAnglePath - previousAnglePath)*dt 
+    
+    currentPostionPath = path[t ,:2]
+    previousPositionPath = path[t - 1 ,:2]
+    velocityPath = ((currentPostionPath[0] -previousPositionPath[0])**2 - (currentPostionPath[1] -previousPositionPath[1])**2)**0.5
+
+    assert type(velocityPath) == np.float64, "velocityPath is not a float" 
+
+    currentAngleBot = np.tan(currentState[t + 1 ,1] - currentState[t,1]/currentState[t + 1 ,0] - currentState[t,0] )
+    previousAngleBot = np.tan(currentState[t ,1] - currentState[t -1 ,1]/currentState[t ,0] - currentState[t - 1 ,0] )
+    angularVelocityBot = (previousAngleBot - currentAngleBot)*dt 
+
+    errorAmatrix = np.array([[1,dt,angularVelocityPath],
+                            [-dt*angularVelocityPath, 0 , dt*velocityPath],
+                            [0,0,1]])
+
+    errorBmatrix = np.array([[-dt, 0],
+                            [0,0],
+                            [0,-dt]])
+
+    xError = currentState[t,0] - path[t,0]
+    yError = currentState[t,1] - path[t,1]
+    thetaError = angularVelocityPath - angularVelocityBot
+
+    currentError = np.array([[xError*np.cos(currentAngleBot) + yError * np.sin(currentAngleBot)],
+                            [-xError * np.sin(currentAngleBot) - yError * np.cos(currentAngleBot)],
+                            [thetaError]])
+
+    return (errorAmatrix, currentError,  errorBmatrix)
 
 def Run(t, curentState = False, path = [0]):
     """
@@ -122,70 +102,28 @@ def Run(t, curentState = False, path = [0]):
     input ->  None
     output-> Plots
     """
-
-    # headingError, postionError, velocityError = errorFunction(t, curentState , path)
-
+    
     # Inintialize variables
     dt = 0.1
-    start = 0
-    stop = 10
 
-    lookahead = 10
+    if t < 2:
+        return
 
-    if t == 0:
-        curentState = np.array([[0], [0], [0], [0]])
-    if len(path) == 1:
-        path = np.array([[0], [0], [0], [0]])
-
-    assert len(curentState) > 3, "current state has the incorrect length"
-    assert len(path) > 3, "current path has the incorrect length"
-
-    vehicle = vehicleDynamicsJap(dt)
-
-    # Saving data 
-    TakingInputs = []
-    NextState = []
-    error = []
-    desiredState = []
-
-
-    # Get the next state
-    # state_ = vehicle.nextX(state_ , input_)
-
-    # Reshaping data
-    # X = np.reshape(dummyDataX, (dummyDataX.shape[0], 1))
-    # velX = np.zeros(X.shape)
-    # Y = np.reshape(dummyDataY, (dummyDataY.shape[0], 1))
-    # velY = np.zeros(Y.shape)
-    # target = np.concatenate((X,velX,Y,velY), axis= 1)
-
-    # Calculate control input
-    print(f"we are in the mpc file this is the shape of currentPath; {curentState.reshape((4,)).shape}")
-    print(f"we are in the mpc file this is the shape of path; { path[t,:].shape}")
-    
-    input_   = mpcControl(vehicle, 10, curentState.reshape((4,)), path[t, :])
-    input_ = np.array(input_[0])
-    input_ = np.reshape(input_, (input_.shape[0], 1))
-
-    #Append to the lists
-    # TakingInputs.append(input_)
-    # NextState.append(state_)
-    # error.append(state_ - target[i,:] )
-    # desiredState.append(target[i,:])
-    #
-
-    # fig, axs = plt.subplots(2, figsize=(15, 15))
-    # fig.suptitle('MPC implementation vehicle dynamics')
-    # time = np.arange(0,len(np.array(NextState)[:,0]),1)
-    # axs[0].plot(np.array(NextState)[:,0],np.array(NextState)[:,2] , label = "Position robot")
-    # axs[0].plot(np.array(desiredState)[:,0],np.array(desiredState)[:,2] , label = "Desired Postion")
-    #
-    # axs[1].plot(np.array(NextState)[:,1],np.array(NextState)[:,3] , label = "Vel robot")
-    # axs[1].plot(np.array(desiredState)[:,1],np.array(desiredState)[:,3] , label = "Desired Vel")
-    # # axs[0].plot(target[:,0],target[:,1], label = "Desired position")
-    # # axs[1].plot(np.arange(0, len(sumErrorOverColumns),1),sumErrorOverColumns, label = "Error" )
-    #
-    # axs[0].legend()
-    # axs[1].legend()
+    error = errorFunction(t,dt, curentState , path)
+    input_   = mpcControl(error, 10, curentState[t,:], path[t, :])
     
     return input_
+
+def tester():
+    dummyDataX = np.arange(0 ,10 ,0.1)
+    dummyDataY = np.arange(0 ,1 ,0.01)
+    target = np.concatenate((dummyDataX,dummyDataY), axis=0).reshape((100,2))
+
+    timestep = 0 
+    for i in range(10):
+        print(i)
+        input = Run(timestep, target, target )
+        print(f"this is the input: {input}")
+        timestep += 1 
+
+tester()
