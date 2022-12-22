@@ -202,41 +202,62 @@ def testerUni():
     plot(ax,stateHistory,stateHistory )
 
 
-def testerTotal(): 
+def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = None): 
+    """
+    Hallo bary
+    """
+
 
     states = []
     inputs = []
     # intialize vehicle
     uni = UniCycleModel(0.1)
+
+    # Check if main is passing arguments otherwise use testdata
+    if currentOrtientation is None: 
+        dummyDataX = np.arange(1 ,101 ,0.1)
+        dummyDataY = np.sin(dummyDataX)
+        target = np.vstack((dummyDataX,dummyDataY)).T
+    else: 
+        target = trajectory[t: t + 10,:]
     
-    dummyDataX = np.arange(1 ,101 ,0.1)
-    dummyDataY = np.sin(dummyDataX)
-    target = np.vstack((dummyDataX,dummyDataY)).T
+    # fig, ax = plt.subplots()
 
-    fig, ax = plt.subplots()
+    timestep = t 
 
-    timestep = 0 
+    for i in range(1):
+         
+        # Check if main is passing arguments otherwise use testdata
+        if currentOrtientation is None: 
+            o = uni.X[2][0]
+        else: 
+            o = np.float(currentOrtientation)
+            
 
-    for i in range(150):
-        o = uni.X[2][0] 
+        
         if len(states) > 3:
             input = Run(timestep - 2 , np.array(states), target, o )
             input = input[0]
-            
-            inputs.append(input)
-            
+            inputs.append(input) 
         else: 
             input = np.array([[0,0]])
-        currentState = uni.nextX(input.reshape((1,2)))
+        
+        # Check if main is passing arguments otherwise use testdata
+        if currentPostion is None:
+            currentState = uni.nextX(input.reshape((1,2)))
+            states.append([currentState.tolist()[0][0], currentState.tolist()[1][0]])
+        else: 
+            currentState = currentPostion
+            states.append(currentState)
+
         print(f"this is the currentstate: {o} ")
-        states.append([currentState.tolist()[0][0], currentState.tolist()[1][0]])        
-        timestep += 1 
+                
+        return input
 
-    fig, ax = plt.subplots()
-    plot(ax,  np.array(states), target )
+    # fig, ax = plt.subplots()
+    # plot(ax,  np.array(states), target )
 
-
-testerTotal()
+mainMPC(0)
 
 
     

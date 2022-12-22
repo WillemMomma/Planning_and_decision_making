@@ -60,7 +60,7 @@ class RRT_star:
         #behavior settings for RRT
         self.maxIter = 400 #maximum number of iterations
         self.probGoal = 0.01 #probability to sample goal 
-        self.threshold = 1 #radius of accepted area within goal
+        self.threshold = 5 #radius of accepted area within goal
         self.maxExpansion = 4 #max distance to expand each collision free step
         self.searchRadius = 6 #radius to find nearest neighbors for RRT* optimilization 
     
@@ -293,12 +293,12 @@ def main():
             y = np.linspace(node.y, node.parent.y, 10)
             for i in range(len(x)):
                 trajectory.append(np.array([x[i],y[i]]))
-        print(node.x,node.y)
-    print(trajectory)
+        # print(node.x,node.y)
+    # print(trajectory)
     return trajectory
     
-if __name__ == '__main__':
-    main()
+# if __name__ == '__main__':
+#     main()
 
 
 

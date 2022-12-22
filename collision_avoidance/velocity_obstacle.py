@@ -8,36 +8,31 @@ import numpy as np
 from collision_avoidance.collision_check_functions import detect, collision_check, resolve
 from collision_avoidance.robot_class import Robot
 
-def main_collision(x, y, vx, vy, theta):
+def mainCollisionAvoidance(positions = None, velocities = None, orientations = None):
 
-    # # Setting 1
-    # robot1 = Robot(0, 0, 1, 0, 0.5, True)
-    # robot2 = Robot(-10, 10, 1, 0.5, 0, False)
-    # robot3 = Robot(3, 5, 1, 0, 0, False)
-    # robot4 = Robot(10, 15, 1, -0.5, 0, False)
-    # robot_list = [robot1, robot2, robot3, robot4]
+    
 
-    if type(x) == np.float64:
-        x = [x]
-        y = [y]
-        vx = [vx]
-        vy = [vy]
-        theta = [theta]
+    # If an input is given fill the robots list with the given data
+    if positions is not None:
+        
+        # Fill robots list
+        radius = 1
 
+        # Fill robot list with given values
+        robot_list = []
+        for i in range(positions.shape[0]):
+            if i == 0:
+                robot_list.append(Robot(positions[i, 0], positions[i, 1], radius, velocities[i, 0], velocities[i, 1], orientations[i], True))
+            else:
+                robot_list.append(Robot(positions[i, 0], positions[i, 1], radius, velocities[i, 0], velocities[i, 1], orientations[i], False))
 
-    assert len(x) > 0, "No position is given for our robot"
-    assert len(y) > 0, "No position is given for our robot"
-    assert len(vx) > 0, "No position is given for our robot"
-    assert len(vy) > 0, "No position is given for our robot"
-    assert len(theta) > 0, "No position is given for our robot"
-
-
-    robot_list = []
-    for i in range(len(x)):
-        if i == 0:
-            robot_list.append(Robot(x[i], y[i], 1, vx[i], vy[i], theta[i], True))
-        else:
-            robot_list.append(Robot(x[i], y[i], 1, vx[i], vy[i], theta[i], False))
+    else:
+        # Setting 1
+        robot1 = Robot(0, 0, 1, 0, 0.5, True)
+        robot2 = Robot(-10, 10, 1, 0.5, 0, False)
+        robot3 = Robot(3, 5, 1, 0, 0, False)
+        robot4 = Robot(10, 15, 1, -0.5, 0, False)
+        robot_list = [robot1, robot2, robot3, robot4]
 
     # # Setup plot
     # fig = plt.figure()
