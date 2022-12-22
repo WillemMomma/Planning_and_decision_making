@@ -1,139 +1,165 @@
-"""
-import math
-import random
 
-import matplotlib.pyplot as plt
+
+"""
+RRT_star 2D
+@author: huiming zhou
+"""
+
+import os
+import sys
+import math
 import numpy as np
 
-show_animation = True
+sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
+                "/../../Sampling_based_Planning/")
+
+from Sampling_based_Planning.rrt_2D import env, plotting, utils, queue
 
 
-class RRT:
-    
-
-    class Node:
-
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-            self.path_x = []
-            self.path_y = []
-            self.parent = None
-
-    class AreaBounds:
-
-        def __init__(self, area):
-            self.xmin = float(area[0])
-            self.xmax = float(area[1])
-            self.ymin = float(area[2])
-            self.ymax = float(area[3])
+class Node:
+    def __init__(self, n):
+        self.x = n[0]
+        self.y = n[1]
+        self.parent = None
 
 
-    def __init__(self,
-                 start,
-                 goal,
-                 obstacle_list,
-                 rand_area,
-                 expand_dis=3.0,
-                 path_resolution=0.5,
-                 goal_sample_rate=5,
-                 max_iter=500,
-                 play_area=None,
-                 robot_radius=0.0,
-                 ):
-        
-        # Setting Parameter
-        # start:Start Position [x,y]
-        # goal:Goal Position [x,y]
-        # obstacleList:obstacle Positions [[x,y,size],...]
-        # randArea:Random Sampling Area [min,max]
-        # play_area:stay inside this area [xmin,xmax,ymin,ymax]
-        # robot_radius: robot body modeled as circle with given radius
-        # 
-        self.start = self.Node(start[0], start[1])
-        self.end = self.Node(goal[0], goal[1])
-        self.min_rand = rand_area[0]
-        self.max_rand = rand_area[1]
-        if play_area is not None:
-            self.play_area = self.AreaBounds(play_area)
-        else:
-            self.play_area = None
-        self.expand_dis = expand_dis
-        self.path_resolution = path_resolution
+class RrtStar:
+    def __init__(self, x_start, x_goal, step_len,
+                 goal_sample_rate, search_radius, iter_max):
+        self.s_start = Node(x_start)
+        self.s_goal = Node(x_goal)
+        self.step_len = step_len
         self.goal_sample_rate = goal_sample_rate
-        self.max_iter = max_iter
-        self.obstacle_list = obstacle_list
-        self.node_list = []
-        self.robot_radius = robot_radius
+        self.search_radius = search_radius
+        self.iter_max = iter_max
+        self.vertex = [self.s_start]
+        self.path = []
 
-    def planning(self, animation=True):
-        
-        rrt path planning
-        animation: flag for animation on or off
-        
+        self.env = env.Env()
+        self.plotting = plotting.Plotting(x_start, x_goal)
+        self.utils = utils.Utils()
 
-        self.node_list = [self.start]
-        for i in range(self.max_iter):
-            rnd_node = self.get_random_node()
-            nearest_ind = self.get_nearest_node_index(self.node_list, rnd_node)
-            nearest_node = self.node_list[nearest_ind]
+        self.x_range = self.env.x_range
+        self.y_range = self.env.y_range
+        self.obs_circle = self.env.obs_circle
+        self.obs_rectangle = self.env.obs_rectangle
+        self.obs_boundary = self.env.obs_boundary
 
-            new_node = self.steer(nearest_node, rnd_node, self.expand_dis)
+    def planning(self):
+        for k in range(self.iter_max):
+            node_rand = self.generate_random_node(self.goal_sample_rate)
+            node_near = self.nearest_neighbor(self.vertex, node_rand)
+            node_new = self.new_state(node_near, node_rand)
 
-            if self.check_if_outside_play_area(new_node, self.play_area) and \
-               self.check_collision(
-                   new_node, self.obstacle_list, self.robot_radius):
-                self.node_list.append(new_node)
+            if k % 500 == 0:
+                print(k)
 
-            if animation and i % 5 == 0:
-                self.draw_graph(rnd_node)
+            if node_new and not self.utils.is_collision(node_near, node_new):
+                neighbor_index = self.find_near_neighbor(node_new)
+                self.vertex.append(node_new)
 
-            if self.calc_dist_to_goal(self.node_list[-1].x,
-                                      self.node_list[-1].y) <= self.expand_dis:
-                final_node = self.steer(self.node_list[-1], self.end,
-                                        self.expand_dis)
-                if self.check_collision(
-                        final_node, self.obstacle_list, self.robot_radius):
-                    return self.generate_final_course(len(self.node_list) - 1)
+                if neighbor_index:
+                    self.choose_parent(node_new, neighbor_index)
+                    self.rewire(node_new, neighbor_index)
 
-            if animation and i % 5:
-                self.draw_graph(rnd_node)
+        index = self.search_goal_parent()
+        self.path = self.extract_path(self.vertex[index])
 
-        return None  # cannot find path
+        self.plotting.animation(self.vertex, self.path, "rrt*, N = " + str(self.iter_max))
 
-    def steer(self, from_node, to_node, extend_length=float("inf")):
+    def new_state(self, node_start, node_goal):
+        dist, theta = self.get_distance_and_angle(node_start, node_goal)
 
-        new_node = self.Node(from_node.x, from_node.y)
-        d, theta = self.calc_distance_and_angle(new_node, to_node)
+        dist = min(self.step_len, dist)
+        node_new = Node((node_start.x + dist * math.cos(theta),
+                         node_start.y + dist * math.sin(theta)))
 
-        new_node.path_x = [new_node.x]
-        new_node.path_y = [new_node.y]
+        node_new.parent = node_start
 
-        if extend_length > d:
-            extend_length = d
+        return node_new
 
-        n_expand = math.floor(extend_length / self.path_resolution)
+    def choose_parent(self, node_new, neighbor_index):
+        cost = [self.get_new_cost(self.vertex[i], node_new) for i in neighbor_index]
 
-        for _ in range(n_expand):
-            new_node.x += self.path_resolution * math.cos(theta)
-            new_node.y += self.path_resolution * math.sin(theta)
-            new_node.path_x.append(new_node.x)
-            new_node.path_y.append(new_node.y)
+        cost_min_index = neighbor_index[int(np.argmin(cost))]
+        node_new.parent = self.vertex[cost_min_index]
 
-        d, _ = self.calc_distance_and_angle(new_node, to_node)
-        if d <= self.path_resolution:
-            new_node.path_x.append(to_node.x)
-            new_node.path_y.append(to_node.y)
-            new_node.x = to_node.x
-            new_node.y = to_node.y
+    def rewire(self, node_new, neighbor_index):
+        for i in neighbor_index:
+            node_neighbor = self.vertex[i]
 
-        new_node.parent = from_node
+            if self.cost(node_neighbor) > self.get_new_cost(node_new, node_neighbor):
+                node_neighbor.parent = node_new
 
-        return new_node
+    def search_goal_parent(self):
+        dist_list = [math.hypot(n.x - self.s_goal.x, n.y - self.s_goal.y) for n in self.vertex]
+        node_index = [i for i in range(len(dist_list)) if dist_list[i] <= self.step_len]
 
-    def generate_final_course(self, goal_ind):
-        path = [[self.end.x, self.end.y]]
-        node = self.node_list[goal_ind]
+        if len(node_index) > 0:
+            cost_list = [dist_list[i] + self.cost(self.vertex[i]) for i in node_index
+                         if not self.utils.is_collision(self.vertex[i], self.s_goal)]
+            return node_index[int(np.argmin(cost_list))]
+
+        return len(self.vertex) - 1
+
+    def get_new_cost(self, node_start, node_end):
+        dist, _ = self.get_distance_and_angle(node_start, node_end)
+
+        return self.cost(node_start) + dist
+
+    def generate_random_node(self, goal_sample_rate):
+        delta = self.utils.delta
+
+        if np.random.random() > goal_sample_rate:
+            return Node((np.random.uniform(self.x_range[0] + delta, self.x_range[1] - delta),
+                         np.random.uniform(self.y_range[0] + delta, self.y_range[1] - delta)))
+
+        return self.s_goal
+
+    def find_near_neighbor(self, node_new):
+        n = len(self.vertex) + 1
+        r = min(self.search_radius * math.sqrt((math.log(n) / n)), self.step_len)
+
+        dist_table = [math.hypot(nd.x - node_new.x, nd.y - node_new.y) for nd in self.vertex]
+        dist_table_index = [ind for ind in range(len(dist_table)) if dist_table[ind] <= r and
+                            not self.utils.is_collision(node_new, self.vertex[ind])]
+
+        return dist_table_index
+
+    @staticmethod
+    def nearest_neighbor(node_list, n):
+        return node_list[int(np.argmin([math.hypot(nd.x - n.x, nd.y - n.y)
+                                        for nd in node_list]))]
+
+    @staticmethod
+    def cost(node_p):
+        node = node_p
+        cost = 0.0
+
+        while node.parent:
+            cost += math.hypot(node.x - node.parent.x, node.y - node.parent.y)
+            node = node.parent
+
+        return cost
+
+    def update_cost(self, parent_node):
+        OPEN = queue.QueueFIFO()
+        OPEN.put(parent_node)
+
+        while not OPEN.empty():
+            node = OPEN.get()
+
+            if len(node.child) == 0:
+                continue
+
+            for node_c in node.child:
+                node_c.Cost = self.get_new_cost(node, node_c)
+                OPEN.put(node_c)
+
+    def extract_path(self, node_end):
+        path = [[self.s_goal.x, self.s_goal.y]]
+        node = node_end
+
         while node.parent is not None:
             path.append([node.x, node.y])
             node = node.parent
@@ -141,223 +167,20 @@ class RRT:
 
         return path
 
-    def calc_dist_to_goal(self, x, y):
-        dx = x - self.end.x
-        dy = y - self.end.y
-        return math.hypot(dx, dy)
-
-    def get_random_node(self):
-        if random.randint(0, 100) > self.goal_sample_rate:
-            rnd = self.Node(
-                random.uniform(self.min_rand, self.max_rand),
-                random.uniform(self.min_rand, self.max_rand))
-        else:  # goal point sampling
-            rnd = self.Node(self.end.x, self.end.y)
-        return rnd
-
-    def draw_graph(self, rnd=None):
-        plt.clf()
-        # for stopping simulation with the esc key.
-        plt.gcf().canvas.mpl_connect(
-            'key_release_event',
-            lambda event: [exit(0) if event.key == 'escape' else None])
-        if rnd is not None:
-            plt.plot(rnd.x, rnd.y, "^k")
-            if self.robot_radius > 0.0:
-                self.plot_circle(rnd.x, rnd.y, self.robot_radius, '-r')
-        for node in self.node_list:
-            if node.parent:
-                plt.plot(node.path_x, node.path_y, "-g")
-
-        for (ox, oy, size) in self.obstacle_list:
-            self.plot_circle(ox, oy, size)
-
-        if self.play_area is not None:
-            plt.plot([self.play_area.xmin, self.play_area.xmax,
-                      self.play_area.xmax, self.play_area.xmin,
-                      self.play_area.xmin],
-                     [self.play_area.ymin, self.play_area.ymin,
-                      self.play_area.ymax, self.play_area.ymax,
-                      self.play_area.ymin],
-                     "-k")
-
-        plt.plot(self.start.x, self.start.y, "xr")
-        plt.plot(self.end.x, self.end.y, "xr")
-        plt.axis("equal")
-        plt.axis([-2, 15, -2, 15])
-        plt.grid(True)
-        plt.pause(0.01)
-
     @staticmethod
-    def plot_circle(x, y, size, color="-b"):  # pragma: no cover
-        deg = list(range(0, 360, 5))
-        deg.append(0)
-        xl = [x + size * math.cos(np.deg2rad(d)) for d in deg]
-        yl = [y + size * math.sin(np.deg2rad(d)) for d in deg]
-        plt.plot(xl, yl, color)
-
-    @staticmethod
-    def get_nearest_node_index(node_list, rnd_node):
-        dlist = [(node.x - rnd_node.x)**2 + (node.y - rnd_node.y)**2
-                 for node in node_list]
-        minind = dlist.index(min(dlist))
-
-        return minind
-
-    @staticmethod
-    def check_if_outside_play_area(node, play_area):
-
-        if play_area is None:
-            return True  # no play_area was defined, every pos should be ok
-
-        if node.x < play_area.xmin or node.x > play_area.xmax or \
-           node.y < play_area.ymin or node.y > play_area.ymax:
-            return False  # outside - bad
-        else:
-            return True  # inside - ok
-
-    @staticmethod
-    def check_collision(node, obstacleList, robot_radius):
-
-        if node is None:
-            return False
-
-        for (ox, oy, size) in obstacleList:
-            dx_list = [ox - x for x in node.path_x]
-            dy_list = [oy - y for y in node.path_y]
-            d_list = [dx * dx + dy * dy for (dx, dy) in zip(dx_list, dy_list)]
-
-            if min(d_list) <= (size+robot_radius)**2:
-                return False  # collision
-
-        return True  # safe
-
-    @staticmethod
-    def calc_distance_and_angle(from_node, to_node):
-        dx = to_node.x - from_node.x
-        dy = to_node.y - from_node.y
-        d = math.hypot(dx, dy)
-        theta = math.atan2(dy, dx)
-        return d, theta
+    def get_distance_and_angle(node_start, node_end):
+        dx = node_end.x - node_start.x
+        dy = node_end.y - node_start.y
+        return math.hypot(dx, dy), math.atan2(dy, dx)
 
 
-def main(gx=6.0, gy=10.0):
-    print("start " + __file__)
+def main():
+    x_start = (18, 8)  # Starting node
+    x_goal = (37, 18)  # Goal node
 
-    # ====Search Path with RRT====
-    obstacleList = [(5, 5, 1), (3, 6, 2), (3, 8, 2), (3, 10, 2), (7, 5, 2),
-                    (9, 5, 2), (8, 10, 1)]  # [x, y, radius]
-    # Set Initial parameters
-    rrt = RRT(
-        start=[0, 0],
-        goal=[gx, gy],
-        rand_area=[-2, 15],
-        obstacle_list=obstacleList,
-        # play_area=[0, 10, 0, 14]
-        robot_radius=0.8
-        )
-    path = rrt.planning(animation=show_animation)
+    rrt_star = RrtStar(x_start, x_goal, 10, 0.10, 20, 10000)
+    rrt_star.planning()
 
-    if path is None:
-        print("Cannot find path")
-    else:
-        print("found path!!")
-
-        # Draw final path
-        if show_animation:
-            rrt.draw_graph()
-            plt.plot([x for (x, y) in path], [y for (x, y) in path], '-r')
-            plt.grid(True)
-            plt.pause(0.01)  # Need for Mac
-            plt.show()
-
-
-if __name__ == '__main__':
-    main()
-"""
-
-import random 
-import math
-import matplotlib.pyplot as plt
-
-class Node:
-    '''
-    Class to define the Nodes (i.e. vertices)
-    Also specifies parent Node and path from parent to child 
-    Input:  x, y: node coordinates
-    '''
-    def __init__(self, x, y):
-        self.x = x
-        self.y = y
-        self.path_x = []
-        self.path_y = []
-        self.parent = None
-
-class obstacleSquare:
-    '''
-    Class for squared obstacles
-    Input:  x, y: center of obstacle
-            size: length of side of obstacle
-    '''
-    def __init__(self, x, y, size):
-        self.x = x
-        self.y = y
-        self.size = size
-        self.x1 = x - size/2
-        self.x2 = x + size/2
-        self.y1 = y - size/2
-        self.y2 = y + size/2
-
-def drawGraph(start, goal, randArea, obstacleList, nodeList):
-    plt.clf()
-    plt.plot([start[0]],start[1], 'ro')
-    plt.plot([goal[0]],goal[1], 'go')
-
-    for node in nodeList:
-        plt.plot(node.x,node.y, 'yo')
-
-    for obs in obstacleList:
-        plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
-    
-    plt.axis([randArea[0], randArea[1], randArea[0], randArea[1]])
-    plt.grid(True)
-    plt.pause(0.01)
-
-def getRandomPoint(obstacleList):
-    '''
-    Samples random node within the random sampling area, discards them if they collide with obstacles
-    Input: obstacleList: list of obstacles
-    Output: qRand: random node
-    '''
-    randomx = random.uniform(0, 50)
-    randomy = random.uniform(0, 50)
-    for obs in obstacleList:
-        if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
-            return None
-    qRand = Node(randomx, randomy)
-    return qRand
-
-def main(): 
-    obstacle1 = obstacleSquare(12,5,5)
-    obstacle2 = obstacleSquare(20,20,10)
-    obstacle3 = obstacleSquare(32,40,8)
-    obstacle4 = obstacleSquare(35,10,7)
-    obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4]
-    nodeList = []
-    infolist = []
-    start = [2,2]
-    goal = [45, 43]
-    randArea = [0,50]
-
-    for i in range(100):
-        node = getRandomPoint(obstacleList)
-        infolist.append(node)
-        if node == None:
-            continue 
-        else:
-            nodeList.append(node)
-        drawGraph(start,goal,randArea,obstacleList,nodeList)
-    plt.show()
 
 if __name__ == '__main__':
     main()
