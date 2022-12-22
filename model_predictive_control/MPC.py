@@ -119,8 +119,8 @@ def errorFunction(t,dt,  currentState , path, o):
     currentAngleBot = o
     
     # angularVelocityBot = (previousAngleBot - currentAngleBot)*dt  
-    xError = path[t,0] - currentState[t,0]
-    yError = (path[t,1] - currentState[t,1] )/5
+    xError = path[t,0] - currentState[len(currentState)-1,0]
+    yError = (path[t,1] - currentState[len(currentState)-1,1] )/5
     thetaError = np.arctan2(velocityPathY,velocityPathX) - o
 
     errorAmatrix = np.array([[1,dt*angularVelocityPath,0],
@@ -219,11 +219,13 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         dummyDataY = np.sin(dummyDataX)
         target = np.vstack((dummyDataX,dummyDataY)).T
     else: 
-        target = trajectory[t: t + 10,:]
+        # Get the right window 
+        windowOffset = 3 
+        target = trajectory[t - windowOffset : t + 10 - windowOffset ,:]
     
     # fig, ax = plt.subplots()
 
-    timestep = t 
+    timestep = 3 
 
     for i in range(1):
          
@@ -233,8 +235,6 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         else: 
             o = np.float(currentOrtientation)
             
-
-        
         if len(states) > 3:
             input = Run(timestep - 2 , np.array(states), target, o )
             input = input[0]
@@ -252,12 +252,11 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
 
         print(f"this is the currentstate: {o} ")
                 
-        return input
+        return input[0][0], input[0][1]
 
     # fig, ax = plt.subplots()
     # plot(ax,  np.array(states), target )
 
-mainMPC(0)
 
 
     

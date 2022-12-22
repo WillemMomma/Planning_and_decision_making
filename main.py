@@ -35,7 +35,12 @@ def behaviour():
     # Start in the correct state
     state = 0
     run = True
-    currentPositions , currentVelocities,currentOrientations , trajectory = [None, None, None, None] 
+    placeholderPos = np.zeros((10,2))
+    placeholderVel = np.zeros((10,))
+    placeholderOr = np.zeros((10,))
+    placeholderTra = np.zeros((100,2))
+    currentPositions , currentVelocities,currentOrientations , trajectory = [placeholderPos, placeholderVel,\
+                                                                            placeholderOr, placeholderTra] 
 
     while run:
         timestep = 0
@@ -45,8 +50,8 @@ def behaviour():
 
             # For the first iteration we have to create a Map of the enviroment and a path to the goal 
             if timestep == 0:   
-                    velocity = np.float(0)
-                    angularVelocity = np.float(0) 
+                    velocity = np.float64(0)
+                    angularVelocity = np.float64(0) 
 
                     # Willem Kolff
                     """
@@ -74,6 +79,7 @@ def behaviour():
 
                     # Delete this if your implementation works this is for test purposes
                     trajectory = mainRRT()
+                    trajectory = np.array(trajectory).reshape((len(trajectory),2))
             
             # Jasper
             """
@@ -87,7 +93,8 @@ def behaviour():
             currentVelocities[0] -> np.float: 0.0
             angularVelocity -> np.float: 0.0
             """
-            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(), currentOrientations[0], trajectory ) 
+
+            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory ) 
 
             # Godert
             """
@@ -105,7 +112,6 @@ def behaviour():
             angularVelocities -> np.float() : 0 
             """
             velocity , angularVelocity = mainCollisionAvoidance(positions = currentPositions, velocities = currentVelocities, angularVelocities = angularVelocity, orientations = currentOrientations)
-
 
             # Calculate the desired input for the robot using MPC
             # It is important that all the variables are provided in the correct format @Willem Kolff    
@@ -128,7 +134,7 @@ def behaviour():
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
-            if np.linalg.norm(np.array([currentPosition]) - trajectory[:,-1]):
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[:,-1]):
                 state = 1
 
         # This state signifies that we have finished

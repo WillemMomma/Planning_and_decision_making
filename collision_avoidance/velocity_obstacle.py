@@ -8,7 +8,7 @@ import numpy as np
 from collision_avoidance.collision_check_functions import detect, collision_check, resolve
 from collision_avoidance.robot_class import Robot
 
-def mainCollisionAvoidance(positions = None, velocities = None, orientations = None):
+def mainCollisionAvoidance(positions = None, velocities = None, angularVelocities = None, orientations = None):
 
     
 

@@ -60,7 +60,7 @@ class RRT_star:
         #behavior settings for RRT
         self.maxIter = 400 #maximum number of iterations
         self.probGoal = 0.01 #probability to sample goal 
-        self.threshold = 5 #radius of accepted area within goal
+        self.threshold = 20 #radius of accepted area within goal
         self.maxExpansion = 4 #max distance to expand each collision free step
         self.searchRadius = 6 #radius to find nearest neighbors for RRT* optimilization 
     
