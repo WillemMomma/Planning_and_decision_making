@@ -8,9 +8,10 @@ import numpy as np
 from collision_avoidance.collision_check_functions import detect, collision_check, resolve
 from collision_avoidance.robot_class import Robot
 
+# Will update this branch to take into account vehicle dynamics
+
 def mainCollisionAvoidance(positions = None, velocities = None, angularVelocities = None, orientations = None):
 
-    
 
     # If an input is given fill the robots list with the given data
     if positions is not None:
