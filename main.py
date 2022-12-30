@@ -3,9 +3,12 @@
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
+from env.holonomic_robot_main import initEnv, robotMain
+
 # from collision_avoidance.robot_class import Robot
 
 import numpy as np
+
 
 def dummydata():
     # Dummy data
@@ -26,11 +29,12 @@ def dummydata():
 
 def behaviour():
     """
+    
     Start the enviroment and run the algorithms
 
     Input -> None : None
     Ouput -> None : None
-    """
+        """
 
     # Start in the correct state
     state = 0
@@ -39,16 +43,33 @@ def behaviour():
     placeholderVel = np.zeros((10,))
     placeholderOr = np.zeros((10,))
     placeholderTra = np.zeros((100,2))
-    currentPositions , currentVelocities,currentOrientations , trajectory = [placeholderPos, placeholderVel,\
+    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
                                                                             placeholderOr, placeholderTra] 
+        
+        
 
+    '''
+    Heb het stuk van momma hier heen verplaatst
+    '''
+    
+    trajectory = mainRRT()
+    trajectory = np.array(trajectory).reshape((len(trajectory),2))
+    
+    '''
+    Hier initialiseer ik de enviroment
+    '''
+    
+    env = initEnv(goal=True)      
+    
+    
+    
     while run:
         timestep = 0
 
         # This state signifies the running, and working envirment
         if state == 0: 
 
-            # For the first iteration we have to create a Map of the enviroment and a path to the goal 
+            # For the first iteration we have to create a Map of the enviroment and a path to the goal
             if timestep == 0:   
                     velocity = np.float64(0)
                     angularVelocity = np.float64(0) 
@@ -58,7 +79,8 @@ def behaviour():
                     INPUT : 
                     velocity -> np.float : 0.0
                     angularVelocity -> np.float : 0.0
-                    
+
+
                     OUTPUT 
                     Map -> UNKNOWN
                     currentPositions : np.array() : shape -> (m, 2)
@@ -77,10 +99,10 @@ def behaviour():
                     # Below is the pseudocode provided
                     # trajectory = mainRRT(map)
 
+
                     # Delete this if your implementation works this is for test purposes
-                    trajectory = mainRRT()
-                    trajectory = np.array(trajectory).reshape((len(trajectory),2))
-            
+                              
+                    
             # Jasper
             """
             INPUT
@@ -93,8 +115,7 @@ def behaviour():
             currentVelocities[0] -> np.float: 0.0
             angularVelocity -> np.float: 0.0
             """
-
-            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory ) 
+            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory) 
 
             # Godert
             """
@@ -111,7 +132,7 @@ def behaviour():
             velocities -> np.float : 0
             angularVelocities -> np.float() : 0 
             """
-            velocity , angularVelocity = mainCollisionAvoidance(positions = currentPositions, velocities = currentVelocities, angularVelocities = angularVelocity, orientations = currentOrientations)
+            #velocity , angularVelocity = mainCollisionAvoidance(positions = currentPositions, velocities = currentVelocities, angularVelocities = angularVelocity, orientations = currentOrientations)
 
             # Calculate the desired input for the robot using MPC
             # It is important that all the variables are provided in the correct format @Willem Kolff    
@@ -119,8 +140,11 @@ def behaviour():
             # Willem Kolff
             """
             INPUT : 
+            currentPositions : np.array() : shape -> (m, 2)
+            currentOrientations : np.array() : shape -> (m,)
             velocity -> np.float : 0.0
             angularVelocity -> np.float : 0.0
+            env -> gym.wrappers.order_enforcing.OrderEnforcing
             
             OUTPUT 
             Map -> UNKNOWN
@@ -128,13 +152,14 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
+            currentPositions, currentVelocities, currentOrientations = robotMain(currentPositions, currentVelocities[0], currentOrientations, angularVelocity, env)
 
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
-            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[:,-1]):
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]) < 1:
                 state = 1
 
         # This state signifies that we have finished
