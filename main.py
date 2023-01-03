@@ -3,7 +3,13 @@
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
+<<<<<<< HEAD
 from collision_avoidance.robot_class import Robot
+=======
+from env.holonomic_robot_main_test import initEnv, robotMain
+
+# from collision_avoidance.robot_class import Robot
+>>>>>>> 18738f0177eaaae603203ef143d198edafa75e81
 
 import numpy as np
 
@@ -41,6 +47,7 @@ def behaviour():
     placeholderVel = np.zeros((10,))
     placeholderOr = np.zeros((10,))
     placeholderTra = np.zeros((100,2))
+<<<<<<< HEAD
     currentPositions , currentVelocities,currentOrientations , trajectory = [placeholderPos, placeholderVel,\
                                                                             placeholderOr, placeholderTra]
     # Init robot list
@@ -51,6 +58,27 @@ def behaviour():
     timestep = 0
 
     # Run loop
+=======
+    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
+                                                                            placeholderOr, placeholderTra] 
+        
+        
+
+    '''
+    Heb het stuk van momma hier heen verplaatst
+    '''
+    env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=True, maps=1)
+    
+    trajectory = mainRRT(obstacles,start=currentPositions[0])
+    trajectory = np.array(trajectory).reshape((len(trajectory),2))
+    trajectory = trajectory[::-1]
+    '''
+    Hier initialiseerd de enviroment
+    '''
+    print("TRAJECTORY =", trajectory)
+    
+    timestep = 0 
+>>>>>>> 18738f0177eaaae603203ef143d198edafa75e81
     while run:
 
         # This state signifies the running, and working envirment
@@ -124,7 +152,6 @@ def behaviour():
             angularVelocity -> np.float: 0.0
             """
             currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory) 
-
             # Godert
             """
             INPUT
@@ -180,23 +207,32 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
+<<<<<<< HEAD
             
             currentPositions, currentVelocities, currentOrientations = robotMain(currentPositions, currentVelocities[0], currentOrientations, angularVelocity, env)
 
+=======
+            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+>>>>>>> 18738f0177eaaae603203ef143d198edafa75e81
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
+            print("currentPositions[0,:]", currentPositions[0,:])
+            print("trajectory[-1,:]", trajectory[-1,:])
+            print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]))
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]) < 1:
-                state = 1
+               state = 1
+
+
+            timestep += 1
 
         # This state signifies that we have finished
         if state == 1:
             print("We have reached our goal")
             run = False
 
-        timestep += 1
 
 
 behaviour()

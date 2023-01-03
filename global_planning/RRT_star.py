@@ -13,14 +13,15 @@ class obstacleSquare:
     Input:  x, y: center of obstacle
             size: length of side of obstacle
     '''
-    def __init__(self, x, y, size):
+    def __init__(self, x, y, size_x, size_y):
         self.x = x
         self.y = y
-        self.size = size
-        self.x1 = x - size/2
-        self.x2 = x + size/2
-        self.y1 = y - size/2
-        self.y2 = y + size/2
+        self.size_x = size_x
+        self.size_y = size_y
+        self.x1 = x - size_x/2
+        self.x2 = x + size_x/2
+        self.y1 = y - size_y/2
+        self.y2 = y + size_y/2
 class RRT_star:
     ''' 
     Class for RRT star planning 
@@ -58,11 +59,11 @@ class RRT_star:
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 400 #maximum number of iterations
+        self.maxIter = 2 #maximum number of iterations
         self.probGoal = 0.01 #probability to sample goal 
-        self.threshold = 20 #radius of accepted area within goal
-        self.maxExpansion = 4 #max distance to expand each collision free step
-        self.searchRadius = 6 #radius to find nearest neighbors for RRT* optimilization 
+        self.threshold = 15 #radius of accepted area within goal
+        self.maxExpansion = 1 #max distance to expand each collision free step
+        self.searchRadius = 1 #radius to find nearest neighbors for RRT* optimilization 
     
     def planning(self):
         '''
@@ -197,16 +198,20 @@ class RRT_star:
         Input:  node1: start node
                 node2: end node
                 obstacleList: list of obstacles as polygons [obstacle1, obstacle2, ...]
+                r = radius of the robot
         Output: True if no collision, False if collision
         '''
         #create line object 
         line = LineString([(node1.x, node1.y), (node2.x, node2.y)])
         for obs in self.obstacleList:
-            r=1 
+            r=0.2
             polygon = shapely.geometry.box(obs.x1-r, obs.y1-r, obs.x2+r, obs.y2+r)
             if line.intersects(polygon):
                 return False
         return True
+
+
+
 
     def finalPath(self, finalNode):
         '''
@@ -242,7 +247,7 @@ class RRT_star:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'g-')
 
         for obs in self.obstacleList:
-            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
+            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size_x,obs.size_y, fc = 'blue', ec='red'))
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
@@ -263,26 +268,27 @@ class RRT_star:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'r--')
         
         for obs in self.obstacleList:
-            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
+            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size_x,obs.size_y, fc = 'blue', ec='red'))
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
         plt.figtext(0.5, 0.01, 'RRT*, cost =' + str(self.cost(self.nodeList[-1])), wrap=True, horizontalalignment='center', fontsize=12)
         plt.pause(0.01)
 
-def main(): 
+def main(obstacles,start=None): 
     '''
     Main function
     Specify start, goal, obstacles, and random area
+    
     '''
-    obstacle1 = obstacleSquare(12,5,5)
-    obstacle2 = obstacleSquare(20,20,10)
-    obstacle3 = obstacleSquare(32,40,8)
-    obstacle4 = obstacleSquare(35,10,7)
-    obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4]
-    start = [2,2]
-    goal = [45, 43]
-    randArea = [0,50]
+    obstacleList = []
+    for i in range(len(obstacles)):
+        obstacle = obstacleSquare(obstacles[i][0],obstacles[i][1],obstacles[i][2],obstacles[i][3])
+        obstacleList.append(obstacle)    
+
+    start = start
+    goal = [-8, -5]
+    randArea = [-10,10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     path = rrt.planning()
     trajectory = []
