@@ -3,7 +3,7 @@
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
-from env.holonomic_robot_main import initEnv, robotMain
+from env.holonomic_robot_main_test import initEnv, robotMain
 
 # from collision_avoidance.robot_class import Robot
 
@@ -51,20 +51,18 @@ def behaviour():
     '''
     Heb het stuk van momma hier heen verplaatst
     '''
+    env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=True, maps=1)
     
-    trajectory = mainRRT()
+    trajectory = mainRRT(obstacles,start=currentPositions[0])
     trajectory = np.array(trajectory).reshape((len(trajectory),2))
-    
+    trajectory = trajectory[::-1]
     '''
-    Hier initialiseer ik de enviroment
+    Hier initialiseerd de enviroment
     '''
+    print("TRAJECTORY =", trajectory)
     
-    env = initEnv(goal=True)      
-    
-    
-    
+    timestep = 0 
     while run:
-        timestep = 0
 
         # This state signifies the running, and working envirment
         if state == 0: 
@@ -116,7 +114,6 @@ def behaviour():
             angularVelocity -> np.float: 0.0
             """
             currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory) 
-
             # Godert
             """
             INPUT
@@ -152,22 +149,26 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, currentVelocities, currentOrientations = robotMain(currentPositions, currentVelocities[0], currentOrientations, angularVelocity, env)
-
+            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
+            print("currentPositions[0,:]", currentPositions[0,:])
+            print("trajectory[-1,:]", trajectory[-1,:])
+            print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]))
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]) < 1:
-                state = 1
+               state = 1
+
+
+            timestep += 1
 
         # This state signifies that we have finished
         if state == 1:
             print("We have reached our goal")
             run = False
 
-        timestep += 1
 
 
 behaviour()

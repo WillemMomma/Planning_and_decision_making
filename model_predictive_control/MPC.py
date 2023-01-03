@@ -225,7 +225,7 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
     
     # fig, ax = plt.subplots()
 
-    timestep = 3 
+    timestep = 3
 
     for i in range(1):
          
