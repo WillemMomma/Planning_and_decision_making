@@ -1,91 +1,9 @@
-import cvxpy as cp
 import matplotlib.pyplot as plt
 import numpy as np
-from tqdm import tqdm
 
-class UniCycleModel:
-    """
-    Defining the vehicle dynamics as an LTV
-    """
-
-    def __init__(self, dt):
-        # Euler discretization
-        self.A = np.eye(3)
-        self.X = np.array([[1],[1],[0]])
-        self.B = np.array([ [np.cos(self.X[2])[0],0],
-                            [0,np.sin(self.X[2])[0]],
-                            [0,1]])
-
-        self.dt = dt
-
-        
-    def nextX(self, u):
-        """
-        Iterate over to the next x
-        
-        x -> current state  : np.array
-        u -> input : np.array
-        return -> next state : np.array
-        """
-
-        # Updating the arrays
-        self.X = self.A.dot(self.X) + self.B.dot(u.T) * self.dt
-        self.B = np.array([ [np.cos(self.X[2])[0],0],
-                            [np.sin(self.X[2])[0],0],
-                            [0,1]])
-        return self.X
-
-def mpcControl(error, N, xInit, xTarget):
-    """
-    Control the vehicle using MPC it is assumed that the operater can only alter the acceleration
-    
-\
-    Normally we would have an LTI, but now we have an LTV therefore
-    x[t+1] = A*x + B*u
-    
-    The state of the bot   ->  [x, y, theta] 
-    X represents the error -> [xError, yError, thereError]
-    U represents the input -> [v,theta]
-
-    A end B are error matrices packaged in the error variable
-
-    """
-    print("we are in MPC")
-    
-    weightInput = np.array([[1,0],[0,1]])    # Weight on the input
-    weightTracking = np.array([[100,0,0],[0,100,0],[0,0,10]]) # Weight on the tracking state
-    
-    cost = 0.
-    constraints = []
-    
-    # Create the optimization variables
-    x = cp.Variable((3, N + 1)) # cp.Variable((dim_1, dim_2))
-    u = cp.Variable((2, N))
-
-
-    # Initialize the current error
-    constraints += [x[:, 0] == error[1].reshape((3,))]  
-        
-    for k in range(N):
-        
-        nextError = error[0].reshape((3,3))@x[:,k] + error[2].reshape((3,2))@u[:, k]
-
-        # constraints
-        constraints += [x[:, k+1] == nextError]
-        constraints += [u[:, k] <= [3,3]]
-        constraints += [u[:, k] >= [-3,-3]]
-
-        # Minimize the cost function
-        cost += cp.quad_form(u[:, k], weightInput)
-        cost += cp.quad_form((x[:, k+1] ), weightTracking)
-
-    
-    # Solves the problem
-    problem = cp.Problem(cp.Minimize(cost), constraints)
-    problem.solve(solver=cp.OSQP)
-
-    # We return the MPC input and the next state (and also the plan for visualization)
-    return u[:, 0].value, x[:, 1].value, x[:, :].value, None
+from uni_cycle_model import UniCycleModel 
+from controller import mpcControl, PID
+from testers import plot, testerMPC, testerUni
 
 def errorFunction(t,dt,  currentState , path, o):
     """
@@ -138,126 +56,113 @@ def errorFunction(t,dt,  currentState , path, o):
 
     return (errorAmatrix, currentError,  errorBmatrix)
 
-def Run(t, curentState = False, path = [0], orient = 0 ):
-    """
-    Start simulating the run of the model and plot the results 
-    
-    input ->  None
-    output-> Plots
-    """
-    
-    # Inintialize variables
-    dt = 0.1
+# State placeholders
+states = []
+inputs = []
 
-    if t < 2:
-        return
-
-    error = errorFunction(t,dt, curentState , path, orient)
-    input_   = mpcControl(error, 10, curentState[t,:], path[t, :])
-    
-    return input_
-
-def plot(ax,input, target):
-   
-    input = input[2:]
-
-    for i in range(len(input)):
-        ax.plot(input[:i,0],input[:i,1])
-        ax.plot(target[:i,0],target[:i,1])
-        # Note that using time.sleep does *not* work here!
-        plt.pause(0.3)
-
-def testerMPC():
-    dummyDataX = np.arange(0 ,100 ,0.1)
-    dummyDataY = np.arange(0 ,10 ,0.01)
-    target = np.concatenate((dummyDataX,dummyDataY), axis=0).reshape((100,2))
-
-    fig, ax = plt.subplots()
-
-    timestep = 0 
-
-    inputHistory = []
-    for i in range(200):
-        input = Run(timestep, target, target )
-        inputHistory.append(input)
-        timestep += 1 
-    
-    # Plotting 
-    return inputHistory
-
-def testerUni():
-
-    model = UniCycleModel(0.1)
-    fig, ax = plt.subplots()
-    stateHistory = []
-    for i in range(2,35):
-        input = np.array([[1,1]])
-        state = model.nextX(input)
-        print(state)
-
-        stateHistory.append(state)
-    stateHistory = (np.array(stateHistory))
-
-
-    plot(ax,stateHistory,stateHistory )
 
 
 def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = None): 
     """
-    Hallo bary
+    Returns the desired velocity and angular velocity 
+
+    INPUT
+    timestep -> int : 0
+    currentPosition -> np.array() : [x,y,theta] : shape (3,1)
+    currentOrientation -> np.float : 0.0
+    trajectory -> np.array() : shape -> (n,2)
+
+    OUTPUT
+    currentVelocities[0] -> np.float: 0.0
+    angularVelocity -> np.float: 0.0
     """
 
+    testing = False
+    global states
+    global inputs
+    dt = 0.1
 
-    states = []
-    inputs = []
-    # intialize vehicle
-    uni = UniCycleModel(0.1)
+   
+    # Check if we are in testing mode
+    if (trajectory is None and currentOrtientation is None) and currentPostion is None: 
+        testing = True
 
-    # Check if main is passing arguments otherwise use testdata
-    if currentOrtientation is None: 
+    # Reformatting 
+    currentPostion = np.array([currentPostion[0],currentPostion[1],currentOrtientation]).reshape((3,1))
+
+    # Sanity check for testing mode
+    if not testing: 
+        assert currentPostion.any() != None,      "Kolff MPC is expecting a currentPostion reveiced None"
+        assert currentOrtientation != None,       "Kolff MPC is expecting a currentOrientation reveiced None"
+        assert trajectory.any() != None,          "Kolff MPC is expecting a trajectory reveiced None"
+
+        assert currentPostion.shape == (3,1),                    f"Kollf MPC requires currentpostion must be of shape (3,1) recieved: {currentPostion.shape}"
+        assert isinstance(currentOrtientation, np.floating),     f"Kollf MPC requires currentOrtientation must be of type numpy.float64()"
+        assert trajectory.shape[0] > 3,                      f"MPC requires more than three points for the trajectory reveiced {trajectory.shape[0]}"
+        assert trajectory.shape[1] == 2,                     f"MPC requires 2 positional arguments for trajectory received {trajectory.shape[0]}"
+
+    
+    # Initialize test variables
+    if testing: 
+        
+        uni = UniCycleModel(dt)
         dummyDataX = np.arange(1 ,101 ,0.1)
         dummyDataY = np.sin(dummyDataX)
-        target = np.vstack((dummyDataX,dummyDataY)).T
+        target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
+        timestep = 0                                    # Current time
+        lengthRange = 100 
     else: 
-        # Get the right window 
         windowOffset = 3 
-        target = trajectory[t - windowOffset : t + 10 - windowOffset ,:]
+        target = trajectory[t - windowOffset : t + 10 - windowOffset ,:]    # Find reference window using time step
+        timestep = windowOffset                                             # Middel of window
+        lengthRange = 1 
     
-    # fig, ax = plt.subplots()
+    for i in range(lengthRange):          
+        if testing:
+            o = uni.X[2][0]   
+        else:
+            o = np.float64(currentOrtientation)
 
-    timestep = 3
-
-    for i in range(1):
-         
-        # Check if main is passing arguments otherwise use testdata
-        if currentOrtientation is None: 
-            o = uni.X[2][0]
-        else: 
-            o = np.float(currentOrtientation)
-            
         if len(states) > 3:
-            input = Run(timestep - 2 , np.array(states), target, o )
-            input = input[0]
+            """
+            The error model needs to differentiate the path of the current time step and the previous timestep
+            therfore we need at least three points in the state array
+            """
+            error = errorFunction(timestep - 2 ,dt, np.array(states) , target, o)
+            input   = mpcControl(error, 10, np.array(states)[timestep - 2,:], target[timestep - 2, :])[0]
             inputs.append(input) 
         else: 
-            input = np.array([[0,0]])
+            input = np.array([0,0])
         
         # Check if main is passing arguments otherwise use testdata
-        if currentPostion is None:
+        if testing:
             currentState = uni.nextX(input.reshape((1,2)))
             states.append([currentState.tolist()[0][0], currentState.tolist()[1][0]])
+            timestep += 1 
+            print(f"this is the currentstate: {o} ")
         else: 
             currentState = currentPostion
             states.append(currentState)
-
-        print(f"this is the currentstate: {o} ")
-                
-        return input[0][0], input[0][1]
-
-    # fig, ax = plt.subplots()
-    # plot(ax,  np.array(states), target )
+            return input[0], input[1]
 
 
+    if testing:
+        fig, ax = plt.subplots()
+        plot(ax,  np.array(states), target )
 
-    
+
+dummyDataX = np.arange(1 ,101 ,0.1)
+dummyDataY = np.sin(dummyDataX)
+target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
+uni = UniCycleModel(0.1)
+input = np.array([[0,0]])
+
+for i in range(0,100):
+    pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
+    currentTimePos = [pos[0][0],pos[0][1]]
+    input = mainMPC(i, currentTimePos, uni.X[2][0] , target)
+    input = np.array(list(input))
+
+fig, ax = plt.subplots()
+plot(ax,  np.array(states), target )
 
