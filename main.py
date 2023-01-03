@@ -47,18 +47,6 @@ def behaviour():
     placeholderVel = np.zeros((10,))
     placeholderOr = np.zeros((10,))
     placeholderTra = np.zeros((100,2))
-<<<<<<< HEAD
-    currentPositions , currentVelocities,currentOrientations , trajectory = [placeholderPos, placeholderVel,\
-                                                                            placeholderOr, placeholderTra]
-    # Init robot list
-    robot_list = []
-    radius = 0.2
-
-    # Init timestep with value 0
-    timestep = 0
-
-    # Run loop
-=======
     currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
                                                                             placeholderOr, placeholderTra] 
         
@@ -78,7 +66,6 @@ def behaviour():
     print("TRAJECTORY =", trajectory)
     
     timestep = 0 
->>>>>>> 18738f0177eaaae603203ef143d198edafa75e81
     while run:
 
         # This state signifies the running, and working envirment
@@ -207,13 +194,7 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-<<<<<<< HEAD
-            
-            currentPositions, currentVelocities, currentOrientations = robotMain(currentPositions, currentVelocities[0], currentOrientations, angularVelocity, env)
-
-=======
             currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
->>>>>>> 18738f0177eaaae603203ef143d198edafa75e81
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
