@@ -45,7 +45,7 @@ def detect(robot_list):
                 p2 = polar2cart(cone_distance, angle + cone_angle)
 
                 # Offset the cone with velocity of other robot and plot the cone and get thee points for triangle
-                center = [our_robot.x + robot.desired_vx, our_robot.y + robot.desired_vy]
+                center = [our_robot.x + robot.input_vx, our_robot.y + robot.input_vy]
                 p1 += center
                 p2 += center
 
@@ -76,37 +76,41 @@ def collision_check(velocity, cones):
 # Resolve collision
 def resolve(our_robot, cones):
 
+    dt = our_robot.dt
+
     # Set closest sampled point distance and range within to sample for new velocities
     closest_distance = 1e6
     new_velocity = [0, 0]
 
     # Range in which to sample for new velocities
-    min_velocity = -1.5
-    max_velocity = 1.5
-    max_angle = deg2radian(15)
+    min_velocity = 0
+    max_velocity = 3
+    max_w = 3
+    # max_angle = deg2radian(15)
 
     # Desired velocity
-    v_desired = np.array([our_robot.desired_vx, our_robot.desired_vy])
-
-    # Direction and magnitude of desired velocity
-    _, desired_angle = cart2polar(v_desired)
+    v_input = np.array([our_robot.input_vx, our_robot.input_vy])
+    #
+    # # Direction and magnitude of desired velocity
+    # _, desired_angle = cart2polar(v_input)
 
     # Start sampling random velocities and keep one which is closest to desired velocity
     for i in range(20):
 
         # Sample velocity in more strictly taken range with angle and min/max vel
-        sampled_magnitude = random.uniform(min_velocity, max_velocity)
-        sampled_angle = random.uniform(-max_angle, max_angle)
-        new_angle = desired_angle + sampled_angle
-        vx, vy = polar2cart(sampled_magnitude, new_angle)
+        sampledVelocity = random.uniform(min_velocity, max_velocity)
+        sampledAngularVelocity = random.uniform(-max_w, max_w)
+        sampledAngle = our_robot.theta + sampledAngularVelocity*dt
+        vx, vy = polar2cart(sampledVelocity, sampledAngle)
 
-        sampled_velocity = Point(vx + our_robot.x, vy + our_robot.y)
+        # Create a point from the sampled velocity
+        velocityPoint = Point(vx + our_robot.x, vy + our_robot.y)
 
         # If no collision occurs for the newly sampled velocity
-        if not collision_check(sampled_velocity, cones):
+        if not collision_check(velocityPoint, cones):
 
             # Calc distance to desired velocity
-            dist = np.linalg.norm(v_desired - np.array([vx, vy]))
+            dist = np.linalg.norm(v_input - np.array([vx, vy]))
 
             # If newly sampled value is closest to desired velocity, keep this one
             if dist < closest_distance:
@@ -114,5 +118,7 @@ def resolve(our_robot, cones):
                 new_velocity = [vx, vy]
 
     # Set output of our robot to newly sampled velocity
+    our_robot.output_v = sampledVelocity
     our_robot.output_vx = new_velocity[0]
     our_robot.output_vy = new_velocity[1]
+    our_robot.output_w = sampledAngularVelocity
