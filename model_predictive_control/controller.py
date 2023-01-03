@@ -52,3 +52,7 @@ def mpcControl(error, N, xInit, xTarget):
 
     # We return the MPC input and the next state (and also the plan for visualization)
     return u[:, 0].value, x[:, 1].value, x[:, :].value, None
+
+
+def PID():
+    pass

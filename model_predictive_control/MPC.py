@@ -49,8 +49,8 @@ def errorFunction(t,dt,  currentState , path, o):
                             [0,0],
                             [0,-dt]])
 
-    currentError = np.array([[xError[0]*np.cos(currentAngleBot) + yError[0] * np.sin(currentAngleBot)],
-                            [-xError[0] * np.sin(currentAngleBot) + yError[0] * np.cos(currentAngleBot)],
+    currentError = np.array([[xError*np.cos(currentAngleBot) + yError * np.sin(currentAngleBot)],
+                            [-xError * np.sin(currentAngleBot) + yError * np.cos(currentAngleBot)],
                             [thetaError]])
 
 
@@ -81,10 +81,14 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
     global states
     global inputs
     dt = 0.1
-    
+
+   
     # Check if we are in testing mode
     if (trajectory is None and currentOrtientation is None) and currentPostion is None: 
         testing = True
+
+    # Reformatting 
+    currentPostion = np.array([currentPostion[0],currentPostion[1],currentOrtientation]).reshape((3,1))
 
     # Sanity check for testing mode
     if not testing: 
@@ -154,9 +158,11 @@ uni = UniCycleModel(0.1)
 input = np.array([[0,0]])
 
 for i in range(0,100):
-    currentTimePos = uni.nextX(input.reshape((1,2)))
+    pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
+    currentTimePos = [pos[0][0],pos[0][1]]
     input = mainMPC(i, currentTimePos, uni.X[2][0] , target)
     input = np.array(list(input))
 
 fig, ax = plt.subplots()
 plot(ax,  np.array(states), target )
+
