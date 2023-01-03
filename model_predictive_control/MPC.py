@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from uni_cycle_model import UniCycleModel 
-from controller import mpcControl, PID
-from testers import plot, testerMPC, testerUni
+from model_predictive_control.uni_cycle_model import UniCycleModel 
+from model_predictive_control.controller import mpcControl, PID
+from model_predictive_control.testers import plot, testerMPC, testerUni
 
 def errorFunction(t,dt,  currentState , path, o):
     """
@@ -86,9 +86,11 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
     # Check if we are in testing mode
     if (trajectory is None and currentOrtientation is None) and currentPostion is None: 
         testing = True
+    else:
+        # Reformatting 
+        currentPostion = np.array([currentPostion[0],currentPostion[1],currentOrtientation]).reshape((3,1))
 
-    # Reformatting 
-    currentPostion = np.array([currentPostion[0],currentPostion[1],currentOrtientation]).reshape((3,1))
+
 
     # Sanity check for testing mode
     if not testing: 
@@ -151,18 +153,20 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         plot(ax,  np.array(states), target )
 
 
-dummyDataX = np.arange(1 ,101 ,0.1)
-dummyDataY = np.sin(dummyDataX)
-target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
-uni = UniCycleModel(0.1)
-input = np.array([[0,0]])
+# dummyDataX = np.arange(1 ,101 ,0.1)
+# dummyDataY = np.sin(dummyDataX)
+# target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
+# uni = UniCycleModel(0.1)
+# input = np.array([[0,0]])
 
-for i in range(0,100):
-    pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
-    currentTimePos = [pos[0][0],pos[0][1]]
-    input = mainMPC(i, currentTimePos, uni.X[2][0] , target)
-    input = np.array(list(input))
+# for i in range(0,100):
+#     pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
+#     currentTimePos = [pos[0][0],pos[0][1]]
+#     input = mainMPC(i, currentTimePos, uni.X[2][0] , target)
+#     input = np.array(list(input))
 
-fig, ax = plt.subplots()
-plot(ax,  np.array(states), target )
+
+
+# fig, ax = plt.subplots()
+# plot(ax,  np.array(states), target )
 

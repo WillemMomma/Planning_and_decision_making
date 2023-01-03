@@ -22,13 +22,13 @@ def mainCollisionAvoidance(robot_list=None):
         robot4 = Robot(10, 15, 0.2, 0.5, 0, 0, False)
         robot_list = [robot1, robot2, robot3, robot4]
 
-    # Setup plot
-    fig = plt.figure()
-    plt.minorticks_on()
-    plt.axis('equal')
-    plt.xlim(-15, 15)
-    plt.ylim(-15, 15)
-    plt.cla()
+    # # Setup plot
+    # fig = plt.figure()
+    # plt.minorticks_on()
+    # plt.axis('equal')
+    # plt.xlim(-15, 15)
+    # plt.ylim(-15, 15)
+    # plt.cla()
 
     # Get the robot we're controlling from the whole list
     our_robot = None
@@ -69,15 +69,15 @@ def mainCollisionAvoidance(robot_list=None):
 
     print(our_robot.output_vx)
 
-    # Draw and move the robots for this timestep
-    for robot in robot_list:
-        robot.draw(plt)
+    # # Draw and move the robots for this timestep
+    # for robot in robot_list:
+        # robot.draw(plt)
         # robot.move(dt)
 
-    # Show and close plot
-    plt.show(block=False)
-    plt.pause(0.1)
-    plt.close(fig)
+    # # Show and close plot
+    # plt.show(block=False)
+    # plt.pause(0.1)
+    # plt.close(fig)
 
     return robot_list
 
