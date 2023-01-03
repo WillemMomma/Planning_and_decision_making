@@ -59,7 +59,7 @@ def behaviour():
     Hier initialiseer ik de enviroment
     '''
     
-    env = initEnv(goal=True)      
+    # env = initEnv(goal=True)      
     
     
     
@@ -105,9 +105,11 @@ def behaviour():
                     
             # Jasper
             """
+            Returns the desired velocity and angular velocity 
+
             INPUT
             timestep -> int : 0
-            currentPosition -> list : [x,y]
+            currentPosition -> np.array() : [x,y,theta] : shape (3,1)
             currentOrientation -> np.float : 0.0
             trajectory -> np.array() : shape -> (n,2)
 
@@ -152,6 +154,7 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
+            
             currentPositions, currentVelocities, currentOrientations = robotMain(currentPositions, currentVelocities[0], currentOrientations, angularVelocity, env)
 
             # Below is the pseudocode provided
