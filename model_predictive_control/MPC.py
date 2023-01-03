@@ -117,17 +117,11 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         timestep = windowOffset                                             # Middel of window
         lengthRange = 1 
     
-<<<<<<< HEAD
     for i in range(lengthRange):          
         if testing:
             o = uni.X[2][0]   
         else:
             o = np.float64(currentOrtientation)
-=======
-    # fig, ax = plt.subplots()
-
-    timestep = 3
->>>>>>> 18738f0177eaaae603203ef143d198edafa75e81
 
         if len(states) > 3:
             """
