@@ -3,9 +3,7 @@
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
-from env.holonomic_robot_main import initEnv, robotMain
-
-# from collision_avoidance.robot_class import Robot
+from collision_avoidance.robot_class import Robot
 
 import numpy as np
 
@@ -43,66 +41,74 @@ def behaviour():
     placeholderVel = np.zeros((10,))
     placeholderOr = np.zeros((10,))
     placeholderTra = np.zeros((100,2))
-    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
-                                                                            placeholderOr, placeholderTra] 
-        
-        
+    currentPositions , currentVelocities,currentOrientations , trajectory = [placeholderPos, placeholderVel,\
+                                                                            placeholderOr, placeholderTra]
+    # Init robot list
+    robot_list = []
+    radius = 0.2
 
-    '''
-    Heb het stuk van momma hier heen verplaatst
-    '''
-    
-    trajectory = mainRRT()
-    trajectory = np.array(trajectory).reshape((len(trajectory),2))
-    
-    '''
-    Hier initialiseer ik de enviroment
-    '''
-    
-    # env = initEnv(goal=True)      
-    
-    
-    
+    # Init timestep with value 0
+    timestep = 0
+
+    # Run loop
     while run:
-        timestep = 0
 
         # This state signifies the running, and working envirment
         if state == 0: 
 
             # For the first iteration we have to create a Map of the enviroment and a path to the goal
             if timestep == 0:   
-                    velocity = np.float64(0)
-                    angularVelocity = np.float64(0) 
+                velocity = np.float64(0)
+                angularVelocity = np.float64(0)
 
-                    # Willem Kolff
-                    """
-                    INPUT : 
-                    velocity -> np.float : 0.0
-                    angularVelocity -> np.float : 0.0
+                # Willem Kolff
+                """
+                INPUT : 
+                velocity -> np.float : 0.0
+                angularVelocity -> np.float : 0.0
+                
+                OUTPUT 
+                Map -> UNKNOWN
+                currentPositions : np.array() : shape -> (m, 2)
+                currentVelocities : np.array() : shape -> (m,)
+                currentOrientations : np.array() : shape -> (m,)
+                """
+
+                # Below is the pseudocode provided
+                # Please import simulation as well
+                # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
+
+                # Willem kOLFF
+                # Please alter the code in the mainRRT as well to accept the map input
+                # This funtion should recieve the map as input @Willem Kolff
+
+                # Below is the pseudocode provided
+                # trajectory = mainRRT(map)
+
+                # Delete this if your implementation works this is for test purposes
+                trajectory = mainRRT()
+                trajectory = np.array(trajectory).reshape((len(trajectory),2))
+
+                for i in range(len(currentPositions)):
+                    if i == 0:
+                        robot_list.append(Robot(currentPositions[i, 0],
+                                                currentPositions[i, 1],
+                                                radius,
+                                                currentVelocities[i],
+                                                angularVelocity,
+                                                currentOrientations[i],
+                                                True))
+                    else:
+                        robot_list.append(Robot(currentPositions[i, 0],
+                                                currentPositions[i, 1],
+                                                radius,
+                                                currentVelocities[i],
+                                                0,
+                                                currentOrientations[i],
+                                                False))
 
 
-                    OUTPUT 
-                    Map -> UNKNOWN
-                    currentPositions : np.array() : shape -> (m, 2)
-                    currentVelocities : np.array() : shape -> (m,)
-                    currentOrientations : np.array() : shape -> (m,)
-                    """
-
-                    # Below is the pseudocode provided
-                    # Please import simulation as well
-                    # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
-                    
-                    # Willem kOLFF
-                    # Please alter the code in the mainRRT as well to accept the map input
-                    # This funtion should recieve the map as input @Willem Kolff
-                    
-                    # Below is the pseudocode provided
-                    # trajectory = mainRRT(map)
-
-
-                    # Delete this if your implementation works this is for test purposes
-                              
-                    
+            
             # Jasper
             """
             Returns the desired velocity and angular velocity 
@@ -125,16 +131,36 @@ def behaviour():
 
             m = number of robots in env including our own robot !!!
 
-            positions -> np.array() : shape -> (m, 2)
-            velocities -> np.array() : shape -> (m,)
-            angularVelocities -> np.float: 0.0
-            orientations -> np.array() : shape -> (m,)
+            robot_list : list of length m filled with Robot objects
+            # positions -> np.array() : shape -> (m, 2)
+            # velocities -> np.array() : shape -> (m,)
+            # angularVelocities -> np.float: 0.0
+            # orientations -> np.array() : shape -> (m,)
 
             OUTPUT
-            velocities -> np.float : 0
-            angularVelocities -> np.float() : 0 
+            robot_list : list of length m filled with Robot objects
+            # velocities -> np.float : 0
+            # angularVelocities -> np.float() : 0 
             """
             #velocity , angularVelocity = mainCollisionAvoidance(positions = currentPositions, velocities = currentVelocities, angularVelocities = angularVelocity, orientations = currentOrientations)
+
+            for i in range(len(robot_list)):
+                if i == 0:
+                    robot_list[i].update(currentPositions[i, 0],
+                                         currentPositions[i, 1],
+                                         currentVelocities[i],
+                                         angularVelocity,
+                                         currentOrientations[i])
+                else:
+                    robot_list[i].update(currentPositions[i, 0],
+                                         currentPositions[i, 1],
+                                         currentVelocities[i],
+                                         0,
+                                         currentOrientations[i])
+
+            robot_list = mainCollisionAvoidance(robot_list)
+            velocity = robot_list[0].output_v
+            angularVelocity = robot_list[0].output_w
 
             # Calculate the desired input for the robot using MPC
             # It is important that all the variables are provided in the correct format @Willem Kolff    
