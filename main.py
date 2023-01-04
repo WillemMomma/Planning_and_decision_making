@@ -2,7 +2,7 @@
 # import env from env.env
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
-from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
+# from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
 from collision_avoidance.robot_class import Robot
 # from env.holonomic_robot_main_test import initEnv, robotMain
 import matplotlib.pyplot as plt
@@ -43,9 +43,10 @@ def behaviour():
     # Start in the correct state
     state = 0
     run = True
-    placeholderPos = np.zeros((1,2))
-    placeholderVel = np.zeros((1,))
-    placeholderOr = np.zeros((1,))
+    placeholderPos = np.zeros((2,2))
+    placeholderPos[1, :] = [3.4, 0]
+    placeholderVel = np.zeros((2,))
+    placeholderOr = np.zeros((2,))
     placeholderTra = np.zeros((100,2))
     currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
                                                                             placeholderOr, placeholderTra] 
@@ -147,7 +148,8 @@ def behaviour():
             angularVelocity -> np.float: 0.0
             """
 
-            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], target) 
+            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], target)
+
             # Godert
             """
             INPUT
@@ -166,29 +168,45 @@ def behaviour():
             # angularVelocities -> np.float() : 0 
             """
 
+            # First update the other robots
             for i in range(len(robot_list)):
-                if i == 0:
-                    robot_list[i].update(currentPositions[i, 0],
-                                         currentPositions[i, 1],
-                                         currentVelocities[i],
-                                         angularVelocity,
-                                         currentOrientations[i])
-                else:
-                    robot_list[i].update(currentPositions[i, 0],
-                                         currentPositions[i, 1],
-                                         currentVelocities[i],
-                                         0,
-                                         currentOrientations[i])
+                if not robot_list[i].our:
 
-            robot_list = mainCollisionAvoidance(robot_list)
-            velocity = robot_list[0].output_v
-            angularVelocity = robot_list[0].output_w
+                    # Update the position and velocity of the other robots
+                    robot_list[i].update_other(currentPositions[i, 0],
+                                               currentPositions[i, 1],
+                                               currentVelocities[i],
+                                               0,
+                                               currentOrientations[i])
+
+            # For our robot
+            for i in range(len(robot_list)):
+                if robot_list[i].our:
+
+                    if abs(robot_list[0].x - robot_list[1].x) < 0:
+                        robot_list[i].plotting = True
+                    else:
+                        robot_list[i].plotting = False
+
+                    # Update our robot and check for collision
+                    robot_list[i].update_our(currentPositions[i, 0],
+                                             currentPositions[i, 1],
+                                             currentVelocities[i],
+                                             angularVelocity,
+                                             currentOrientations[i],
+                                             robot_list)
+
+                    # Update the velocity and angular_velocity to be collision free
+                    currentVelocities[0] = robot_list[i].output_v
+                    angularVelocity = robot_list[i].output_w
+
 
             godert_input = np.array([currentVelocities[0], angularVelocity])
-            xy  = uni.nextX(godert_input.reshape((1,2)))[:2]
+            xytheta = uni.nextX(godert_input.reshape((1,2)))
+            xy = xytheta[:2]
             jasperPositions.append(xy.reshape(1,2))
             currentPositions[0,:] = xy.flatten()           
-            currentOrientations[0] =  uni.nextX(godert_input.reshape((1,2)))[2]
+            currentOrientations[0] = xytheta[2]
 
 
 
@@ -219,7 +237,7 @@ def behaviour():
             # print("currentPositions[0,:]", currentPositions[0,:])
             # print("trajectory[-1,:]", trajectory[-1,:])
             # print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]))
-            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]) < 1:
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - [1e3, 1e3]) < 1:
                state = 1
 
 
@@ -229,9 +247,12 @@ def behaviour():
         if state == 1:
             print("We have reached our goal")
             run = False
+
     print("jasperPositions")
     print(np.array(jasperPositions)[0,:],np.array(jasperPositions)[1,:])
     print(np.sum(np.array(jasperPositions), axis = 1 )[:,0])
+
+    plt.scatter(placeholderPos[:, 0], placeholderPos[:, 1], 400)
     plt.plot(np.sum(np.array(jasperPositions), axis = 1 )[:,0],np.sum(np.array(jasperPositions), axis = 1 )[:,1])
     plt.show()
 
