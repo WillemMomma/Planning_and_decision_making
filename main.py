@@ -130,8 +130,6 @@ def behaviour():
                                                 currentOrientations[i],
                                                 False))
 
-
-            
             # Jasper
             """
             Returns the desired velocity and angular velocity 
@@ -182,15 +180,14 @@ def behaviour():
 
             robot_list = mainCollisionAvoidance(robot_list)
             velocity = robot_list[0].output_v
-            angularVelocity = robot_list[0].output_w
+            # angularVelocity = robot_list[0].output_w
 
+            # Godert jij moet deze waarden naar die van jou annpassen
             godert_input = np.array([currentVelocities[0], angularVelocity])
             xy  = uni.nextX(godert_input.reshape((1,2)))[:2]
             jasperPositions.append(xy.reshape(1,2))
             currentPositions[0,:] = xy.flatten()           
             currentOrientations[0] =  uni.nextX(godert_input.reshape((1,2)))[2]
-
-
 
             # Calculate the desired input for the robot using MPC
             # It is important that all the variables are provided in the correct format @Willem Kolff    
