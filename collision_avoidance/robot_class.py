@@ -43,21 +43,51 @@ class Robot:
         self.our = our
 
     def update_other(self, x, y, v, w, theta):
+        """""
+        Input: x -> float
+        y -> float
+        v -> float
+        w -> float
+        theta -> float
+
+        Output: None but all the variables of self are updated in this function
+        """""
 
         # Init position and radius of robot
         self.x = x
         self.y = y
 
-        # Input given to the robot at initialization
+        # Input given to the robot at update
         self.input_v = v
         self.input_w = w
         self.input_vx = np.cos(theta + w*self.dt) * v
         self.input_vy = np.sin(theta + w*self.dt) * v
 
+        # Set previous and output equal to input
+        self.previous_v = self.input_v
+        self.previous_w = self.input_w
+        self.previous_vx = self.input_vx
+        self.previous_vy = self.input_vy
+
+        self.output_v = self.input_v
+        self.output_w = self.input_w
+        self.output_vx = self.input_vx
+        self.output_vy = self.input_vy
+
         # Init orientation and if it is the to-be-controlled robot
         self.theta = theta
 
     def update_our(self, x, y, v, w, theta, robot_list):
+        """""
+        Input: x -> float
+        y -> float
+        v -> float
+        w -> float
+        theta -> float
+        robot_list -> list filled with Robot objects
+
+        Output: None but all the variables of self are updated in this function
+        """""
 
         # Update information incoming from the main
         self.x = x
@@ -124,6 +154,12 @@ class Robot:
             plt.close(fig)
 
     def detect(self, robot_list):
+        """""
+        Input: robot_list -> list filled with Robot objects
+        
+        Output: cones -> list filled with shapely.geometry.Polygon objects 
+                        which resemble the collision areas in velocity space
+        """""
 
         # Hyper parameters
         cone_size = 1000
@@ -145,6 +181,7 @@ class Robot:
                 # Direction and distance between two robots
                 dist, angle = cart2polar(p_rel)
 
+                # Only check for robots within threshold_distance
                 if dist < threshold_distance:
 
                     # Calculate the angle of the velocity obstacle and calculate points to draw cone
@@ -153,14 +190,16 @@ class Robot:
                     p1 = polar2cart(cone_distance, angle - cone_angle)
                     p2 = polar2cart(cone_distance, angle + cone_angle)
 
-                    # Offset the cone with velocity of other robot and plot the cone and get three points for triangle
+                    # Move collision free velocity space away from obstacle for extra safety
                     if dist < 0.75:
                         center = [self.x + robot.input_vx - p_rel[0]*dist, self.y + robot.input_vy - p_rel[1]*dist]
                     else:
                         center = [self.x + robot.input_vx, self.y + robot.input_vy]
+                    # Offset the cone with velocity of other robot and plot the cone and get three points for triangle
                     p1 += center
                     p2 += center
 
+                    # For plotting
                     if self.plotting:
                         # Plot the cone
                         plt.plot([center[0], p1[0]], [center[1], p1[1]], 'bo', linestyle="--", color="grey")
@@ -172,6 +211,14 @@ class Robot:
         return cones
 
     def resolve(self, cones):
+        """""
+        Input: cones -> list filled with shapely.geometry.Polygon objects 
+                        which resemble the collision areas in velocity space
+
+        Output: None
+        
+        Function finds a new velocity for our robot which is collision free in velocity space
+        """""
 
         # Set closest sampled point distance and range within to sample for new velocities
         closest_distance = 1e6
@@ -185,11 +232,22 @@ class Robot:
         # Desired velocity without angular velocity
         v_input = np.array([self.input_vx + self.x, self.input_vy + self.y])
 
+        # Plot and found toggle
         plt_resolve = False
         found = False
 
-        # Start sampling random velocities and keep one which is closest to desired velocity
+        # While no collsion free velocity is found, keep sampling
         while not found:
+
+            # Init plot and plot cone if plt_resolve
+            if plt_resolve:
+                fig = plt.figure()
+                plt.gca()
+                plt.minorticks_on()
+                plt.axis('equal')
+                plt.xlim(0, 5)
+                for cone in cones:
+                    plt.plot(*cone.exterior.xy)
 
             # Try 10 times to find a new velocity
             for i in range(10):
@@ -197,31 +255,15 @@ class Robot:
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
                 sampledAngularVelocity = random.uniform(-max_w, max_w)
-                # sampledAngle = self.theta + sampledAngularVelocity * self.dt
                 vx = np.cos(self.theta + sampledAngularVelocity * self.dt) * sampledVelocity
                 vy = np.sin(self.theta + sampledAngularVelocity * self.dt) * sampledVelocity
-                # vx, vy = polar2cart(sampledVelocity, sampledAngle)
 
                 # Create a point from the sampled velocity
                 velocityPoint = Point(vx + self.x, vy + self.y)
 
                 # Plot the sampled velocity
                 if plt_resolve:
-                    fig = plt.figure()
-                    plt.gca()
-                    plt.minorticks_on()
-                    plt.axis('equal')
-                    plt.xlim(0, 5)
-
-                    for cone in cones:
-                        plt.plot(*cone.exterior.xy)
-
                     plt.scatter(velocityPoint.x, velocityPoint.y)
-
-                    # Show and close plot
-                    plt.show(block=False)
-                    plt.pause(0.1)
-                    plt.close(fig)
 
                 # If no collision occurs for the newly sampled velocity
                 if not self.collision_check(velocityPoint, cones):
@@ -229,7 +271,7 @@ class Robot:
                     # Toggle found to True
                     found = True
 
-                    # Calc distance to desired velocity
+                    # Calc distance to desired velocity with a weight to a high angular velocity
                     dist = np.linalg.norm(v_input - np.array([vx, vy])) + 100*sampledAngularVelocity
 
                     # If newly sampled value is closest to desired velocity, keep this one
@@ -237,6 +279,14 @@ class Robot:
                         closest_distance = dist
                         new_velocity = [sampledVelocity, sampledAngularVelocity]
 
+            # Show and close plot
+            if plt_resolve:
+                # Show and close plot
+                plt.show(block=False)
+                plt.pause(0.1)
+                plt.close(fig)
+
+            # If no collision free velocity is found, increase the search area
             max_w += 1
 
         # # Set output of our robot to newly sampled velocity
@@ -245,6 +295,14 @@ class Robot:
 
     @staticmethod
     def collision_check(velocity, cones):
+        """""
+        Input: velocity -> shapely.geometry.Point object 
+        cones -> list filled with shapely.geometry.Polygon objects which resemble the collision areas in velocity space
+
+        Output: collision -> Boolean
+
+        Function checks if a velocity is collsion free in velocity space
+        """""
 
         # Set collision to False and start check
         collision = False
@@ -256,11 +314,14 @@ class Robot:
 
         return collision
 
-    def move(self, dt):
-        self.x += self.output_vx * dt
-        self.y += self.output_vy * dt
-
     def draw(self, plt):
+        """""
+        Input: plt -> Plot from matplotlib 
+
+        Output: None
+
+        Plots the robots in a plot
+        """""
         circle = plt.Circle((self.x, self.y), self.r)
         plt.gca().add_patch(circle)
 
