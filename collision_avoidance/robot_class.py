@@ -92,13 +92,12 @@ class Robot:
         # Update information incoming from the main
         self.x = x
         self.y = y
+        self.theta = theta
 
         self.input_v = v
         self.input_w = w
         self.input_vx = np.cos(theta + w*self.dt) * v
         self.input_vy = np.sin(theta + w*self.dt) * v
-
-        self.theta = theta
 
         # Plot the current velocity obstacles
         if self.plotting:
@@ -192,7 +191,8 @@ class Robot:
 
                     # Move collision free velocity space away from obstacle for extra safety
                     if dist < 0.75:
-                        center = [self.x + robot.input_vx - p_rel[0]*dist, self.y + robot.input_vy - p_rel[1]*dist]
+                        # center = [self.x + robot.input_vx - p_rel[0]*dist, self.y + robot.input_vy - p_rel[1]*dist]
+                        center = [self.x + robot.input_vx, self.y + robot.input_vy]
                     else:
                         center = [self.x + robot.input_vx, self.y + robot.input_vy]
                     # Offset the cone with velocity of other robot and plot the cone and get three points for triangle
@@ -225,7 +225,7 @@ class Robot:
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
-        min_velocity = 0
+        min_velocity = 0.5
         max_velocity = 1.5
         max_w = 3
 
@@ -250,7 +250,7 @@ class Robot:
                     plt.plot(*cone.exterior.xy)
 
             # Try 10 times to find a new velocity
-            for i in range(10):
+            for i in range(20):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
@@ -272,7 +272,7 @@ class Robot:
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    dist = np.linalg.norm(v_input - np.array([vx, vy])) + 100*sampledAngularVelocity
+                    dist = np.linalg.norm(v_input - np.array([vx, vy])) + 50*sampledAngularVelocity
 
                     # If newly sampled value is closest to desired velocity, keep this one
                     if dist < closest_distance:
@@ -292,6 +292,8 @@ class Robot:
         # # Set output of our robot to newly sampled velocity
         self.output_v = new_velocity[0]
         self.output_w = new_velocity[1]
+        self.input_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
+        self.input_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
 
     @staticmethod
     def collision_check(velocity, cones):
