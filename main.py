@@ -43,10 +43,13 @@ def behaviour():
     # Start in the correct state
     state = 0
     run = True
-    placeholderPos = np.zeros((2,2))
-    placeholderPos[1, :] = [3.4, 0]
-    placeholderVel = np.zeros((2,))
-    placeholderOr = np.zeros((2,))
+    placeholderPos = np.zeros((4,2))
+    placeholderPos[1, :] = [4, 4]
+    placeholderPos[2, :] = [5, 6]
+    placeholderPos[3, :] = [8, 7]
+
+    placeholderVel = np.zeros((4,))
+    placeholderOr = np.zeros((4,))
     placeholderTra = np.zeros((100,2))
     currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
                                                                             placeholderOr, placeholderTra] 
@@ -64,8 +67,8 @@ def behaviour():
     '''
     # print("TRAJECTORY =", trajectory)
 
-    dummyDataX = np.arange(1 ,101 ,0.1)
-    dummyDataY = np.sin(dummyDataX)
+    dummyDataX = np.arange(0 ,50 ,0.1)
+    dummyDataY = dummyDataX
     target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
     uni = UniCycleModel(0.1)
     input = np.array([[0,0]])
@@ -181,7 +184,7 @@ def behaviour():
             for i in range(len(robot_list)):
                 if robot_list[i].our:
 
-                    if abs(robot_list[0].x - robot_list[1].x) < 0:
+                    if abs(robot_list[0].x - robot_list[1].x) < 2:
                         robot_list[i].plotting = True
                     else:
                         robot_list[i].plotting = False
@@ -251,6 +254,7 @@ def behaviour():
 
     plt.scatter(placeholderPos[:, 0], placeholderPos[:, 1], 400)
     plt.plot(np.sum(np.array(jasperPositions), axis = 1 )[:,0],np.sum(np.array(jasperPositions), axis = 1 )[:,1])
+    # plt.plot(target[:100,:])
     plt.show()
 
 

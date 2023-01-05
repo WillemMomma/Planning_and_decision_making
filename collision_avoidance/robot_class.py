@@ -107,8 +107,8 @@ class Robot:
             plt.cla()
             plt.minorticks_on()
             plt.axis('equal')
-            plt.xlim(0, 5)
-            plt.ylim(-3, 3)
+            plt.xlim(0, 10)
+            plt.ylim(0, 10)
 
         # Detect all velocity obstacles here
         cones = self.detect(robot_list)
