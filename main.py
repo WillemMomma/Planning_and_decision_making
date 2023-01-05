@@ -184,7 +184,8 @@ def behaviour():
             for i in range(len(robot_list)):
                 if robot_list[i].our:
 
-                    if abs(robot_list[0].x - robot_list[1].x) < 2:
+                    # Set 0 to a larger value to see some plotting
+                    if abs(robot_list[0].x - robot_list[1].x) < 0:
                         robot_list[i].plotting = True
                     else:
                         robot_list[i].plotting = False
