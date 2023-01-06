@@ -5,8 +5,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString
 import shapely
-from matplotlib.patches import Circle
-
 class obstacleRectangle:
     '''
     Class for rectangular obstacles used in RRT star planning
@@ -36,25 +34,24 @@ class obstacleSquare:
         self.x2 = x + size/2
         self.y1 = y - size/2
         self.y2 = y + size/2
+class Node:
+    '''
+    Class to define the Nodes (i.e. vertices)
+    Also specifies parent Node and path from parent to child 
+    Input:  x, y: node coordinates
+    '''
+    def __init__(self, x, y):
+        self.x = x
+        self.y = y
+        self.parent = None
+        self.cost = 0
 class RRT_star:
     ''' 
     Class for RRT star planning 
     Goal: find optimal path from start to goal avoiding obstacles
     Returns: path as a list of nodes [[x1, y1], [x2, y2], ...]
     Also plots the growing tree, final path and obstacles
-    '''
-    class Node:
-        '''
-        Class to define the Nodes (i.e. vertices)
-        Also specifies parent Node and path from parent to child 
-        Input:  x, y: node coordinates
-        '''
-        def __init__(self, x, y):
-            self.x = x
-            self.y = y
-            self.parent = None
-            self.cost = 0
-    
+    '''   
 
     def __init__(self, start, goal, obstacleList, randArea):
         '''
@@ -66,19 +63,19 @@ class RRT_star:
                 maxIter: maximum number of expansions
         Output: None
         '''
-        self.start = self.Node(start[0], start[1])
-        self.end = self.Node(goal[0], goal[1]) 
+        self.start = Node(start[0], start[1])
+        self.end = Node(goal[0], goal[1]) 
         self.minRand = randArea[0]
         self.maxRand = randArea[1]
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 1200 #maximum number of iterations
-        self.probGoal = 0.01 #probability to sample goal 
+        self.maxIter = 1000 #maximum number of iterations
+        self.probGoal = 0.05 #probability to sample goal 
         self.threshold = 1 #radius of accepted area within goal
-        self.maxExpansion = 5 #max distance to expand each collision free step
-        self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization
-        self.searchGamma = 1 #gamma parameter for RRT* optimilization
+        self.maxExpansion = 3 #max distance to expand each collision free step
+        #self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization
+        self.searchGamma = 70 #gamma parameter for RRT* optimilization
 
     def planning(self, animation=False):
         '''
@@ -112,6 +109,10 @@ class RRT_star:
                 self.plotGraph(self.nodeList)
         
         finalNode = self.getNearestNode(self.nodeList, self.end)
+        if self.euclideanDistance(finalNode, self.end) < self.threshold:
+            print("Goal Reached!")
+        else:
+            print("Goal not reached, try increasing maxIter")
         path = self.finalPath(finalNode)
         self.plotFinalPath(path)
         plt.show()
@@ -126,8 +127,9 @@ class RRT_star:
         '''
         euclideanDistances = [self.euclideanDistance(node, newNode) for node in allNodes]
         neighborList = []
+        searchRadius = self.searchGamma * math.sqrt((math.log(len(allNodes)) / len(allNodes)))
         for i in range(len(euclideanDistances)):
-            if euclideanDistances[i] < self.searchRadius:
+            if euclideanDistances[i] < searchRadius:
                 neighborList.append(allNodes[i])
             else:
                 continue
@@ -148,7 +150,7 @@ class RRT_star:
             for obs in self.obstacleList:
                 if randomx >= obs.x1 and randomx <= obs.x2 and randomy >= obs.y1 and randomy <= obs.y2:
                     return None
-            qRand = self.Node(randomx, randomy)
+            qRand = Node(randomx, randomy)
             return qRand
     
     def euclideanDistance(self, node1, node2):
@@ -182,11 +184,11 @@ class RRT_star:
         theta = math.atan2(toNode.y - fromNode.y, toNode.x - fromNode.x)
         dist = self.euclideanDistance(fromNode, toNode)
         if dist > self.maxExpansion:
-            newNode = self.Node(fromNode.x, fromNode.y)
+            newNode = Node(fromNode.x, fromNode.y)
             newNode.x += self.maxExpansion * math.cos(theta)
             newNode.y += self.maxExpansion * math.sin(theta)
         else:    
-            newNode = self.Node(toNode.x, toNode.y)
+            newNode = Node(toNode.x, toNode.y)
         newNode.parent = fromNode 
         return newNode
     
@@ -201,15 +203,6 @@ class RRT_star:
             cost += self.euclideanDistance(node, node.parent)
             node = node.parent
         return cost
-    
-    def goalCheck(self, node):
-        '''
-        Check if goal is reached within specified radius of endpoint 
-        Input: node: latest generated node 
-        Output: boolean True if goal reached 
-        '''
-        if ((node.x - self.end.x)**2 + (node.y - self.end.y)**2 >= self.threshold**2):
-            return True
     
     def lineCollisionCheck(self, node1, node2):
         '''
@@ -267,7 +260,7 @@ class RRT_star:
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
-        plt.pause(0.001)
+        plt.pause(0.00001)
 
     def plotFinalPath(self, path):
         '''
