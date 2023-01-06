@@ -5,6 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString
 import shapely
+import time
 class obstacleRectangle:
     '''
     Class for rectangular obstacles used in RRT star planning
@@ -53,7 +54,14 @@ class RRT_star:
     Also plots the growing tree, final path and obstacles
     '''   
 
-    def __init__(self, start, goal, obstacleList, randArea):
+    def __init__(self, start, goal, obstacleList, randArea, 
+                r=0.5, 
+                maxIter=1200, 
+                probGoal=0.05, 
+                threshold=1, 
+                maxExpansion=3, 
+                searchGamma=40
+                ):
         '''
         Initialize the class variables
         Input:  start: start node
@@ -70,12 +78,12 @@ class RRT_star:
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 1000 #maximum number of iterations
-        self.probGoal = 0.05 #probability to sample goal 
-        self.threshold = 1 #radius of accepted area within goal
-        self.maxExpansion = 3 #max distance to expand each collision free step
-        #self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization
-        self.searchGamma = 70 #gamma parameter for RRT* optimilization
+        self.maxIter = maxIter #maximum number of iterations
+        self.probGoal = probGoal #probability to sample goal 
+        self.threshold = threshold #radius of accepted area within goal
+        self.maxExpansion = maxExpansion #max distance to expand each collision free step
+        self.searchGamma = searchGamma #gamma parameter for RRT* optimilization search radius
+        self.r = r #distance allowed to be from obstacle in collision check
 
     def planning(self, animation=False):
         '''
@@ -85,6 +93,7 @@ class RRT_star:
         If no collision, finds neighbors in radius neighbor_radius, chooses parent, rewire tree, add node to node list
         Output: path as a list of nodes [[x1, y1], [x2, y2], ...]
         '''
+        start = time.time()
         self.nodeList = [self.start] 
         for i in range(self.maxIter):
             qRand = self.getRandomPoint()
@@ -107,7 +116,8 @@ class RRT_star:
                         neighbor.parent = newNode
             if animation:
                 self.plotGraph(self.nodeList)
-        
+        end = time.time()
+        print("Time taken: ", end - start)
         finalNode = self.getNearestNode(self.nodeList, self.end)
         if self.euclideanDistance(finalNode, self.end) < self.threshold:
             print("Goal Reached!")
@@ -127,7 +137,7 @@ class RRT_star:
         '''
         euclideanDistances = [self.euclideanDistance(node, newNode) for node in allNodes]
         neighborList = []
-        searchRadius = self.searchGamma * math.sqrt((math.log(len(allNodes)) / len(allNodes)))
+        searchRadius = self.searchGamma * (math.log(len(allNodes)) / len(allNodes)) ** (1/3)
         for i in range(len(euclideanDistances)):
             if euclideanDistances[i] < searchRadius:
                 neighborList.append(allNodes[i])
@@ -212,12 +222,11 @@ class RRT_star:
                 obstacleList: list of obstacles as polygons [obstacle1, obstacle2, ...]
         Output: True if no collision, False if collision
         '''
-        #create line object 
+        #create line object with shapely
         line = LineString([(node1.x, node1.y), (node2.x, node2.y)])
         for obs in self.obstacleList:
-            r=1
-            polygon = shapely.geometry.box(obs.x1-r, obs.y1-r, obs.x2+r, obs.y2+r)
-            if line.intersects(polygon): #check if line intersects with polygon
+            polygon = shapely.geometry.box(obs.x1-self.r, obs.y1-self.r, obs.x2+self.r, obs.y2+self.r)
+            if line.intersects(polygon): 
                 return False
         return True
 
@@ -260,7 +269,7 @@ class RRT_star:
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
-        plt.pause(0.00001)
+        plt.pause(0.01)
 
     def plotFinalPath(self, path):
         '''
@@ -290,8 +299,21 @@ class RRT_star:
 def main(): 
     '''
     Main function
-    Specify start, goal, obstacles, and random area
+    Specify start, goal, obstacles, animation (set False for time results) and random area
+    
+    optional settings:
+        maxIter: maximum number of iterations, default 1200
+        maxExpansion: maximum distance to expand tree, default 1
+        r: radius of circle around node to check for collision, default 1
+        probGoal: probability of selecting goal as random node, default 0.05
+        threshold: threshold to check if goal is reached, default 0.5
+        searchGamma: gamma value for RRT*, default 1.5
+    
+    output: path from start to goal, interpolated path
     '''
+    print("")
+    print("========RRT star planning==========")
+    
     obstacle1 = obstacleRectangle(5,5,10,15)
     obstacle2 = obstacleRectangle(14,5,20,15)
     obstacle3 = obstacleRectangle(5,20,10,30)
@@ -300,12 +322,14 @@ def main():
     obstacle6 = obstacleRectangle(25,20,30,30)
     obstacle7 = obstacleRectangle(42,35,43,49)
     obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4, obstacle5, obstacle6, obstacle7]
+    
     start = [1,1]
     goal = [45, 43]
-
     randArea = [0,50]
+
     rrt = RRT_star(start, goal, obstacleList, randArea)
-    path = rrt.planning()
+    animation = False
+    path = rrt.planning(animation)
     trajectory = []
     for node in path: 
         # fill spaces in between nodes with linear interpolation
