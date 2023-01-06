@@ -7,6 +7,21 @@ from shapely.geometry import Polygon, LineString
 import shapely
 from matplotlib.patches import Circle
 
+class obstacleRectangle:
+    '''
+    Class for rectangular obstacles used in RRT star planning
+    Input:  x1, y1: bottom left corner of obstacle
+            x2, y2: top right corner of obstacle
+    '''
+    def __init__(self, x1, y1, x2, y2):
+        self.x1 = x1
+        self.y1 = y1
+        self.x2 = x2
+        self.y2 = y2
+        self.width = x2 - x1
+        self.height = y2 - y1
+        self.obstacle = Polygon([(x1, y1), (x2, y1), (x2, y2), (x1, y2)])
+
 class obstacleSquare:
     '''
     Class for squared obstacles used in RRT star planning
@@ -58,11 +73,12 @@ class RRT_star:
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 1000 #maximum number of iterations
+        self.maxIter = 1200 #maximum number of iterations
         self.probGoal = 0.01 #probability to sample goal 
         self.threshold = 1 #radius of accepted area within goal
         self.maxExpansion = 5 #max distance to expand each collision free step
-        self.searchRadius = 7 #radius to find nearest neighbors for RRT* optimilization
+        self.searchRadius = 10 #radius to find nearest neighbors for RRT* optimilization
+        self.searchGamma = 1 #gamma parameter for RRT* optimilization
 
     def planning(self, animation=False):
         '''
@@ -82,16 +98,15 @@ class RRT_star:
             if self.lineCollisionCheck(newNode, nearestNode):
                 neighbors = self.findNeighbors(self.nodeList, newNode)
                 self.nodeList.append(newNode)
-                costs = []
-                # Choose best parent 
+            costs = []
+            # Choose best parent 
             for neighbor in neighbors:
-                if self.lineCollisionCheck(neighbor, newNode):
-                    costs.append(self.cost(neighbor) + self.euclideanDistance(newNode, neighbor))
-                    newNode.parent = neighbors[np.argmin(costs)]
-                # Rewire 
+                if self.lineCollisionCheck(neighbor, newNode) and self.cost(neighbor) + self.euclideanDistance(newNode, neighbor) < self.cost(newNode):
+                    newNode.parent = neighbor
+            # Rewire 
             for neighbor in neighbors:
-                if self.lineCollisionCheck(neighbor, newNode):
-                    if self.cost(neighbor) > self.cost(newNode) + self.euclideanDistance(newNode,neighbor):
+                if self.lineCollisionCheck(newNode, neighbor):
+                    if self.cost(newNode) + self.euclideanDistance(newNode, neighbor) < self.cost(neighbor):
                         neighbor.parent = newNode
             if animation:
                 self.plotGraph(self.nodeList)
@@ -207,11 +222,12 @@ class RRT_star:
         #create line object 
         line = LineString([(node1.x, node1.y), (node2.x, node2.y)])
         for obs in self.obstacleList:
-            r=1 
+            r=1
             polygon = shapely.geometry.box(obs.x1-r, obs.y1-r, obs.x2+r, obs.y2+r)
-            if line.intersects(polygon):
+            if line.intersects(polygon): #check if line intersects with polygon
                 return False
         return True
+
 
     def finalPath(self, finalNode):
         '''
@@ -247,11 +263,11 @@ class RRT_star:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'g-')
 
         for obs in self.obstacleList:
-            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
+            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'blue', ec='red'))
         
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
-        plt.pause(0.01)
+        plt.pause(0.001)
 
     def plotFinalPath(self, path):
         '''
@@ -259,8 +275,6 @@ class RRT_star:
         Input:  path: list of nodes from start to goal
         Output: None
         '''
-        plt.plot([self.start.x], self.start.y, 'ro')
-        plt.plot([self.end.x],self.end.y, 'go')
 
         for node in path:
             plt.plot(node.x,node.y, 'yo')
@@ -268,24 +282,32 @@ class RRT_star:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'r--')
         
         for obs in self.obstacleList:
-            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.size,obs.size, fc = 'blue', ec='red'))
+            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'blue', ec='red'))
+        
+        plt.plot([self.start.x], self.start.y, 'go')
+        plt.plot([self.end.x],self.end.y, 'go')
+        
         finalNode = self.getNearestNode(self.nodeList, self.end)
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.grid(True)
         plt.figtext(0.5, 0.01, 'cost =' + str(self.cost(finalNode)), wrap=True, horizontalalignment='center', fontsize=12)
         plt.pause(0.01)
 
+
 def main(): 
     '''
     Main function
     Specify start, goal, obstacles, and random area
     '''
-    obstacle1 = obstacleSquare(12,5,5)
-    obstacle2 = obstacleSquare(20,20,10)
-    obstacle3 = obstacleSquare(32,40,8)
-    obstacle4 = obstacleSquare(35,10,7)
-    obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4]
-    start = [2,2]
+    obstacle1 = obstacleRectangle(5,5,10,15)
+    obstacle2 = obstacleRectangle(14,5,20,15)
+    obstacle3 = obstacleRectangle(5,20,10,30)
+    obstacle4 = obstacleRectangle(14,20,20,30)
+    obstacle5 = obstacleRectangle(35,20,40,30)
+    obstacle6 = obstacleRectangle(25,20,30,30)
+    obstacle7 = obstacleRectangle(42,35,43,49)
+    obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4, obstacle5, obstacle6, obstacle7]
+    start = [1,1]
     goal = [45, 43]
 
     randArea = [0,50]

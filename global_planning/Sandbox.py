@@ -1,188 +1,74 @@
+import matplotlib.pyplot as plt
+
+def line_intersects_rectangle(x1, y1, x2, y2, r_x1, r_y1, r_x2, r_y2):
+    # Check if either of the line's endpoints are inside the rectangle
+    inside1 = r_x1 <= x1 <= r_x2 and r_y1 <= y1 <= r_y2
+    inside2 = r_x1 <= x2 <= r_x2 and r_y1 <= y2 <= r_y2
+    if inside1 or inside2:
+        return True
+
+    # Check if the line intersects any of the rectangle's sides
+    for r_x, r_y in [(r_x1, r_y1), (r_x2, r_y1), (r_x2, r_y2), (r_x1, r_y2)]:
+        if line_intersects_point(x1, y1, x2, y2, r_x, r_y):
+            return True
+
+    return False
+
+def line_intersects_point(x1, y1, x2, y2, px, py):
+    # Check if the point is strictly inside the box formed by the line's endpoints
+    if (x1 < px < x2 or x2 < px < x1) and (y1 < py < y2 or y2 < py < y1):
+        return True
+
+    # Check if the point is on the line
+    if (px == x1 and py == y1) or (px == x2 and py == y2):
+        return True
+
+    # Check if the point is collinear with the line and lies on the line segment
+    if (x1 == x2 and x1 == px) or (y1 == y2 and y1 == py):
+        if (y1 <= py <= y2 or y2 <= py <= y1) and (x1 <= px <= x2 or x2 <= px <= x1):
+            return True
+
+    return False
 
 
-"""
-RRT_star 2D
-@author: huiming zhou
-"""
-
-import os
-import sys
-import math
-import numpy as np
-
-sys.path.append(os.path.dirname(os.path.abspath(__file__)) +
-                "/../../Sampling_based_Planning/")
-
-from Sampling_based_Planning.rrt_2D import env, plotting, utils, queue
+def line_intersects_any_rectangle(rectangles, x1, y1, x2, y2):
+    for r_x1, r_y1, r_x2, r_y2 in rectangles:
+        if line_intersects_rectangle(x1, y1, x2, y2, r_x1, r_y1, r_x2, r_y2):
+            return True
+    return False
 
 
-class Node:
-    def __init__(self, n):
-        self.x = n[0]
-        self.y = n[1]
-        self.parent = None
 
+def visualize_line_intersection(rectangles, x1, y1, x2, y2):
+    # Plot the rectangles
+    for r_x1, r_y1, r_x2, r_y2 in rectangles:
+        plt.plot([r_x1, r_x2, r_x2, r_x1, r_x1], [r_y1, r_y1, r_y2, r_y2, r_y1], 'b')
 
-class RrtStar:
-    def __init__(self, x_start, x_goal, step_len,
-                 goal_sample_rate, search_radius, iter_max):
-        self.s_start = Node(x_start)
-        self.s_goal = Node(x_goal)
-        self.step_len = step_len
-        self.goal_sample_rate = goal_sample_rate
-        self.search_radius = search_radius
-        self.iter_max = iter_max
-        self.vertex = [self.s_start]
-        self.path = []
+    # Plot the line
+    plt.plot([x1, x2], [y1, y2], 'r')
 
-        self.env = env.Env()
-        self.plotting = plotting.Plotting(x_start, x_goal)
-        self.utils = utils.Utils()
+    # Set the plot limits
+    plt.xlim(min(x1, x2, *[r_x1 for r_x1, _, _, _ in rectangles]), max(x1, x2, *[r_x2 for _, _, r_x2, _ in rectangles]))
+    plt.ylim(min(y1, y2, *[r_y1 for _, r_y1, _, _ in rectangles]), max(y1, y2, *[r_y2 for _, _, _, r_y2 in rectangles]))
 
-        self.x_range = self.env.x_range
-        self.y_range = self.env.y_range
-        self.obs_circle = self.env.obs_circle
-        self.obs_rectangle = self.env.obs_rectangle
-        self.obs_boundary = self.env.obs_boundary
+    # Show the plot
+    plt.show()
 
-    def planning(self):
-        for k in range(self.iter_max):
-            node_rand = self.generate_random_node(self.goal_sample_rate)
-            node_near = self.nearest_neighbor(self.vertex, node_rand)
-            node_new = self.new_state(node_near, node_rand)
+rectangles = [
+    (1, 1, 5, 5),  
+    (10, 10, 20, 20),
+    (15, 15, 25, 25),
+    (30, 30, 40, 40),
+    (35, 35, 45, 45)
 
-            if k % 500 == 0:
-                print(k)
+]
+line1 = (6, 25, 13, 30)
+line2 = (30, 15, 40, 25)
+line3 = (1, 1, 5, 5)
+line4 = (4,4,10,10)
+line5 = (10,1,2,10)
+lines = [line1, line2, line3, line4, line5]
 
-            if node_new and not self.utils.is_collision(node_near, node_new):
-                neighbor_index = self.find_near_neighbor(node_new)
-                self.vertex.append(node_new)
-
-                if neighbor_index:
-                    self.choose_parent(node_new, neighbor_index)
-                    self.rewire(node_new, neighbor_index)
-
-        index = self.search_goal_parent()
-        self.path = self.extract_path(self.vertex[index])
-
-        self.plotting.animation(self.vertex, self.path, "rrt*, N = " + str(self.iter_max))
-
-    def new_state(self, node_start, node_goal):
-        dist, theta = self.get_distance_and_angle(node_start, node_goal)
-
-        dist = min(self.step_len, dist)
-        node_new = Node((node_start.x + dist * math.cos(theta),
-                         node_start.y + dist * math.sin(theta)))
-
-        node_new.parent = node_start
-
-        return node_new
-
-    def choose_parent(self, node_new, neighbor_index):
-        cost = [self.get_new_cost(self.vertex[i], node_new) for i in neighbor_index]
-
-        cost_min_index = neighbor_index[int(np.argmin(cost))]
-        node_new.parent = self.vertex[cost_min_index]
-
-    def rewire(self, node_new, neighbor_index):
-        for i in neighbor_index:
-            node_neighbor = self.vertex[i]
-
-            if self.cost(node_neighbor) > self.get_new_cost(node_new, node_neighbor):
-                node_neighbor.parent = node_new
-
-    def search_goal_parent(self):
-        dist_list = [math.hypot(n.x - self.s_goal.x, n.y - self.s_goal.y) for n in self.vertex]
-        node_index = [i for i in range(len(dist_list)) if dist_list[i] <= self.step_len]
-
-        if len(node_index) > 0:
-            cost_list = [dist_list[i] + self.cost(self.vertex[i]) for i in node_index
-                         if not self.utils.is_collision(self.vertex[i], self.s_goal)]
-            return node_index[int(np.argmin(cost_list))]
-
-        return len(self.vertex) - 1
-
-    def get_new_cost(self, node_start, node_end):
-        dist, _ = self.get_distance_and_angle(node_start, node_end)
-
-        return self.cost(node_start) + dist
-
-    def generate_random_node(self, goal_sample_rate):
-        delta = self.utils.delta
-
-        if np.random.random() > goal_sample_rate:
-            return Node((np.random.uniform(self.x_range[0] + delta, self.x_range[1] - delta),
-                         np.random.uniform(self.y_range[0] + delta, self.y_range[1] - delta)))
-
-        return self.s_goal
-
-    def find_near_neighbor(self, node_new):
-        n = len(self.vertex) + 1
-        r = min(self.search_radius * math.sqrt((math.log(n) / n)), self.step_len)
-
-        dist_table = [math.hypot(nd.x - node_new.x, nd.y - node_new.y) for nd in self.vertex]
-        dist_table_index = [ind for ind in range(len(dist_table)) if dist_table[ind] <= r and
-                            not self.utils.is_collision(node_new, self.vertex[ind])]
-
-        return dist_table_index
-
-    @staticmethod
-    def nearest_neighbor(node_list, n):
-        return node_list[int(np.argmin([math.hypot(nd.x - n.x, nd.y - n.y)
-                                        for nd in node_list]))]
-
-    @staticmethod
-    def cost(node_p):
-        node = node_p
-        cost = 0.0
-
-        while node.parent:
-            cost += math.hypot(node.x - node.parent.x, node.y - node.parent.y)
-            node = node.parent
-
-        return cost
-
-    def update_cost(self, parent_node):
-        OPEN = queue.QueueFIFO()
-        OPEN.put(parent_node)
-
-        while not OPEN.empty():
-            node = OPEN.get()
-
-            if len(node.child) == 0:
-                continue
-
-            for node_c in node.child:
-                node_c.Cost = self.get_new_cost(node, node_c)
-                OPEN.put(node_c)
-
-    def extract_path(self, node_end):
-        path = [[self.s_goal.x, self.s_goal.y]]
-        node = node_end
-
-        while node.parent is not None:
-            path.append([node.x, node.y])
-            node = node.parent
-        path.append([node.x, node.y])
-
-        return path
-
-    @staticmethod
-    def get_distance_and_angle(node_start, node_end):
-        dx = node_end.x - node_start.x
-        dy = node_end.y - node_start.y
-        return math.hypot(dx, dy), math.atan2(dy, dx)
-
-
-def main():
-    x_start = (18, 8)  # Starting node
-    x_goal = (37, 18)  # Goal node
-
-    rrt_star = RrtStar(x_start, x_goal, 10, 0.10, 20, 10000)
-    rrt_star.planning()
-
-
-if __name__ == '__main__':
-    main()
-
-
+for line in lines:
+    visualize_line_intersection(rectangles, line[0], line[1], line[2], line[3])
+    print(line_intersects_any_rectangle(rectangles, line[0], line[1], line[2], line[3])) 
