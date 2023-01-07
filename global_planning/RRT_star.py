@@ -6,6 +6,9 @@ import matplotlib.pyplot as plt
 from shapely.geometry import Polygon, LineString
 import shapely
 import time
+import matplotlib.animation as animation
+from matplotlib.patches import Patch
+
 class obstacleRectangle:
     '''
     Class for rectangular obstacles used in RRT star planning
@@ -59,8 +62,8 @@ class RRT_star:
                 maxIter=1200, 
                 probGoal=0.05, 
                 threshold=1, 
-                maxExpansion=3, 
-                searchGamma=40
+                maxExpansion=5, 
+                searchGamma=30
                 ):
         '''
         Initialize the class variables
@@ -91,6 +94,7 @@ class RRT_star:
         Uses class methods to generate a path from start to goal
         Samples random points, finds nearest node, steers towards random point, checks for collision
         If no collision, finds neighbors in radius neighbor_radius, chooses parent, rewire tree, add node to node list
+        Input:  animation: boolean to plot the growing tree
         Output: path as a list of nodes [[x1, y1], [x2, y2], ...]
         '''
         start = time.time()
@@ -104,10 +108,12 @@ class RRT_star:
             if self.lineCollisionCheck(newNode, nearestNode):
                 neighbors = self.findNeighbors(self.nodeList, newNode)
                 self.nodeList.append(newNode)
-            costs = []
             # Choose best parent 
+            else:
+                continue
             for neighbor in neighbors:
-                if self.lineCollisionCheck(neighbor, newNode) and self.cost(neighbor) + self.euclideanDistance(newNode, neighbor) < self.cost(newNode):
+                if self.lineCollisionCheck(neighbor, newNode) \
+                    and self.cost(neighbor) + self.euclideanDistance(newNode, neighbor) < self.cost(newNode):
                     newNode.parent = neighbor
             # Rewire 
             for neighbor in neighbors:
@@ -117,14 +123,15 @@ class RRT_star:
             if animation:
                 self.plotGraph(self.nodeList)
         end = time.time()
-        print("Time taken: ", end - start)
+        totalTime = end - start
+        print("Time taken: ",totalTime)
         finalNode = self.getNearestNode(self.nodeList, self.end)
         if self.euclideanDistance(finalNode, self.end) < self.threshold:
             print("Goal Reached!")
         else:
             print("Goal not reached, try increasing maxIter")
         path = self.finalPath(finalNode)
-        self.plotFinalPath(path)
+        self.plotFinalTree(finalNode, path, totalTime)
         plt.show()
         return path
 
@@ -247,6 +254,8 @@ class RRT_star:
 
         return path
         
+
+
     def plotGraph(self, nodeList):
         '''
         Plot the graph
@@ -257,6 +266,7 @@ class RRT_star:
         plt.clf()
         plt.plot([self.start.x], self.start.y, 'ro')
         plt.plot([self.end.x],self.end.y, 'go')
+
 
         for node in nodeList:
             plt.plot(node.x,node.y, 'yo')
@@ -271,29 +281,57 @@ class RRT_star:
         plt.grid(True)
         plt.pause(0.01)
 
-    def plotFinalPath(self, path):
+    def plotFinalTree(self, finalNode, path, totalTime):
         '''
-        Plot the final path
-        Input:  path: list of nodes from start to goal
+        Plot the final tree
+        Input:  nodeList: list of all nodes
         Output: None
         '''
-
-        for node in path:
-            plt.plot(node.x,node.y, 'yo')
+        plt.clf()
+        plt.figure(figsize=(10, 6))
+        for node in self.nodeList:
+            plt.plot(node.x,node.y, color = 'darkgrey', marker = 'o', markersize = 5)
             if node.parent:
-                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), 'r--')
-        
+                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='darkgrey', linestyle='-')
+                
         for obs in self.obstacleList:
-            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'blue', ec='red'))
+            plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'darkred', ec='darkred'))
         
-        plt.plot([self.start.x], self.start.y, 'go')
-        plt.plot([self.end.x],self.end.y, 'go')
+        plt.plot([self.start.x], self.start.y, color = 'green', marker = '*', markersize = 20)
+        plt.plot([self.end.x],self.end.y, color = 'green', marker = '*', markersize = 20)        
         
-        finalNode = self.getNearestNode(self.nodeList, self.end)
+        for node in path:
+            if node.parent:
+                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='dodgerblue', linestyle='-')
+            plt.plot(node.x,node.y, color = 'orange', marker = 'o', markersize = 6)       
+    
+        plt.figtext(0.5, 0.01, 'cost (m) = ' + str(round(self.cost(finalNode),1)) + ' time (s) = ' +str(round(totalTime, 1)), wrap=True, horizontalalignment='center', fontsize=12)    
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
-        plt.grid(True)
-        plt.figtext(0.5, 0.01, 'cost =' + str(self.cost(finalNode)), wrap=True, horizontalalignment='center', fontsize=12)
+        plt.legend
+        redBox = Patch(color='darkred', label='Obstacle')
+        bluePath = Patch(color='dodgerblue', label='Edges goalpath')
+        orangeNodes = Patch(color='orange', label='Vertices goalpath')
+        greyNodes = Patch(color='darkgrey', label='Tree')
+        greenStart = Patch(color='green', label='Start/Goal')
+        handles = [redBox, bluePath, orangeNodes, greyNodes, greenStart]
+        plt.legend(handles=handles, bbox_to_anchor=(0.8,1), borderaxespad=0.)
+        plt.grid(False)
         plt.pause(0.01)
+
+
+
+        
+        # for obs in self.obstacleList:
+        #     plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'blue', ec='red'))
+        
+        # plt.plot([self.start.x], self.start.y, 'go')
+        # plt.plot([self.end.x],self.end.y, 'go')
+        
+        # finalNode = self.getNearestNode(self.nodeList, self.end)
+        # plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
+        # plt.grid(True)
+        # plt.figtext(0.5, 0.01, 'cost =' + str(self.cost(finalNode)), wrap=True, horizontalalignment='center', fontsize=12)
+        # plt.pause(0.01)
 
 
 def main(): 
@@ -307,7 +345,7 @@ def main():
         r: radius of circle around node to check for collision, default 1
         probGoal: probability of selecting goal as random node, default 0.05
         threshold: threshold to check if goal is reached, default 0.5
-        searchGamma: gamma value for RRT*, default 1.5
+        searchGamma: gamma value for RRT*, default 40
     
     output: path from start to goal, interpolated path
     '''
@@ -328,7 +366,7 @@ def main():
     randArea = [0,50]
 
     rrt = RRT_star(start, goal, obstacleList, randArea)
-    animation = False
+    animation = False #set to False to speed up calculation and get time results
     path = rrt.planning(animation)
     trajectory = []
     for node in path: 
