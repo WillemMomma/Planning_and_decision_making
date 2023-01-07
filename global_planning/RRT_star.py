@@ -63,7 +63,7 @@ class RRT_star:
                 probGoal=0.05, 
                 threshold=1, 
                 maxExpansion=5, 
-                searchGamma=30
+                searchGamma=40
                 ):
         '''
         Initialize the class variables
@@ -288,7 +288,7 @@ class RRT_star:
         Output: None
         '''
         plt.clf()
-        plt.figure(figsize=(10, 6))
+   
         for node in self.nodeList:
             plt.plot(node.x,node.y, color = 'darkgrey', marker = 'o', markersize = 5)
             if node.parent:
@@ -297,7 +297,7 @@ class RRT_star:
         for obs in self.obstacleList:
             plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'darkred', ec='darkred'))
         
-        plt.plot([self.start.x], self.start.y, color = 'green', marker = '*', markersize = 20)
+        plt.plot([self.start.x], self.start.y, color = 'green', marker = 's', markersize = 20)
         plt.plot([self.end.x],self.end.y, color = 'green', marker = '*', markersize = 20)        
         
         for node in path:
@@ -314,7 +314,8 @@ class RRT_star:
         greyNodes = Patch(color='darkgrey', label='Tree')
         greenStart = Patch(color='green', label='Start/Goal')
         handles = [redBox, bluePath, orangeNodes, greyNodes, greenStart]
-        plt.legend(handles=handles, bbox_to_anchor=(0.8,1), borderaxespad=0.)
+        plt.legend(handles=handles, bbox_to_anchor=(1,1), borderaxespad=0.)
+        plt.tight_layout()
         plt.grid(False)
         plt.pause(0.01)
 
