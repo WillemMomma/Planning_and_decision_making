@@ -58,12 +58,18 @@ class RRT_star:
     '''   
 
     def __init__(self, start, goal, obstacleList, randArea, 
-                r=0.5, 
-                maxIter=1200, 
-                probGoal=0.05, 
-                threshold=1, 
-                maxExpansion=5, 
-                searchGamma=40
+                # r=0.5,
+                # maxIter=1200,
+                # probGoal=0.05,
+                # threshold=1,
+                # maxExpansion=5,
+                # searchGamma=40
+                r = 0.5,
+                maxIter = 1200,
+                probGoal = 0.05,
+                threshold = 1,
+                maxExpansion = 5,
+                searchGamma = 10
                 ):
         '''
         Initialize the class variables
@@ -357,11 +363,12 @@ def main():
     for node in path: 
         # fill spaces in between nodes with linear interpolation
         if node.parent:
-            x = np.linspace(node.x, node.parent.x, 10)
-            y = np.linspace(node.y, node.parent.y, 10)
+            x = np.linspace(node.x, node.parent.x, 10)[1:]
+            y = np.linspace(node.y, node.parent.y, 10)[1:]
             for i in range(len(x)):
                 trajectory.append(np.array([x[i],y[i]]))
-    return trajectory
+    return trajectory[::-1]
 
-main()
+# trajectory = main()
+# print(trajectory)
 

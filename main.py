@@ -1,89 +1,87 @@
-# Importing libraries 
+# Importing own files
 # import env from env.env
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
-# from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
 from collision_avoidance.robot_class import Robot
 # from env.holonomic_robot_main_test import initEnv, robotMain
-import matplotlib.pyplot as plt
-
 from model_predictive_control.uni_cycle_model import UniCycleModel 
 
-# from collision_avoidance.robot_class import Robot
-
+# Importing libraries
 import numpy as np
+import matplotlib.pyplot as plt
 
 
-def dummydata():
-    # Dummy data
-    start = 0
-    stop = 10
-    dt = 0.1
-    dummyDataX = np.arange(start, stop, dt)
-    dummyDataY = np.ones(len(dummyDataX))
-
-    # Reshaping data
-    X = np.reshape(dummyDataX, (dummyDataX.shape[0], 1))
-    velX = np.zeros(X.shape)
-    Y = np.reshape(dummyDataY, (dummyDataY.shape[0], 1))
-    velY = np.zeros(Y.shape)
-    target = np.concatenate((X, velX, Y, velY), axis= 1)
-    return target
+# # Function for dummy data creation
+# def dummydata():
+#     # Dummy data
+#     start = 0
+#     stop = 10
+#     dt = 0.1
+#     dummyDataX = np.arange(start, stop, dt)
+#     dummyDataY = np.ones(len(dummyDataX))
+#
+#     # Reshaping data
+#     X = np.reshape(dummyDataX, (dummyDataX.shape[0], 1))
+#     velX = np.zeros(X.shape)
+#     Y = np.reshape(dummyDataY, (dummyDataY.shape[0], 1))
+#     velY = np.zeros(Y.shape)
+#     target = np.concatenate((X, velX, Y, velY), axis= 1)
+#     return target
 
 
 def behaviour():
-    """
-    
+    """"
     Start the enviroment and run the algorithms
 
     Input -> None : None
     Ouput -> None : None
-        """
+    """""
 
-    # Start in the correct state
-    state = 0
-    run = True
-    placeholderPos = np.zeros((4,2))
-    placeholderPos[1, :] = [4, 4]
-    placeholderPos[2, :] = [5, 6]
-    placeholderPos[3, :] = [8, 7]
+    # Initialization of all robots positions, velocities and orientations
+    placeholderPos = np.ones((1,2))
+    # placeholderPos[1, :] = [4, 4]
+    # placeholderPos[2, :] = [5, 6]
+    # placeholderPos[3, :] = [8, 7]
 
-    placeholderVel = np.zeros((4,))
-    placeholderOr = np.zeros((4,))
+    placeholderVel = np.zeros((1,))
+    placeholderOr = np.zeros((1,))
     placeholderTra = np.zeros((100,2))
-    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
-                                                                            placeholderOr, placeholderTra] 
-        
-    '''
-    Heb het stuk van momma hier heen verplaatst
-    '''
-    # env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=True, maps=1)
-    
-    # trajectory = mainRRT(obstacles,start=currentPositions[0])
-    # trajectory = np.array(trajectory).reshape((len(trajectory),2))
-    # trajectory = trajectory[::-1]
-    '''
-    Hier initialiseerd de enviroment
-    '''
-    # print("TRAJECTORY =", trajectory)
+    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos,
+                                                                             placeholderVel,
+                                                                             placeholderOr,
+                                                                             placeholderTra]
 
+
+    # Some dummy trajectory should be removed eventually
     dummyDataX = np.arange(0 ,50 ,0.1)
     dummyDataY = dummyDataX
     target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
+
+    # Init for env @Willem Kolff
+    # env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=True, maps=1)
+
+    # Init for MPC @Jaspen van Leuven
     uni = UniCycleModel(0.1)
     input = np.array([[0,0]])
     jasperPositions = []
 
+    # Init for collision avoidance @Godert Notten
     radius = 0.2
     robot_list = []
-    
-    timestep = 0 
-    while timestep < 100:
+
+    # Settings for the running loop
+    state = 0
+    run = True
+    timestep = 0
+
+    # Running loop
+    # while run == True: # Change to this condition eventually This requires coordination between @Jasper van Leuven & @Willem Momma
+    while timestep < len(trajectory):
 
         # This state signifies the running, and working envirment
         if state == 0: 
 
-            # For the first iteration we have to create a Map of the enviroment and a path to the goal
+            # For the first iteration we have to create a Map of the enviroment and a path to the goal and init the robot_list
             if timestep == 0:   
                 velocity = np.float64(0)
                 angularVelocity = np.float64(0)
@@ -105,16 +103,14 @@ def behaviour():
                 # Please import simulation as well
                 # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
-                # Willem kOLFF
-                # Please alter the code in the mainRRT as well to accept the map input
-                # This funtion should recieve the map as input @Willem Kolff
-
-                # Below is the pseudocode provided
-                # trajectory = mainRRT(map)
+                # @Willem Kolff & @Willem Momma coordinate on how the obstacles from the map can be passed
+                # to the mainRRT algorithm for the path creation!
 
                 # Delete this if your implementation works this is for test purposes
-                # trajectory = mainRRT()
-                # trajectory = np.array(trajectory).reshape((len(trajectory),2))
+                # trajectory = mainRRT(map) # Should be this line
+                trajectory = mainRRT()
+                trajectory = np.array(trajectory).reshape((len(trajectory),2))
+                print("TRAJECTORY =", trajectory)
 
                 for i in range(len(currentPositions)):
                     if i == 0:
@@ -134,7 +130,7 @@ def behaviour():
                                                 currentOrientations[i],
                                                 False))
 
-            # Jasper
+            # @Jasper van Leuven
             """
             Returns the desired velocity and angular velocity 
 
@@ -149,9 +145,9 @@ def behaviour():
             angularVelocity -> np.float: 0.0
             """
 
-            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], target)
+            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
 
-            # Godert
+            # @Godert Notten
             """
             INPUT
 
@@ -184,11 +180,11 @@ def behaviour():
             for i in range(len(robot_list)):
                 if robot_list[i].our:
 
-                    # Set 0 to a larger value to see some plotting
-                    if abs(robot_list[0].x - robot_list[1].x) < 0:
-                        robot_list[i].plotting = True
-                    else:
-                        robot_list[i].plotting = False
+                    # Can be changed to show plotting of the velocity obstacles
+                    # if abs(robot_list[0].x - robot_list[1].x) < 0:
+                    #     robot_list[i].plotting = True
+                    # else:
+                    #     robot_list[i].plotting = False
 
                     # Update our robot and check for collision
                     robot_list[i].update_our(currentPositions[i, 0],
@@ -203,7 +199,8 @@ def behaviour():
                     angularVelocity = robot_list[i].output_w
 
 
-            # Godert jij moet deze waarden naar die van jou annpassen
+            # This is now how we update the positions of the robots but this block of code should be replaced
+            # in function by the environment @Willem Kolff
             godert_input = np.array([currentVelocities[0], angularVelocity])
             xytheta = uni.nextX(godert_input.reshape((1,2)))
             xy = xytheta[:2]
@@ -211,10 +208,7 @@ def behaviour():
             currentPositions[0,:] = xy.flatten()           
             currentOrientations[0] = xytheta[2]
 
-            # Calculate the desired input for the robot using MPC
-            # It is important that all the variables are provided in the correct format @Willem Kolff    
-            
-            # Willem Kolff
+            # @Willem Kolff
             """
             INPUT : 
             currentPositions : np.array() : shape -> (m, 2)
@@ -235,11 +229,13 @@ def behaviour():
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
-            # print("currentPositions[0,:]", currentPositions[0,:])
-            # print("trajectory[-1,:]", trajectory[-1,:])
-            # print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1,:]))
-            if np.linalg.norm(np.array([currentPositions[0,:]]) - [1e3, 1e3]) < 1:
+            # print("currentPositions[0]", currentPositions[0])
+            # print("trajectory[-1]", trajectory[-1])
+            # print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0]]) - trajectory[-1]))
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 2:
                state = 1
+               print("We have reached our goal")
+               run = False
 
 
             timestep += 1
