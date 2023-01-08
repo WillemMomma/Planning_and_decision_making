@@ -59,11 +59,11 @@ class RRT_star:
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
-        self.maxIter = 2 #maximum number of iterations
+        self.maxIter = 400 #maximum number of iterations
         self.probGoal = 0.01 #probability to sample goal 
         self.threshold = 15 #radius of accepted area within goal
         self.maxExpansion = 1 #max distance to expand each collision free step
-        self.searchRadius = 1 #radius to find nearest neighbors for RRT* optimilization 
+        self.searchRadius = 1.5 #radius to find nearest neighbors for RRT* optimilization 
     
     def planning(self):
         '''

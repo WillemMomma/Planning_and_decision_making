@@ -1,10 +1,10 @@
 # Importing libraries 
-# import env from env.env
+#import env from env.env
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
-# from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
+#from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
 from collision_avoidance.robot_class import Robot
-# from env.holonomic_robot_main_test import initEnv, robotMain
+from env.holonomic_robot_main_test import initEnv, robotMain
 import matplotlib.pyplot as plt
 
 from model_predictive_control.uni_cycle_model import UniCycleModel 
@@ -51,21 +51,21 @@ def behaviour():
     placeholderVel = np.zeros((4,))
     placeholderOr = np.zeros((4,))
     placeholderTra = np.zeros((100,2))
-    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
-                                                                            placeholderOr, placeholderTra] 
+#    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
+#                                                                            placeholderOr, placeholderTra] 
         
     '''
     Heb het stuk van momma hier heen verplaatst
     '''
-    # env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=True, maps=1)
+    env , m , currentPositions, currentVelocities, currentOrientations, obstacles,  steeringInput = initEnv(goal=True, maps=1)
     
-    # trajectory = mainRRT(obstacles,start=currentPositions[0])
-    # trajectory = np.array(trajectory).reshape((len(trajectory),2))
-    # trajectory = trajectory[::-1]
+    trajectory = mainRRT(obstacles,start=currentPositions[0])
+    trajectory = np.array(trajectory).reshape((len(trajectory),2))
+    trajectory = trajectory[::-1]
     '''
     Hier initialiseerd de enviroment
     '''
-    # print("TRAJECTORY =", trajectory)
+
 
     dummyDataX = np.arange(0 ,50 ,0.1)
     dummyDataY = dummyDataX
@@ -76,9 +76,14 @@ def behaviour():
 
     radius = 0.2
     robot_list = []
+    print(len(trajectory))
+
+    print("trajectory = ", trajectory[14])
+    print("target = ", target[14])
+    
     
     timestep = 0 
-    while timestep < 100:
+    while timestep < 2000:
 
         # This state signifies the running, and working envirment
         if state == 0: 
@@ -87,7 +92,7 @@ def behaviour():
             if timestep == 0:   
                 velocity = np.float64(0)
                 angularVelocity = np.float64(0)
-
+                
                 # Willem Kolff
                 """
                 INPUT : 
@@ -116,7 +121,8 @@ def behaviour():
                 # trajectory = mainRRT()
                 # trajectory = np.array(trajectory).reshape((len(trajectory),2))
 
-                for i in range(len(currentPositions)):
+
+                for i in range(m):
                     if i == 0:
                         robot_list.append(Robot(currentPositions[i, 0],
                                                 currentPositions[i, 1],
@@ -148,8 +154,8 @@ def behaviour():
             currentVelocities[0] -> np.float: 0.0
             angularVelocity -> np.float: 0.0
             """
-
-            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], target)
+            print(timestep)
+            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
 
             # Godert
             """
@@ -204,13 +210,14 @@ def behaviour():
 
 
             # Godert jij moet deze waarden naar die van jou annpassen
+            '''
             godert_input = np.array([currentVelocities[0], angularVelocity])
             xytheta = uni.nextX(godert_input.reshape((1,2)))
             xy = xytheta[:2]
             jasperPositions.append(xy.reshape(1,2))
             currentPositions[0,:] = xy.flatten()           
             currentOrientations[0] = xytheta[2]
-
+            '''
             # Calculate the desired input for the robot using MPC
             # It is important that all the variables are provided in the correct format @Willem Kolff    
             
@@ -229,7 +236,7 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            # currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
@@ -248,7 +255,8 @@ def behaviour():
         if state == 1:
             print("We have reached our goal")
             run = False
-
+            
+'''
     print("jasperPositions")
     print(np.array(jasperPositions)[0,:],np.array(jasperPositions)[1,:])
     print(np.sum(np.array(jasperPositions), axis = 1 )[:,0])
@@ -258,6 +266,6 @@ def behaviour():
     # plt.plot(target[:100,:])
     plt.show()
 
-
+'''
 
 behaviour()
