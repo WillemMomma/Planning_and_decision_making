@@ -41,7 +41,7 @@ class obstacleSquare:
 class Node:
     '''
     Class to define the Nodes (i.e. vertices)
-    Also specifies parent Node and path from parent to child 
+    Also specifies parent Node and path from parent to child
     Input:  x, y: node coordinates
     '''
     def __init__(self, x, y):
@@ -50,14 +50,14 @@ class Node:
         self.parent = None
         self.cost = 0
 class RRT_star:
-    ''' 
-    Class for RRT star planning 
+    '''
+    Class for RRT star planning
     Goal: find optimal path from start to goal avoiding obstacles
     Returns: path as a list of nodes [[x1, y1], [x2, y2], ...]
     Also plots the growing tree, final path and obstacles
-    '''   
+    '''
 
-    def __init__(self, start, goal, obstacleList, randArea, 
+    def __init__(self, start, goal, obstacleList, randArea,
                 r=0.5,
                 maxIter=1200,
                 probGoal=0.05,
@@ -75,14 +75,14 @@ class RRT_star:
         Output: None
         '''
         self.start = Node(start[0], start[1])
-        self.end = Node(goal[0], goal[1]) 
+        self.end = Node(goal[0], goal[1])
         self.minRand = randArea[0]
         self.maxRand = randArea[1]
         self.obstacleList = obstacleList
     
         #behavior settings for RRT
         self.maxIter = maxIter #maximum number of iterations
-        self.probGoal = probGoal #probability to sample goal 
+        self.probGoal = probGoal #probability to sample goal
         self.threshold = threshold #radius of accepted area within goal
         self.maxExpansion = maxExpansion #max distance to expand each collision free step
         self.searchGamma = searchGamma #gamma parameter for RRT* optimilization search radius
@@ -98,24 +98,24 @@ class RRT_star:
         Output: path as a list of nodes [[x1, y1], [x2, y2], ...]
         '''
         start = time.time()
-        self.nodeList = [self.start] 
+        self.nodeList = [self.start]
         for i in range(self.maxIter):
             qRand = self.getRandomPoint()
             if qRand == None:
                 continue
-            nearestNode = self.getNearestNode(self.nodeList, qRand) 
-            newNode = self.steeringFunction(nearestNode, qRand)                 
+            nearestNode = self.getNearestNode(self.nodeList, qRand)
+            newNode = self.steeringFunction(nearestNode, qRand)
             if self.lineCollisionCheck(newNode, nearestNode):
                 neighbors = self.findNeighbors(self.nodeList, newNode)
                 self.nodeList.append(newNode)
-            # Choose best parent 
+            # Choose best parent
             else:
                 continue
             for neighbor in neighbors:
                 if self.lineCollisionCheck(neighbor, newNode) \
                     and self.cost(neighbor) + self.euclideanDistance(newNode, neighbor) < self.cost(newNode):
                     newNode.parent = neighbor
-            # Rewire 
+            # Rewire
             for neighbor in neighbors:
                 if self.lineCollisionCheck(newNode, neighbor):
                     if self.cost(newNode) + self.euclideanDistance(newNode, neighbor) < self.cost(neighbor):
@@ -220,7 +220,7 @@ class RRT_star:
             cost += self.euclideanDistance(node, node.parent)
             node = node.parent
         return cost
-    
+
     def lineCollisionCheck(self, node1, node2):
         '''
         Check if line between two nodes collides with any obstacle
@@ -233,7 +233,7 @@ class RRT_star:
         line = LineString([(node1.x, node1.y), (node2.x, node2.y)])
         for obs in self.obstacleList:
             polygon = shapely.geometry.box(obs.x1-self.r, obs.y1-self.r, obs.x2+self.r, obs.y2+self.r)
-            if line.intersects(polygon): 
+            if line.intersects(polygon):
                 return False
         return True
 
@@ -254,8 +254,6 @@ class RRT_star:
 
         return path
         
-
-
     def plotGraph(self, nodeList):
         '''
         Plot the graph
@@ -266,7 +264,6 @@ class RRT_star:
         plt.clf()
         plt.plot([self.start.x], self.start.y, 'ro')
         plt.plot([self.end.x],self.end.y, 'go')
-
 
         for node in nodeList:
             plt.plot(node.x,node.y, 'yo')
@@ -288,24 +285,24 @@ class RRT_star:
         Output: None
         '''
         plt.clf()
-   
+
         for node in self.nodeList:
             plt.plot(node.x,node.y, color = 'darkgrey', marker = 'o', markersize = 5)
             if node.parent:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='darkgrey', linestyle='-')
-                
+
         for obs in self.obstacleList:
             plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'darkred', ec='darkred'))
-        
+
         plt.plot([self.start.x], self.start.y, color = 'green', marker = 's', markersize = 20)
-        plt.plot([self.end.x],self.end.y, color = 'green', marker = '*', markersize = 20)        
-        
+        plt.plot([self.end.x],self.end.y, color = 'green', marker = '*', markersize = 20)
+
         for node in path:
             if node.parent:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='dodgerblue', linestyle='-')
-            plt.plot(node.x,node.y, color = 'orange', marker = 'o', markersize = 6)       
-    
-        plt.figtext(0.5, 0.01, 'cost (m) = ' + str(round(self.cost(finalNode),1)) + ' time (s) = ' +str(round(totalTime, 1)), wrap=True, horizontalalignment='center', fontsize=12)    
+            plt.plot(node.x,node.y, color = 'orange', marker = 'o', markersize = 6)
+
+        plt.figtext(0.5, 0.01, 'cost (m) = ' + str(round(self.cost(finalNode),1)) + ' time (s) = ' +str(round(totalTime, 1)), wrap=True, horizontalalignment='center', fontsize=12)
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
         plt.legend
         redBox = Patch(color='darkred', label='Obstacle')
@@ -318,12 +315,12 @@ class RRT_star:
         plt.tight_layout()
         plt.grid(False)
         plt.pause(0.01)
-        
-def main(): 
+
+def main(obstacles,start=None): 
     '''
     Main function
     Specify start, goal, obstacles, animation (set False for time results) and random area
-    
+
     optional settings:
         maxIter: maximum number of iterations, default 1200
         maxExpansion: maximum distance to expand tree, default 1
@@ -334,22 +331,14 @@ def main():
     
     output: path from start to goal, interpolated path
     '''
-    print("")
-    print("========RRT star planning==========")
-    
-    obstacle1 = obstacleRectangle(5,5,10,15)
-    obstacle2 = obstacleRectangle(14,5,20,15)
-    obstacle3 = obstacleRectangle(5,20,10,30)
-    obstacle4 = obstacleRectangle(14,20,20,30)
-    obstacle5 = obstacleRectangle(35,20,40,30)
-    obstacle6 = obstacleRectangle(25,20,30,30)
-    obstacle7 = obstacleRectangle(42,35,43,49)
-    obstacleList = [obstacle1, obstacle2, obstacle3, obstacle4, obstacle5, obstacle6, obstacle7]
-    
-    start = [1,1]
-    goal = [45, 43]
-    randArea = [0,50]
+    obstacleList = []
+    for i in range(len(obstacles)):
+        obstacle = obstacleSquare(obstacles[i][0],obstacles[i][1],obstacles[i][2],obstacles[i][3])
+        obstacleList.append(obstacle)    
 
+    start = start
+    goal = [-8, -5]
+    randArea = [-10,10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     animation = False #set to False to speed up calculation and get time results
     path = rrt.planning(animation)

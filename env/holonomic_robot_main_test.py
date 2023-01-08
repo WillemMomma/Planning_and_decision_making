@@ -69,12 +69,12 @@ def initEnv(goal=False, obstacles=False, maps=0):
         )
         env.reset(pos=initialPositions,mount_positions=mountPositions)
 
-        arr1 = np.concatenate([steering.stop(1),steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 9), steering.right(6,2,91),steering.straight(6, 0.1),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
-        arr2 = np.concatenate([steering.stop(1),steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 5), steering.right(6,2,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
-        arr3 = np.concatenate([steering.stop(1), steering.straight(6, 7),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 7),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
-        arr4 = np.concatenate([steering.stop(1), steering.straight(6, 3),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 6),steering.left(6, 1, 91),steering.straight(6, 7),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr1 = np.concatenate([steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 9), steering.right(6,2,91),steering.straight(6, 0.1),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr2 = np.concatenate([steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 5), steering.right(6,2,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr3 = np.concatenate([steering.straight(6, 7),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 7),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr4 = np.concatenate([steering.straight(6, 3),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 6),steering.left(6, 1, 91),steering.straight(6, 7),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
         arr5 = np.concatenate([steering.stop(4), steering.straight(4, 26)])
-        arr6 = np.concatenate([steering.stop(4), steering.straight(4, 26)])
+        arr6 = np.concatenate([steering.stop(5), steering.straight(4, 26)])
 
         max_len = max(arr1.shape[0], arr2.shape[0], arr3.shape[0],arr4.shape[0],arr5.shape[0],arr6.shape[0])
         
@@ -105,12 +105,12 @@ def initEnv(goal=False, obstacles=False, maps=0):
         pass
 
 
-    return env , m, mountPositions[:,:2], obstacles, initialPositions[:,2]+np.deg2rad(90), steeringInput
+    return env , m, mountPositions[:,:2], mountPositions[:,1],initialPositions[:,2]+np.deg2rad(90), obstacles, steeringInput
     
 
 
 
-def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.01):
+def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.1):
     x = pos[0][0]
     y = pos[0][1]
     theta = current_orientations[0]

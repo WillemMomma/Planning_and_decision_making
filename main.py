@@ -1,9 +1,12 @@
-# Importing own files
-# import env from env.env
+# Importing libraries 
+#import env from env.env
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
+#from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
 from collision_avoidance.robot_class import Robot
-# from env.holonomic_robot_main_test import initEnv, robotMain
+from env.holonomic_robot_main_test import initEnv, robotMain
+import matplotlib.pyplot as plt
+
 from model_predictive_control.uni_cycle_model import UniCycleModel 
 
 # Importing libraries
@@ -112,7 +115,8 @@ def behaviour():
                 trajectory = np.array(trajectory).reshape((len(trajectory),2))
                 print("TRAJECTORY =", trajectory)
 
-                for i in range(len(currentPositions)):
+
+                for i in range(m):
                     if i == 0:
                         robot_list.append(Robot(currentPositions[i, 0],
                                                 currentPositions[i, 1],
@@ -223,7 +227,7 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            # currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
@@ -245,6 +249,7 @@ def behaviour():
             print("We have reached our goal")
             run = False
 
+'''
     print("jasperPositions")
     print(np.array(jasperPositions)[0,:],np.array(jasperPositions)[1,:])
     print(np.sum(np.array(jasperPositions), axis = 1 )[:,0])
@@ -254,6 +259,6 @@ def behaviour():
     # plt.plot(target[:100,:])
     plt.show()
 
-
+'''
 
 behaviour()
