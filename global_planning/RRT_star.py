@@ -59,7 +59,7 @@ class RRT_star:
 
     def __init__(self, start, goal, obstacleList, randArea,
                 r=0.5,
-                maxIter=1200,
+                maxIter=500,
                 probGoal=0.05,
                 threshold=1,
                 maxExpansion=5,
@@ -333,11 +333,11 @@ def main(obstacles,start=None):
     '''
     obstacleList = []
     for i in range(len(obstacles)):
-        obstacle = obstacleSquare(obstacles[i][0],obstacles[i][1],obstacles[i][2],obstacles[i][3])
+        obstacle = obstacleRectangle(obstacles[i][0],obstacles[i][1],obstacles[i][2],obstacles[i][3])
         obstacleList.append(obstacle)    
 
     start = start
-    goal = [-8, -5]
+    goal = [8, 5]
     randArea = [-10,10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     animation = False #set to False to speed up calculation and get time results

@@ -33,27 +33,29 @@ import matplotlib.pyplot as plt
 
 
 def behaviour():
-    """"
+    """
     Start the enviroment and run the algorithms
 
     Input -> None : None
     Ouput -> None : None
-    """""
+    """
+    
+
 
     # Initialization of all robots positions, velocities and orientations
-    placeholderPos = np.ones((1,2))
+    # placeholderPos = np.ones((1,2))
     # placeholderPos[1, :] = [4, 4]
     # placeholderPos[2, :] = [5, 6]
     # placeholderPos[3, :] = [8, 7]
 
-    placeholderVel = np.zeros((1,))
-    placeholderOr = np.zeros((1,))
-    placeholderTra = np.zeros((100,2))
-    currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos,
-                                                                             placeholderVel,
-                                                                             placeholderOr,
-                                                                             placeholderTra]
-
+    # placeholderVel = np.zeros((1,))
+    # placeholderOr = np.zeros((1,))
+    # placeholderTra = np.zeros((100,2))
+    # currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos,
+    #                                                                          placeholderVel,
+    #                                                                          placeholderOr,
+    #                                                                          placeholderTra]
+    
 
     # Some dummy trajectory should be removed eventually
     dummyDataX = np.arange(0 ,50 ,0.1)
@@ -79,11 +81,12 @@ def behaviour():
 
     # Running loop
     # while run == True: # Change to this condition eventually This requires coordination between @Jasper van Leuven & @Willem Momma
-    while timestep < len(trajectory):
-
+    while timestep < 100:
+        print(timestep)
         # This state signifies the running, and working envirment
         if state == 0: 
 
+            
             # For the first iteration we have to create a Map of the enviroment and a path to the goal and init the robot_list
             if timestep == 0:   
                 velocity = np.float64(0)
@@ -111,7 +114,10 @@ def behaviour():
 
                 # Delete this if your implementation works this is for test purposes
                 # trajectory = mainRRT(map) # Should be this line
-                trajectory = mainRRT()
+                env , m , currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1)
+                currentVelocities = np.zeros((m,))
+                
+                trajectory = mainRRT(obstacles,start=currentPositions[0])
                 trajectory = np.array(trajectory).reshape((len(trajectory),2))
                 print("TRAJECTORY =", trajectory)
 

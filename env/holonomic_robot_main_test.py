@@ -97,7 +97,8 @@ def initEnv(goal=False, obstacles=False, maps=0):
             dimensions = walls1[i][1][0:2]
             coordinates = [coord[:2] for coord in walls1[i][2]]
             
-            result.append([[coordinates[0], coordinates[1], dimensions[0], dimensions[1]] for coordinates in coordinates])
+            result.append([[coordinates[0] - 0.5 * dimensions[0] , coordinates[1] - 0.5 * dimensions[1], 
+                            coordinates[0] + 0.5 * dimensions[0] , coordinates[1] + 0.5 * dimensions[1]] for coordinates in coordinates])
             
         obstacles = list(itertools.chain(*result))
 
@@ -105,7 +106,7 @@ def initEnv(goal=False, obstacles=False, maps=0):
         pass
 
 
-    return env , m, mountPositions[:,:2], mountPositions[:,1],initialPositions[:,2]+np.deg2rad(90), obstacles, steeringInput
+    return env , m, mountPositions[:,:2], initialPositions[:,2]+np.deg2rad(90), obstacles, steeringInput
     
 
 
