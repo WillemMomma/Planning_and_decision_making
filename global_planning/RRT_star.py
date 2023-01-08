@@ -295,8 +295,8 @@ def main(obstacles,start=None):
     for node in path: 
         # fill spaces in between nodes with linear interpolation
         if node.parent:
-            x = np.linspace(node.x, node.parent.x, 10)
-            y = np.linspace(node.y, node.parent.y, 10)
+            x = np.linspace(node.x, node.parent.x, 10)[1:]
+            y = np.linspace(node.y, node.parent.y, 10)[1:]
             for i in range(len(x)):
                 trajectory.append(np.array([x[i],y[i]]))
         # print(node.x,node.y)

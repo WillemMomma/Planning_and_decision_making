@@ -110,7 +110,7 @@ def initEnv(goal=False, obstacles=False, maps=0):
 
 
 
-def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.01):
+def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.1):
     x = pos[0][0]
     y = pos[0][1]
     theta = current_orientations[0]
