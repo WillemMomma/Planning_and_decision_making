@@ -318,23 +318,7 @@ class RRT_star:
         plt.tight_layout()
         plt.grid(False)
         plt.pause(0.01)
-
-
-
         
-        # for obs in self.obstacleList:
-        #     plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'blue', ec='red'))
-        
-        # plt.plot([self.start.x], self.start.y, 'go')
-        # plt.plot([self.end.x],self.end.y, 'go')
-        
-        # finalNode = self.getNearestNode(self.nodeList, self.end)
-        # plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
-        # plt.grid(True)
-        # plt.figtext(0.5, 0.01, 'cost =' + str(self.cost(finalNode)), wrap=True, horizontalalignment='center', fontsize=12)
-        # plt.pause(0.01)
-
-
 def main(): 
     '''
     Main function
