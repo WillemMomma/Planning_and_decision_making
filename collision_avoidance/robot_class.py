@@ -109,22 +109,31 @@ class Robot:
 
         half_half = np.array([self.input_v + self.previous_v, self.input_w + self.previous_w])/2
 
+        # Only consider the close robots in the list
+        min_dist = 10
+        close_robot_list = []
+
+        for robot in robot_list:
+            dist = np.linalg.norm([robot.x - self.x, robot.y - self.y])
+            if dist < min_dist:
+                close_robot_list.append(robot)
+
         # If no collision is found with desired velocity, continue with desired velocity
-        if not self.check_validity(robot_list, self.input_v, self.input_w):
+        if not self.check_validity(close_robot_list, self.input_v, self.input_w):
             self.output_v = self.input_v
             self.output_vx = self.input_vx
             self.output_vy = self.input_vy
             self.output_w = self.input_w
 
         # If collision is found with desired velocity, check for previous velocity
-        elif not self.check_validity(robot_list, self.previous_v, self.previous_w) and self.previous_v != 0:
+        elif not self.check_validity(close_robot_list, self.previous_v, self.previous_w) and self.previous_v != 0:
             self.output_v = self.previous_v
             self.output_vx = self.previous_vx
             self.output_vy = self.previous_vy
             self.output_w = self.previous_w
 
         # If collision is found with desired velocity, check for previous velocity
-        elif not self.check_validity(robot_list, half_half[0], half_half[1]) and self.previous_v != 0:
+        elif not self.check_validity(close_robot_list, half_half[0], half_half[1]) and self.previous_v != 0:
             self.output_v = self.previous_v
             self.output_vx = self.previous_vx
             self.output_vy = self.previous_vy
@@ -132,7 +141,7 @@ class Robot:
 
         # Else sample a new velocity with gvo
         else:
-            self.resolve_gvo(robot_list)
+            self.resolve_gvo(close_robot_list)
 
         # Save current output for next timestep
         self.previous_v = self.output_v
@@ -167,8 +176,8 @@ class Robot:
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
-        min_velocity = 0
-        max_velocity = 1.5
+        min_velocity = 0.5
+        max_velocity = 3
         max_w = 1
 
         # Plot and found toggle
@@ -178,7 +187,7 @@ class Robot:
         while not found:
 
             # Try 40 times to find a new velocity
-            for i in range(60):
+            for i in range(40):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
@@ -191,8 +200,8 @@ class Robot:
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    input = np.array([self.input_v, self.input_w])
-                    sample = np.array([sampledVelocity, sampledAngularVelocity])
+                    input = np.array([self.input_v, self.input_w*3])
+                    sample = np.array([sampledVelocity, sampledAngularVelocity*3])
                     dist = np.linalg.norm(input - sample)
 
                     # If newly sampled value is closest to desired velocity, keep this one
