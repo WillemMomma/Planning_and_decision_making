@@ -4,33 +4,35 @@ import itertools
 from urdfenvs.robots.generic_urdf import GenericUrdfReacher
 from MotionPlanningEnv.dynamicSphereObstacle import DynamicSphereObstacle
 
-class steering:
-    def straight(v,n):
-        vector = np.array([v,0,0])      
-        m = int(n/v *100)
-        arr = np.tile(vector, (m, 1))
-        return(arr)
-        
-    def left(v,r,deg):
-        omega = v/r
-        m = int((np.pi*100*deg)/(180*omega))
-        vector = np.array([v,0,omega])
-        arr = np.tile(vector, (m, 1))
-        return(arr)
-    def right(v,r,deg):
-        omega = v/r
-        m = int((np.pi*100*deg)/(180*omega))
-        vector = np.array([v,0,-omega])
-        arr = np.tile(vector, (m, 1))
-        return(arr)   
-    def stop(t):
-        vector = np.array([0, 0, 0])
-        m = 100 * t
-        arr = np.tile(vector, (m, 1))
-        return(arr)        
-    
 
-def initEnv(goal=False, obstacles=False, maps=0):   
+
+def initEnv(goal=False, obstacles=False, maps=0, dt=0.01):   
+
+    class steering:
+        def straight(v,n):
+            vector = np.array([v,0,0])      
+            m = int(n/v *(1/dt))
+            arr = np.tile(vector, (m, 1))
+            return(arr)
+            
+        def left(v,r,deg):
+            omega = v/r
+            m = int((np.pi*(1/dt)*deg)/(180*omega))
+            vector = np.array([v,0,omega])
+            arr = np.tile(vector, (m, 1))
+            return(arr)
+        def right(v,r,deg):
+            omega = v/r
+            m = int((np.pi*(1/dt)*deg)/(180*omega))
+            vector = np.array([v,0,-omega])
+            arr = np.tile(vector, (m, 1))
+            return(arr)   
+        def stop(t):
+            vector = np.array([0, 0, 0])
+            m = int((1/dt) * t)
+            arr = np.tile(vector, (m, 1))
+            return(arr)        
+            
 
     if maps == 1:
         result = []
@@ -47,7 +49,7 @@ def initEnv(goal=False, obstacles=False, maps=0):
         m = len(robots)
         env = gym.make(
             "urdf-env-v0",
-            dt=0.01, robots=robots, render=True
+            dt=dt, robots=robots, render=True
         )
         
         n = env.n()       
@@ -111,7 +113,7 @@ def initEnv(goal=False, obstacles=False, maps=0):
 
 
 
-def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.1):
+def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.01):
     x = pos[0][0]
     y = pos[0][1]
     theta = current_orientations[0]

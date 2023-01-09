@@ -12,7 +12,7 @@ class Robot:
 
     def __init__(self, x, y, r, v, w, theta, our):
 
-        self.dt = 0.1
+        self.dt = 0.01
         self.plotting = False
         self.plot_number = 0
 

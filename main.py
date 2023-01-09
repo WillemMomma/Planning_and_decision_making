@@ -81,8 +81,7 @@ def behaviour():
 
     # Running loop
     # while run == True: # Change to this condition eventually This requires coordination between @Jasper van Leuven & @Willem Momma
-    while timestep < 100:
-        print(timestep)
+    while timestep < 3000:
         # This state signifies the running, and working envirment
         if state == 0: 
 
@@ -114,12 +113,12 @@ def behaviour():
 
                 # Delete this if your implementation works this is for test purposes
                 # trajectory = mainRRT(map) # Should be this line
-                env , m , currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1)
+                env , m , currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1, dt=0.01)
                 currentVelocities = np.zeros((m,))
                 
+                print(currentOrientations)
                 trajectory = mainRRT(obstacles,start=currentPositions[0])
                 trajectory = np.array(trajectory).reshape((len(trajectory),2))
-                print("TRAJECTORY =", trajectory)
 
 
                 for i in range(m):
@@ -156,67 +155,69 @@ def behaviour():
             """
 
             currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
-
+            #if timestep % 10 == 0:
+                #print('currentVelocitie = ',currentVelocities[0])
+                #print('position = ',currentPositions[0,:])
             # @Godert Notten
             """
-            INPUT
+                INPUT
 
-            m = number of robots in env including our own robot !!!
+                m = number of robots in env including our own robot !!!
 
-            robot_list : list of length m filled with Robot objects
-            # positions -> np.array() : shape -> (m, 2)
-            # velocities -> np.array() : shape -> (m,)
-            # angularVelocities -> np.float: 0.0
-            # orientations -> np.array() : shape -> (m,)
+                robot_list : list of length m filled with Robot objects
+                # positions -> np.array() : shape -> (m, 2)
+                # velocities -> np.array() : shape -> (m,)
+                # angularVelocities -> np.float: 0.0
+                # orientations -> np.array() : shape -> (m,)
 
-            OUTPUT
-            robot_list : list of length m filled with Robot objects
-            # velocities -> np.float : 0
-            # angularVelocities -> np.float() : 0 
+                #cOUTPUT
+                #robot_list : list of length m filled with Robot objects
+                # velocities -> np.float : 0
+                # angularVelocities -> np.float() : 0 
             """
 
-            # First update the other robots
-            for i in range(len(robot_list)):
-                if not robot_list[i].our:
+            # # First update the other robots
+            # for i in range(len(robot_list)):
+            #     if not robot_list[i].our:
 
-                    # Update the position and velocity of the other robots
-                    robot_list[i].update_other(currentPositions[i, 0],
-                                               currentPositions[i, 1],
-                                               currentVelocities[i],
-                                               0,
-                                               currentOrientations[i])
+            #         # Update the position and velocity of the other robots
+            #         robot_list[i].update_other(currentPositions[i, 0],
+            #                                    currentPositions[i, 1],
+            #                                    currentVelocities[i],
+            #                                    0,
+            #                                    currentOrientations[i])
 
-            # For our robot
-            for i in range(len(robot_list)):
-                if robot_list[i].our:
+            # # For our robot
+            # for i in range(len(robot_list)):
+            #     if robot_list[i].our:
 
-                    # Can be changed to show plotting of the velocity obstacles
-                    # if abs(robot_list[0].x - robot_list[1].x) < 0:
-                    #     robot_list[i].plotting = True
-                    # else:
-                    #     robot_list[i].plotting = False
+            #         # Can be changed to show plotting of the velocity obstacles
+            #         # if abs(robot_list[0].x - robot_list[1].x) < 0:
+            #         #     robot_list[i].plotting = True
+            #         # else:
+            #         #     robot_list[i].plotting = False
 
-                    # Update our robot and check for collision
-                    robot_list[i].update_our(currentPositions[i, 0],
-                                             currentPositions[i, 1],
-                                             currentVelocities[i],
-                                             angularVelocity,
-                                             currentOrientations[i],
-                                             robot_list)
+            #         # Update our robot and check for collision
+            #         robot_list[i].update_our(currentPositions[i, 0],
+            #                                  currentPositions[i, 1],
+            #                                  currentVelocities[i],
+            #                                  angularVelocity,
+            #                                  currentOrientations[i],
+            #                                  robot_list)
 
-                    # Update the velocity and angular_velocity to be collision free
-                    currentVelocities[0] = robot_list[i].output_v
-                    angularVelocity = robot_list[i].output_w
+            #         # Update the velocity and angular_velocity to be collision free
+            #         currentVelocities[0] = robot_list[i].output_v
+            #         angularVelocity = robot_list[i].output_w
 
 
             # This is now how we update the positions of the robots but this block of code should be replaced
             # in function by the environment @Willem Kolff
-            godert_input = np.array([currentVelocities[0], angularVelocity])
-            xytheta = uni.nextX(godert_input.reshape((1,2)))
-            xy = xytheta[:2]
-            jasperPositions.append(xy.reshape(1,2))
-            currentPositions[0,:] = xy.flatten()           
-            currentOrientations[0] = xytheta[2]
+            # godert_input = np.array([currentVelocities[0], angularVelocity])
+            # xytheta = uni.nextX(godert_input.reshape((1,2)))
+            # xy = xytheta[:2]
+            # jasperPositions.append(xy.reshape(1,2))
+            # currentPositions[0,:] = xy.flatten()           
+            # currentOrientations[0] = xytheta[2]
 
             # @Willem Kolff
             """
@@ -245,6 +246,7 @@ def behaviour():
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 2:
                state = 1
                print("We have reached our goal")
+               print(state)
                run = False
 
 
@@ -252,7 +254,6 @@ def behaviour():
 
         # This state signifies that we have finished
         if state == 1:
-            print("We have reached our goal")
             run = False
 
 '''

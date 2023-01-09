@@ -44,12 +44,12 @@ arr5 = np.concatenate([steering.stop(20)])
 
 
 # Set the maximum number of iterations for the while loop
-max_iter = 100
+max_iter = 2000
 # Set the counter variable to zero
 i = 0
 
-env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=False, maps=1)
-print(steeringInput[150])
+env , m , currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=False, maps=1)
+
 while i < max_iter:
     # Call the run_robot function, passing in the current action
     currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, arr5[i][0], currentOrientations, arr5[i][2], steeringInput[i], env)
