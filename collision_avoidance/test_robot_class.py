@@ -17,8 +17,8 @@ def testCollisionAvoidance():
     """""
 
     # Initialization of all robots positions, velocities and orientations
-    test_case = 2
-    n_robots = 5
+    test_case = 1
+    n_robots = 4
     dt = 0.1
 
     currentPositions, currentVelocities, currentOrientations, angularVelocity, trajectory = cases(test_case, n_robots)
@@ -139,18 +139,18 @@ def testCollisionAvoidance():
                 currentPositions[index, :] = xy.flatten()
                 currentOrientations[index] = xytheta[2]
 
-
+    fig = plt.figure()
     plt.cla()
     plt.minorticks_on()
     plt.axis('equal')
     if test_case == 1:
         plt.xlim(-2, 8)
-        plt.ylim(-1, 8)
+        plt.ylim(-2, 8)
     if test_case == 2:
         plt.xlim(0, 10)
         plt.ylim(0, 10)
     for robot in robot_list:
-        robot.draw(plt)
+        robot.draw()
     plt.plot(np.sum(np.array(previousPositions), axis=1)[:, 0], np.sum(np.array(previousPositions), axis=1)[:, 1])
     plt.scatter(np.sum(np.array(previousPositions), axis=1)[::1, 0], np.sum(np.array(previousPositions), axis=1)[::1, 1], s=100, edgecolors='r', facecolors='blue')
 
