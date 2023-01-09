@@ -93,7 +93,6 @@ class Robot:
         self.x = x
         self.y = y
         self.theta = theta
-
         self.input_v = v
         self.input_w = w
         self.input_vx = np.cos(theta + w*self.dt) * v
@@ -115,6 +114,8 @@ class Robot:
         # Check for collision with any of the obstacles for desired velocity
         input_velocity = Point(self.x + self.input_vx, self.y + self.input_vy)
         previous_velocity = Point(self.x + self.previous_vx, self.y + self.previous_vy)
+        half_half = Point((self.x + self.input_vx + self.x + self.previous_vx)/2,
+                          (self.y + self.input_vy + self.y + self.previous_vy)/2)
 
         # If no collision is found with desired velocity, continue with desired velocity
         if not self.collision_check(input_velocity, cones):
@@ -123,8 +124,14 @@ class Robot:
             self.output_vy = self.input_vy
             self.output_w = self.input_w
 
+        elif not self.collision_check(half_half, cones):
+            self.output_v = self.previous_v
+            self.output_vx = self.previous_vx
+            self.output_vy = self.previous_vy
+            self.output_w = self.previous_w
+
         # If collision is found with desired velocity, check for previous velocity
-        elif not self.collision_check(previous_velocity, cones):
+        elif not self.collision_check(previous_velocity, cones) and self.previous_v != 0:
             self.output_v = self.previous_v
             self.output_vx = self.previous_vx
             self.output_vy = self.previous_vy
@@ -146,8 +153,8 @@ class Robot:
                 robot.draw(plt)
 
             # Show and close plot
-            plt.show(block=False)
-            plt.pause(0.1)
+            # plt.show(block=False)
+            # plt.pause(0.1)
             plt.savefig(f'plotnumber_{self.plot_number}')
             self.plot_number += 1
             plt.close(fig)
@@ -162,7 +169,7 @@ class Robot:
 
         # Hyper parameters
         cone_size = 1000
-        safety_factor = 1.5
+        safety_factor = 1.8
         threshold_distance = 10
 
         # Init our robot and cones list
@@ -190,9 +197,10 @@ class Robot:
                     p2 = polar2cart(cone_distance, angle + cone_angle)
 
                     # Move collision free velocity space away from obstacle for extra safety
-                    if dist < 0.75:
-                        # center = [self.x + robot.input_vx - p_rel[0]*dist, self.y + robot.input_vy - p_rel[1]*dist]
-                        center = [self.x + robot.input_vx, self.y + robot.input_vy]
+                    if dist < 1:
+                        scaler = (1/dist - 1)
+                        center = [self.x + robot.input_vx - p_rel[0]*scaler, self.y + robot.input_vy - p_rel[1]*scaler]
+                        # center = [self.x + robot.input_vx, self.y + robot.input_vy]
                     else:
                         center = [self.x + robot.input_vx, self.y + robot.input_vy]
                     # Offset the cone with velocity of other robot and plot the cone and get three points for triangle
@@ -202,8 +210,8 @@ class Robot:
                     # For plotting
                     if self.plotting:
                         # Plot the cone
-                        plt.plot([center[0], p1[0]], [center[1], p1[1]], 'bo', linestyle="--", color="grey")
-                        plt.plot([center[0], p2[0]], [center[1], p2[1]], 'bo', linestyle="--", color="grey")
+                        plt.plot([center[0], p1[0]], [center[1], p1[1]], linestyle="--", color="grey")
+                        plt.plot([center[0], p2[0]], [center[1], p2[1]], linestyle="--", color="grey")
 
                     # Append all the cones to a list for collision detection
                     cones.append(Polygon([(center[0], center[1]), (p1[0], p1[1]), (p2[0], p2[1])]))
@@ -225,12 +233,14 @@ class Robot:
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
-        min_velocity = 0.5
+        min_velocity = -0.1
         max_velocity = 1.5
-        max_w = 3
+        max_w = 1
 
         # Desired velocity without angular velocity
         v_input = np.array([self.input_vx + self.x, self.input_vy + self.y])
+        v_previous = np.array([self.previous_vx + self.x, self.previous_vy + self.y])
+        v_input = (v_input*0.75 + v_previous*0.25)
 
         # Plot and found toggle
         plt_resolve = False
@@ -250,7 +260,7 @@ class Robot:
                     plt.plot(*cone.exterior.xy)
 
             # Try 10 times to find a new velocity
-            for i in range(20):
+            for i in range(40):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
@@ -272,7 +282,7 @@ class Robot:
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    dist = np.linalg.norm(v_input - np.array([vx, vy])) + 50*sampledAngularVelocity
+                    dist = np.linalg.norm(v_input - np.array([vx, vy])) + sampledAngularVelocity
 
                     # If newly sampled value is closest to desired velocity, keep this one
                     if dist < closest_distance:
@@ -287,13 +297,13 @@ class Robot:
                 plt.close(fig)
 
             # If no collision free velocity is found, increase the search area
-            max_w += 1
+            max_w += 0.5
 
         # # Set output of our robot to newly sampled velocity
         self.output_v = new_velocity[0]
         self.output_w = new_velocity[1]
-        self.input_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
-        self.input_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
+        self.output_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
+        self.output_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
 
     @staticmethod
     def collision_check(velocity, cones):
@@ -328,5 +338,8 @@ class Robot:
         plt.gca().add_patch(circle)
 
         if self.our:
+            plt.title(f"v: {np.round(self.output_v, 2)}, w: {np.round(self.output_w, 2)}, vx: {np.round(self.output_vx, 2)}, vy: {np.round(self.output_vy, 2)}")
+            circle = plt.Circle((self.x + np.cos(self.theta), self.y + np.sin(self.theta)), 0.05, color='green')
+            plt.gca().add_patch(circle)
             circle = plt.Circle((self.x + self.output_vx, self.y + self.output_vy), 0.1, color='red')
             plt.gca().add_patch(circle)
