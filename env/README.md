@@ -64,7 +64,7 @@ python main.py
 
 ### Alternitive setup way.
 
-1. You have a python installed which is 5.5 or lower or 3.10 or higher. By running the following command you can check if you have other python versions installed on your computer. 
+1. You have a python installed which is 3.5 or lower or 3.10 or higher. By running the following command you can check if you have other python versions installed on your computer. 
 
 ``` {.sourceCode .bash}
 where python
