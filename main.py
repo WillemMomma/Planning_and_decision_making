@@ -1,36 +1,12 @@
-# Importing libraries 
-#import env from env.env
+# Importing libraries
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
-#from collision_avoidance.velocity_obstacle import mainCollisionAvoidance
 from collision_avoidance.robot_class import Robot
 from env.holonomic_robot_main_test import initEnv, robotMain
-import matplotlib.pyplot as plt
-
-from model_predictive_control.uni_cycle_model import UniCycleModel 
 
 # Importing libraries
 import numpy as np
 import matplotlib.pyplot as plt
-
-
-# # Function for dummy data creation
-# def dummydata():
-#     # Dummy data
-#     start = 0
-#     stop = 10
-#     dt = 0.1
-#     dummyDataX = np.arange(start, stop, dt)
-#     dummyDataY = np.ones(len(dummyDataX))
-#
-#     # Reshaping data
-#     X = np.reshape(dummyDataX, (dummyDataX.shape[0], 1))
-#     velX = np.zeros(X.shape)
-#     Y = np.reshape(dummyDataY, (dummyDataY.shape[0], 1))
-#     velY = np.zeros(Y.shape)
-#     target = np.concatenate((X, velX, Y, velY), axis= 1)
-#     return target
-
 
 def behaviour():
     """
@@ -39,36 +15,6 @@ def behaviour():
     Input -> None : None
     Ouput -> None : None
     """
-    
-
-
-    # Initialization of all robots positions, velocities and orientations
-    # placeholderPos = np.ones((1,2))
-    # placeholderPos[1, :] = [4, 4]
-    # placeholderPos[2, :] = [5, 6]
-    # placeholderPos[3, :] = [8, 7]
-
-    # placeholderVel = np.zeros((1,))
-    # placeholderOr = np.zeros((1,))
-    # placeholderTra = np.zeros((100,2))
-    # currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos,
-    #                                                                          placeholderVel,
-    #                                                                          placeholderOr,
-    #                                                                          placeholderTra]
-    
-
-    # Some dummy trajectory should be removed eventually
-    dummyDataX = np.arange(0 ,50 ,0.1)
-    dummyDataY = dummyDataX
-    target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
-
-    # Init for env @Willem Kolff
-    # env , m , currentPositions, obstacles, currentOrientations, steeringInput = initEnv(goal=True, maps=1)
-
-    # Init for MPC @Jaspen van Leuven
-    uni = UniCycleModel(0.1)
-    input = np.array([[0,0]])
-    jasperPositions = []
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -82,12 +28,10 @@ def behaviour():
     # Running loop
     # while run == True: # Change to this condition eventually This requires coordination between @Jasper van Leuven & @Willem Momma
     while timestep < 3000:
-        # This state signifies the running, and working envirment
         if state == 0: 
 
-            
             # For the first iteration we have to create a Map of the enviroment and a path to the goal and init the robot_list
-            if timestep == 0:   
+            if timestep == 0:
                 velocity = np.float64(0)
                 angularVelocity = np.float64(0)
 
@@ -104,22 +48,13 @@ def behaviour():
                 currentOrientations : np.array() : shape -> (m,)
                 """
 
-                # Below is the pseudocode provided
-                # Please import simulation as well
-                # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
-
-                # @Willem Kolff & @Willem Momma coordinate on how the obstacles from the map can be passed
-                # to the mainRRT algorithm for the path creation!
-
-                # Delete this if your implementation works this is for test purposes
-                # trajectory = mainRRT(map) # Should be this line
-                env , m , currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1, dt=0.01)
+                # Initialize the map
+                env, m, currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1, dt=0.01)
                 currentVelocities = np.zeros((m,))
-                
-                print(currentOrientations)
-                trajectory = mainRRT(obstacles,start=currentPositions[0])
-                trajectory = np.array(trajectory).reshape((len(trajectory),2))
 
+                # Create the trajectory
+                trajectory = mainRRT(obstacles, start=currentPositions[0])
+                trajectory = np.array(trajectory).reshape((len(trajectory), 2))
 
                 for i in range(m):
                     if i == 0:
@@ -216,7 +151,7 @@ def behaviour():
             # xytheta = uni.nextX(godert_input.reshape((1,2)))
             # xy = xytheta[:2]
             # jasperPositions.append(xy.reshape(1,2))
-            # currentPositions[0,:] = xy.flatten()           
+            # currentPositions[0,:] = xy.flatten()
             # currentOrientations[0] = xytheta[2]
 
             # @Willem Kolff
