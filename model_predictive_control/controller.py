@@ -19,7 +19,7 @@ def mpcControl(error, N, xInit, xTarget):
     print("we are in MPC")
     
     weightInput = np.array([[1,0],[0,1]])    # Weight on the input
-    weightTracking = np.array([[10,0,0],[0,10,0],[0,0,10]]) # Weight on the tracking state
+    weightTracking = np.array([[100,0,0],[0,100,0],[0,0,10]]) # Weight on the tracking state
     
     cost = 0.
     constraints = []
@@ -39,7 +39,7 @@ def mpcControl(error, N, xInit, xTarget):
         # constraints
         constraints += [x[:, k+1] == nextError]
         constraints += [u[:, k] <= [3,3]]
-        constraints += [u[:, k] >= [-3,-3]]
+        constraints += [u[:, k] >= [0,-3]]
 
         # Minimize the cost function
         cost += cp.quad_form(u[:, k], weightInput)

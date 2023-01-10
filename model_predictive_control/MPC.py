@@ -19,14 +19,14 @@ def errorFunction(t,dt,  currentState , path, o):
     previousPositionPath = path[t - 1 ,:2]
     previousPreviousPositionPath = path[t - 2 ,:2]
 
-    previousVelocityPathX = (previousPositionPath[0] - previousPreviousPositionPath[0])*dt
-    previousVelocityPathY = (previousPositionPath[1] - previousPreviousPositionPath[1])*dt  
+    previousVelocityPathX = ((previousPositionPath[0] - previousPreviousPositionPath[0])*dt)
+    previousVelocityPathY = ((previousPositionPath[1] - previousPreviousPositionPath[1])*dt)  
     previousVelocityPath = ((previousVelocityPathX**2 + previousVelocityPathY**2)**0.5)
 
-    velocityPathX = (currentPostionPath[0] -previousPositionPath[0])*dt
-    velocityPathY = (currentPostionPath[1] -previousPositionPath[1])*dt  
+    velocityPathX = ((currentPostionPath[0] -previousPositionPath[0])*dt)
+    velocityPathY = ((currentPostionPath[1] -previousPositionPath[1])*dt)  
     velocityPath = (velocityPathX**2 + velocityPathY**2)**0.5
-    anglePath = np.arctan2(velocityPathY , velocityPathX)
+    anglePath = np.arctan2( velocityPathY ,velocityPathX)
 
     # Acceleration of the path
     accX = (velocityPathX - previousVelocityPathX)*dt
@@ -39,7 +39,16 @@ def errorFunction(t,dt,  currentState , path, o):
     # angularVelocityBot = (previousAngleBot - currentAngleBot)*dt  
     xError = path[t,0] - currentState[len(currentState)-1,0]
     yError = (path[t,1] - currentState[len(currentState)-1,1] )
-    thetaError = np.arctan2(velocityPathY,velocityPathX) - o
+
+    thetaError = anglePath - o
+
+    if thetaError < -2:
+        thetaError = -0.03
+
+    print(f"this is the total error: {thetaError}")
+    print(f"this is the angle path: {anglePath}")
+    print(f"this is the orientation: {o}")
+
 
     errorAmatrix = np.array([[1,dt*angularVelocityPath,0],
                             [-dt*angularVelocityPath, 1 , dt*velocityPath],
@@ -153,16 +162,22 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         plot(ax,  np.array(states), target )
 
 
-# dummyDataX = np.arange(1 ,101 ,0.1)
-# dummyDataY = 0.5*np.sin(dummyDataX)
+# dummyDatag = np.arange(0 ,10 ,0.05)
+# dummyDataY = np.sin(dummyDatag)
+# dummyDataX = (dummyDatag) 
 # target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
 # uni = UniCycleModel(0.1)
 # input = np.array([[0,0]])
 
-# for i in range(0,100):
+# for i in range(0,190    ):
 #     pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
 #     currentTimePos = [pos[0][0],pos[0][1]]
-#     input = mainMPC(i, currentTimePos, uni.X[2][0] , target)
+
+#     if uni.X[2][0]  > 2*np.pi: 
+#        uni.X[2][0]  = uni.X[2][0] - 2*np.pi
+#     orientation = uni.X[2][0]
+
+#     input = mainMPC(i, currentTimePos, orientation, target)
 #     input = np.array(list(input))
 
 
