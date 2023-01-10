@@ -2,10 +2,9 @@
 import numpy as np
 import random
 import matplotlib.pyplot as plt
-from shapely.geometry import Point, Polygon
 
 # Import from other .py files
-from collision_avoidance.helper import cart2polar, polar2cart
+from collision_avoidance.uni_cycle_test import UniCycleModel
 
 
 class Robot:
@@ -93,7 +92,6 @@ class Robot:
         self.x = x
         self.y = y
         self.theta = theta
-
         self.input_v = v
         self.input_w = w
         self.input_vx = np.cos(theta + w*self.dt) * v
@@ -109,30 +107,41 @@ class Robot:
             plt.xlim(0, 10)
             plt.ylim(0, 10)
 
-        # Detect all velocity obstacles here
-        cones = self.detect(robot_list)
+        half_half = np.array([self.input_v + self.previous_v, self.input_w + self.previous_w])/2
 
-        # Check for collision with any of the obstacles for desired velocity
-        input_velocity = Point(self.x + self.input_vx, self.y + self.input_vy)
-        previous_velocity = Point(self.x + self.previous_vx, self.y + self.previous_vy)
+        # Only consider the close robots in the list
+        min_dist = 10
+        close_robot_list = []
+
+        for robot in robot_list:
+            dist = np.linalg.norm([robot.x - self.x, robot.y - self.y])
+            if dist < min_dist:
+                close_robot_list.append(robot)
 
         # If no collision is found with desired velocity, continue with desired velocity
-        if not self.collision_check(input_velocity, cones):
+        if not self.check_validity(close_robot_list, self.input_v, self.input_w):
             self.output_v = self.input_v
             self.output_vx = self.input_vx
             self.output_vy = self.input_vy
             self.output_w = self.input_w
 
         # If collision is found with desired velocity, check for previous velocity
-        elif not self.collision_check(previous_velocity, cones):
+        elif not self.check_validity(close_robot_list, self.previous_v, self.previous_w) and self.previous_v != 0:
             self.output_v = self.previous_v
             self.output_vx = self.previous_vx
             self.output_vy = self.previous_vy
             self.output_w = self.previous_w
 
-        # Else sample a new velocity
+        # If collision is found with desired velocity, check for previous velocity
+        elif not self.check_validity(close_robot_list, half_half[0], half_half[1]) and self.previous_v != 0:
+            self.output_v = self.previous_v
+            self.output_vx = self.previous_vx
+            self.output_vy = self.previous_vy
+            self.output_w = self.previous_w
+
+        # Else sample a new velocity with gvo
         else:
-            self.resolve(cones)
+            self.resolve_gvo(close_robot_list)
 
         # Save current output for next timestep
         self.previous_v = self.output_v
@@ -143,180 +152,141 @@ class Robot:
         if self.plotting:
             # Draw and move the robots for this timestep
             for robot in robot_list:
-                robot.draw(plt)
+                robot.draw()
 
             # Show and close plot
-            plt.show(block=False)
-            plt.pause(0.1)
+            # plt.show(block=False)
+            # plt.pause(0.1)
             plt.savefig(f'plotnumber_{self.plot_number}')
             self.plot_number += 1
             plt.close(fig)
 
-    def detect(self, robot_list):
-        """""
-        Input: robot_list -> list filled with Robot objects
-        
-        Output: cones -> list filled with shapely.geometry.Polygon objects 
-                        which resemble the collision areas in velocity space
-        """""
-
-        # Hyper parameters
-        cone_size = 1000
-        safety_factor = 1.5
-        threshold_distance = 10
-
-        # Init our robot and cones list
-        cones = []
-
-        # Loop trough complete robot_list
-        for robot in robot_list:
-
-            # For all robots that are not ours
-            if not robot.our:
-
-                # Calculate relative distance to robot
-                p_rel = [robot.x - self.x, robot.y - self.y]
-
-                # Direction and distance between two robots
-                dist, angle = cart2polar(p_rel)
-
-                # Only check for robots within threshold_distance
-                if dist < threshold_distance:
-
-                    # Calculate the angle of the velocity obstacle and calculate points to draw cone
-                    cone_angle = np.arcsin((robot.r + self.r) / dist) * safety_factor
-                    cone_distance = ((robot.r + self.r) / np.tan(cone_angle)) * cone_size
-                    p1 = polar2cart(cone_distance, angle - cone_angle)
-                    p2 = polar2cart(cone_distance, angle + cone_angle)
-
-                    # Move collision free velocity space away from obstacle for extra safety
-                    if dist < 0.75:
-                        # center = [self.x + robot.input_vx - p_rel[0]*dist, self.y + robot.input_vy - p_rel[1]*dist]
-                        center = [self.x + robot.input_vx, self.y + robot.input_vy]
-                    else:
-                        center = [self.x + robot.input_vx, self.y + robot.input_vy]
-                    # Offset the cone with velocity of other robot and plot the cone and get three points for triangle
-                    p1 += center
-                    p2 += center
-
-                    # For plotting
-                    if self.plotting:
-                        # Plot the cone
-                        plt.plot([center[0], p1[0]], [center[1], p1[1]], 'bo', linestyle="--", color="grey")
-                        plt.plot([center[0], p2[0]], [center[1], p2[1]], 'bo', linestyle="--", color="grey")
-
-                    # Append all the cones to a list for collision detection
-                    cones.append(Polygon([(center[0], center[1]), (p1[0], p1[1]), (p2[0], p2[1])]))
-
-        return cones
-
-    def resolve(self, cones):
+    def resolve_gvo(self, robot_list):
         """""
         Input: cones -> list filled with shapely.geometry.Polygon objects 
                         which resemble the collision areas in velocity space
 
         Output: None
-        
+
         Function finds a new velocity for our robot which is collision free in velocity space
         """""
 
         # Set closest sampled point distance and range within to sample for new velocities
-        closest_distance = 1e6
+        closest_distance = float("Inf")
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
         min_velocity = 0.5
-        max_velocity = 1.5
-        max_w = 3
-
-        # Desired velocity without angular velocity
-        v_input = np.array([self.input_vx + self.x, self.input_vy + self.y])
+        max_velocity = 3
+        max_w = 1
 
         # Plot and found toggle
-        plt_resolve = False
         found = False
 
         # While no collsion free velocity is found, keep sampling
         while not found:
 
-            # Init plot and plot cone if plt_resolve
-            if plt_resolve:
-                fig = plt.figure()
-                plt.gca()
-                plt.minorticks_on()
-                plt.axis('equal')
-                plt.xlim(0, 5)
-                for cone in cones:
-                    plt.plot(*cone.exterior.xy)
-
-            # Try 10 times to find a new velocity
-            for i in range(20):
+            # Try 40 times to find a new velocity
+            for i in range(40):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
                 sampledAngularVelocity = random.uniform(-max_w, max_w)
-                vx = np.cos(self.theta + sampledAngularVelocity * self.dt) * sampledVelocity
-                vy = np.sin(self.theta + sampledAngularVelocity * self.dt) * sampledVelocity
-
-                # Create a point from the sampled velocity
-                velocityPoint = Point(vx + self.x, vy + self.y)
-
-                # Plot the sampled velocity
-                if plt_resolve:
-                    plt.scatter(velocityPoint.x, velocityPoint.y)
 
                 # If no collision occurs for the newly sampled velocity
-                if not self.collision_check(velocityPoint, cones):
+                if not self.check_validity(robot_list, sampledVelocity, sampledAngularVelocity):
 
                     # Toggle found to True
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    dist = np.linalg.norm(v_input - np.array([vx, vy])) + 50*sampledAngularVelocity
+                    input = np.array([self.input_v, self.input_w*3])
+                    sample = np.array([sampledVelocity, sampledAngularVelocity*3])
+                    dist = np.linalg.norm(input - sample)
 
                     # If newly sampled value is closest to desired velocity, keep this one
                     if dist < closest_distance:
                         closest_distance = dist
                         new_velocity = [sampledVelocity, sampledAngularVelocity]
 
-            # Show and close plot
-            if plt_resolve:
-                # Show and close plot
-                plt.show(block=False)
-                plt.pause(0.1)
-                plt.close(fig)
-
             # If no collision free velocity is found, increase the search area
-            max_w += 1
+            max_w += 0.5
 
         # # Set output of our robot to newly sampled velocity
         self.output_v = new_velocity[0]
         self.output_w = new_velocity[1]
-        self.input_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
-        self.input_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
+        self.output_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
+        self.output_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
 
-    @staticmethod
-    def collision_check(velocity, cones):
-        """""
-        Input: velocity -> shapely.geometry.Point object 
-        cones -> list filled with shapely.geometry.Polygon objects which resemble the collision areas in velocity space
+    def check_validity(self, robot_list, testVelocity, testAngulaVelocity):
 
-        Output: collision -> Boolean
+        # Check for collision 10 seconds into the future
+        time_horizon = 5
+        safety_margin = 1.2
 
-        Function checks if a velocity is collsion free in velocity space
-        """""
-
-        # Set collision to False and start check
+        # Set collision to False in beginning
         collision = False
 
-        # Check if our desired velocity is in any of the velocity obstacles
-        for cone in cones:
-            if cone.contains(velocity):
-                collision = True
+        # Toggle for plotting
+        plot_gvo = False
+        if plot_gvo:
+            fig = plt.figure()
+            plt.cla()
+            plt.minorticks_on()
+            plt.axis('equal')
+            plt.xlim(0, 10)
+            plt.ylim(0, 10)
+
+        # Iterate over robot_list
+        for robot in robot_list:
+
+            # Init our positions and other positions
+            our_positions = []
+            other_positions = []
+
+            # Init two unicycle objects
+            our_uni = UniCycleModel(self.dt, self.x, self.y, self.theta)
+            other_uni = UniCycleModel(robot.dt, robot.x, robot.y, robot.theta)
+
+            # Update positions for time horizon and check closest distance
+            if not robot.our:
+                steps = int(time_horizon//self.dt)
+                for i in range(steps):
+                    ourNewPosition = np.array([testVelocity, testAngulaVelocity])
+                    xytheta = our_uni.nextX(ourNewPosition.reshape((1, 2)))
+                    xy = xytheta[:2]
+                    our_positions.append(xy.reshape(1, 2))
+
+                    otherNewPosition = np.array([robot.output_v, robot.output_w])
+                    xytheta = other_uni.nextX(otherNewPosition.reshape((1, 2)))
+                    xy = xytheta[:2]
+                    other_positions.append(xy.reshape(1, 2))
+
+                # Check min distance per robot
+                min_distance = float("inf")
+                for index in range(len(other_positions)):
+                    distance = np.linalg.norm(np.array(other_positions[index]) - np.array(our_positions[index]))
+                    min_distance = min(min_distance, distance)
+
+                # If distance is less than the radii added --> collisison = True
+                if min_distance < (self.r + robot.r)*safety_margin:
+                    collision = True
+
+                # Plot
+                if plot_gvo:
+                    plt.scatter(np.sum(np.array(our_positions), axis=1)[:, 0],
+                        np.sum(np.array(our_positions), axis=1)[:, 1])
+                    plt.scatter(np.sum(np.array(other_positions), axis=1)[:, 0],
+                        np.sum(np.array(other_positions), axis=1)[:, 1])
+
+        if plot_gvo:
+            plt.show(block=False)
+            plt.pause(0.1)
+            plt.close(fig)
 
         return collision
 
-    def draw(self, plt):
+    def draw(self):
         """""
         Input: plt -> Plot from matplotlib 
 
@@ -328,5 +298,6 @@ class Robot:
         plt.gca().add_patch(circle)
 
         if self.our:
-            circle = plt.Circle((self.x + self.output_vx, self.y + self.output_vy), 0.1, color='red')
+            plt.title(f"Test case   with   robots")
+            circle = plt.Circle((self.x + np.cos(self.theta), self.y + np.sin(self.theta)), 0.05, color='green')
             plt.gca().add_patch(circle)
