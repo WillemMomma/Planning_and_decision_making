@@ -1,6 +1,6 @@
 Introduction
 ===================
-In this read.me, we will walk you through the process of setting up a local environment called "pd-final" and installing the necessary packages. We will assume that you already have Python 3.6 or above and that your python is below version 3.10 and pip already installed.
+In this read.me, we will walk you through the process of setting up a local environment called "pd-final" and installing the necessary packages. We will assume that you already have Python 3.6 or above and that your python is below version 3.9 and pip already installed.
 
 ### Installation
 Open a terminal window and navigate to the directory where you want to create the pd-final environment.
@@ -12,7 +12,7 @@ git clone git@github.com:WillemMomma/Planning_and_decision_making.git
 ```
 
 ### Setting up the pd-final environment
-The urdfenv requires Python >3.6, <3.10. Check which python version of python is currently active on your computer.
+The urdfenv requires Python >3.6, <3.9. Check which python version of python is currently active on your computer.
 
 ``` {.sourceCode .bash}
 python --version
@@ -37,7 +37,7 @@ pd-final\Scripts\activate
 source pd-final/bin/activate
 ```
 
-3. Verify that you have the required python version, the version needs to be between 3.6 and 3.9.
+3. Verify that you have the required python version, the version needs to be between <3.6 and 3.8>.
 
 ``` {.sourceCode .bash}
 python --version
@@ -64,7 +64,7 @@ python main.py
 
 ### Alternitive setup way.
 
-1. You have a python installed which is 3.5 or lower or 3.10 or higher. By running the following command you can check if you have other python versions installed on your computer. 
+1. You have a python installed which is 3.5 or lower or 3.9 or higher. By running the following command you can check if you have other python versions installed on your computer. 
 
 ``` {.sourceCode .bash}
 where python
