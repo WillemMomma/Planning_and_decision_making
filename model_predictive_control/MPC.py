@@ -36,6 +36,9 @@ def errorFunction(t,dt,  currentState , path, o):
     angularVelocityPath = (velocityPathX * accY - velocityPathY*accX)/(velocityPathX**2 + velocityPathY**2 )
     currentAngleBot = o
     
+    
+
+    
     # angularVelocityBot = (previousAngleBot - currentAngleBot)*dt  
     xError = path[t,0] - currentState[len(currentState)-1,0]
     yError = (path[t,1] - currentState[len(currentState)-1,1] )
@@ -44,10 +47,6 @@ def errorFunction(t,dt,  currentState , path, o):
 
     if thetaError < -2:
         thetaError = -0.03
-
-    print(f"this is the total error: {thetaError}")
-    print(f"this is the angle path: {anglePath}")
-    print(f"this is the orientation: {o}")
 
 
     errorAmatrix = np.array([[1,dt*angularVelocityPath,0],
@@ -89,7 +88,7 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
     testing = False
     global states
     global inputs
-    dt = 0.1
+    dt = 0.01
 
    
     # Check if we are in testing mode
@@ -140,7 +139,7 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
             therfore we need at least three points in the state array
             """
             error = errorFunction(timestep - 2 ,dt, np.array(states) , target, o)
-            input   = mpcControl(error, 20, np.array(states)[timestep - 2,:], target[timestep - 2, :])[0]
+            input   = mpcControl(error, 1, np.array(states)[timestep - 2,:], target[timestep - 2, :])[0]
             inputs.append(input) 
         else: 
             input = np.array([0,0])

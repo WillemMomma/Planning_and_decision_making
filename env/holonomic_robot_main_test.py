@@ -4,33 +4,35 @@ import itertools
 from urdfenvs.robots.generic_urdf import GenericUrdfReacher
 from MotionPlanningEnv.dynamicSphereObstacle import DynamicSphereObstacle
 
-class steering:
-    def straight(v,n):
-        vector = np.array([v,0,0])      
-        m = int(n/v *100)
-        arr = np.tile(vector, (m, 1))
-        return(arr)
-        
-    def left(v,r,deg):
-        omega = v/r
-        m = int((np.pi*100*deg)/(180*omega))
-        vector = np.array([v,0,omega])
-        arr = np.tile(vector, (m, 1))
-        return(arr)
-    def right(v,r,deg):
-        omega = v/r
-        m = int((np.pi*100*deg)/(180*omega))
-        vector = np.array([v,0,-omega])
-        arr = np.tile(vector, (m, 1))
-        return(arr)   
-    def stop(t):
-        vector = np.array([0, 0, 0])
-        m = 100 * t
-        arr = np.tile(vector, (m, 1))
-        return(arr)        
-    
 
-def initEnv(goal=False, obstacles=False, maps=0):   
+
+def initEnv(goal=False, obstacles=False, maps=0, dt=0.01):   
+
+    class steering:
+        def straight(v,n):
+            vector = np.array([v,0,0])      
+            m = int(n/v *(1/dt))
+            arr = np.tile(vector, (m, 1))
+            return(arr)
+            
+        def left(v,r,deg):
+            omega = v/r
+            m = int((np.pi*(1/dt)*deg)/(180*omega))
+            vector = np.array([v,0,omega])
+            arr = np.tile(vector, (m, 1))
+            return(arr)
+        def right(v,r,deg):
+            omega = v/r
+            m = int((np.pi*(1/dt)*deg)/(180*omega))
+            vector = np.array([v,0,-omega])
+            arr = np.tile(vector, (m, 1))
+            return(arr)   
+        def stop(t):
+            vector = np.array([0, 0, 0])
+            m = int((1/dt) * t)
+            arr = np.tile(vector, (m, 1))
+            return(arr)        
+            
 
     if maps == 1:
         result = []
@@ -47,7 +49,7 @@ def initEnv(goal=False, obstacles=False, maps=0):
         m = len(robots)
         env = gym.make(
             "urdf-env-v0",
-            dt=0.01, robots=robots, render=True
+            dt=dt, robots=robots, render=True
         )
         
         n = env.n()       
@@ -69,12 +71,12 @@ def initEnv(goal=False, obstacles=False, maps=0):
         )
         env.reset(pos=initialPositions,mount_positions=mountPositions)
 
-        arr1 = np.concatenate([steering.stop(1),steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 9), steering.right(6,2,91),steering.straight(6, 0.1),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
-        arr2 = np.concatenate([steering.stop(1),steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 5), steering.right(6,2,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
-        arr3 = np.concatenate([steering.stop(1), steering.straight(6, 7),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 7),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
-        arr4 = np.concatenate([steering.stop(1), steering.straight(6, 3),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 6),steering.left(6, 1, 91),steering.straight(6, 7),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr1 = np.concatenate([steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 9), steering.right(6,2,91),steering.straight(6, 0.1),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr2 = np.concatenate([steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 5), steering.right(6,2,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr3 = np.concatenate([steering.straight(6, 7),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 7),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
+        arr4 = np.concatenate([steering.straight(6, 3),steering.right(6,1,91),steering.straight(6, 5.5),steering.left(6, 1, 180),steering.straight(6, 2),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.straight(4, 6),steering.left(6, 1, 91),steering.straight(6, 7),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
         arr5 = np.concatenate([steering.stop(4), steering.straight(4, 26)])
-        arr6 = np.concatenate([steering.stop(4), steering.straight(4, 26)])
+        arr6 = np.concatenate([steering.stop(5), steering.straight(4, 26)])
 
         max_len = max(arr1.shape[0], arr2.shape[0], arr3.shape[0],arr4.shape[0],arr5.shape[0],arr6.shape[0])
         
@@ -97,7 +99,8 @@ def initEnv(goal=False, obstacles=False, maps=0):
             dimensions = walls1[i][1][0:2]
             coordinates = [coord[:2] for coord in walls1[i][2]]
             
-            result.append([[coordinates[0], coordinates[1], dimensions[0], dimensions[1]] for coordinates in coordinates])
+            result.append([[coordinates[0] - 0.5 * dimensions[0] , coordinates[1] - 0.5 * dimensions[1], 
+                            coordinates[0] + 0.5 * dimensions[0] , coordinates[1] + 0.5 * dimensions[1]] for coordinates in coordinates])
             
         obstacles = list(itertools.chain(*result))
 
@@ -105,7 +108,7 @@ def initEnv(goal=False, obstacles=False, maps=0):
         pass
 
 
-    return env , m, mountPositions[:,:2], obstacles, initialPositions[:,2]+np.deg2rad(90), steeringInput
+    return env , m, mountPositions[:,:2], initialPositions[:,2]+np.deg2rad(90), obstacles, steeringInput
     
 
 

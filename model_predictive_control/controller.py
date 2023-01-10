@@ -16,7 +16,6 @@ def mpcControl(error, N, xInit, xTarget):
     A end B are error matrices packaged in the error variable
 
     """
-    print("we are in MPC")
     
     weightInput = np.array([[1,0],[0,1]])    # Weight on the input
     weightTracking = np.array([[100,0,0],[0,100,0],[0,0,10]]) # Weight on the tracking state
@@ -38,7 +37,7 @@ def mpcControl(error, N, xInit, xTarget):
 
         # constraints
         constraints += [x[:, k+1] == nextError]
-        constraints += [u[:, k] <= [3,3]]
+        constraints += [u[:, k] <= [6,3]]
         constraints += [u[:, k] >= [0,-3]]
 
         # Minimize the cost function
