@@ -36,9 +36,6 @@ def errorFunction(t,dt,  currentState , path, o):
     angularVelocityPath = (velocityPathX * accY - velocityPathY*accX)/(velocityPathX**2 + velocityPathY**2 )
     currentAngleBot = o
     
-    
-
-    
     # angularVelocityBot = (previousAngleBot - currentAngleBot)*dt  
     xError = path[t,0] - currentState[len(currentState)-1,0]
     yError = (path[t,1] - currentState[len(currentState)-1,1] )
@@ -139,7 +136,7 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
             therfore we need at least three points in the state array
             """
             error = errorFunction(timestep - 2 ,dt, np.array(states) , target, o)
-            input   = mpcControl(error, 1, np.array(states)[timestep - 2,:], target[timestep - 2, :])[0]
+            input   = mpcControl(error, 20, np.array(states)[timestep - 2,:], target[timestep - 2, :])[0]
             inputs.append(input) 
         else: 
             input = np.array([0,0])
@@ -165,10 +162,10 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
 # dummyDataY = np.sin(dummyDatag)
 # dummyDataX = (dummyDatag) 
 # target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
-# uni = UniCycleModel(0.1)
+# uni = UniCycleModel(0.05)
 # input = np.array([[0,0]])
 
-# for i in range(0,190    ):
+# for i in range(0,190):
 #     pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
 #     currentTimePos = [pos[0][0],pos[0][1]]
 
