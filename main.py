@@ -2,7 +2,7 @@
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.robot_class import Robot
-from env.holonomic_robot_main_test import initEnv, robotMain
+from env.holonomic_robot_main import initEnv, robotMain
 
 # Importing libraries
 import numpy as np
