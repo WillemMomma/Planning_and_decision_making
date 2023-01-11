@@ -5,7 +5,7 @@ Created on Fri Dec 30 17:17:42 2022
 @author: wille
 """
 import numpy as np
-from env.holonomic_robot_main_test import initEnv, robotMain
+from env.holonomic_robot_main import initEnv, robotMain
 #from point_robot_main import robotMain as robotMain
 
 #currentPositions, currentVelocities, currentOrientations , trajectory = [placeholderPos, placeholderVel,\
