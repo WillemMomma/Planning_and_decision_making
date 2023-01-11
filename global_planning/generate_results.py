@@ -369,7 +369,6 @@ def maindf(obstacles,start=None,goal=None, maxIter = 1200, maxExpansion = 1, pro
     costList = []
     timeList = []
     nodesList = []
-    rrt.planning(animation=False, plotter=True)
     print('Starting generating results with 20 iterations')
     for i in range(20):
         goal, cost, time = rrt.planning(animation=False, plotter=False)
@@ -406,8 +405,8 @@ obstacleList.append(obstacleCircle(11, 36, 6))
 obstacleList.append(obstacleRectangle(20, 46.5, 22, 50))
 # obstacleList.append(obstacleRectangle(30, 46, 32, 50))
 
-main(obstacleList, start, goal,
-                maxIter = 1500, maxExpansion = 5, probGoal = 0.05, threshold = 0.5, searchGamma = 60)
+# main(obstacleList, start, goal,
+#                 maxIter = 1000, maxExpansion = 5, probGoal = 0.05, threshold = 0.5, searchGamma = 20)
 
 # quick = maindf(obstacleList, start, goal,
 #                 maxIter = 1000, maxExpansion = 15, probGoal = 0.05, threshold = 0.5, searchGamma = 20)
@@ -418,26 +417,27 @@ main(obstacleList, start, goal,
 # medium.to_excel('medium.xlsx')
 
 # optimal = maindf(obstacleList, start, goal,
-#                 maxIter = 1800, maxExpansion = 5, probGoal = 0.05, threshold = 0.5, searchGamma = 60)
+#                 maxIter = 2500, maxExpansion = 5, probGoal = 0.05, threshold = 0.5, searchGamma = 60)
 # optimal.to_excel('optimal.xlsx')
 
 # testmap compared to RRT* from AtsushiSakai
-# obstacle_list = [
-#     (5, 5, 3),
-#     (15, 15, 5),
-#     (25, 25, 5),
-#     (5, 15, 5),
-#     (5, 25, 5),
-#     (40, 40, 4),
-#     (30, 10, 7),
-#     (45, 30, 4),
-#     (36,28,3)
-# ]  # [x,y,size(radius)]
-# obstacleList = []
-# for obs in obstacle_list:
-#     obstacleList.append(obstacleCircle(obs[0], obs[1], obs[2]))
+obstacle_list = [
+    (5, 5, 3),
+    (15, 15, 5),
+    (25, 25, 5),
+    (5, 15, 5),
+    (5, 25, 5),
+    (40, 40, 4),
+    (30, 10, 7),
+    (45, 30, 4),
+    (36,28,3)
+]  # [x,y,size(radius)]
+obstacleList = []
+for obs in obstacle_list:
+    obstacleList.append(obstacleCircle(obs[0], obs[1], obs[2]))
 
-# start = [1, 1]
-# goal = [50, 50]
-# main(obstacleList, start, goal,
-#     maxIter = 1500, maxExpansion = 7, probGoal = 0.05, threshold = 0.5, searchGamma = 40)
+start = [1, 1]
+goal = [50, 50]
+comparisonPythonRobotics = maindf(obstacleList, start, goal,
+                                    maxIter = 1500, maxExpansion = 7, probGoal = 0.05, threshold = 0.5, searchGamma = 40)
+comparisonPythonRobotics.to_excel('comparisonPythonRobotics.xlsx')
