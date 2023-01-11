@@ -15,6 +15,8 @@ def behaviour():
     Input -> None : None
     Ouput -> None : None
     """
+    #initialize the map
+    map = 0
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -49,7 +51,7 @@ def behaviour():
                 """
 
                 # Initialize the map
-                env, m, currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1, dt=0.01)
+                env, m, currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=map, dt=0.01)
                 currentVelocities = np.zeros((m,))
 
                 # Create the trajectory
@@ -169,7 +171,12 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+
+            if map == 0:
+                currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput, env)
+
+            if map == 1:
+                currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
