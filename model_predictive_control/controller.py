@@ -38,7 +38,7 @@ def mpcControl(error, N, xInit, xTarget):
         # constraints
         constraints += [x[:, k+1] == nextError]
         constraints += [u[:, k] <= [6,3]]
-        constraints += [u[:, k] >= [0,-3]]
+        constraints += [u[:, k] >= [-4,-3]]
 
         # Minimize the cost function
         cost += cp.quad_form(u[:, k], weightInput)
