@@ -45,7 +45,7 @@ def mpcControl(error, N, xInit, xTarget):
         cost += cp.quad_form((x[:, k+1] ), weightTracking)
     
     # Terminal set
-    cost += cp.quad_form(x[:, N], weightTracking*100000)
+    cost += cp.quad_form(x[:, N], weightTracking*10000)
 
     
     # Solves the problem
