@@ -177,8 +177,9 @@ class Robot:
 
         # Range in which to sample for new velocities
         min_velocity = 0.5
-        max_velocity = 3
-        max_w = 1
+        max_velocity = 6
+        max_w = 3
+        weight = [1, 1]
 
         # Plot and found toggle
         found = False
@@ -187,7 +188,7 @@ class Robot:
         while not found:
 
             # Try 40 times to find a new velocity
-            for i in range(40):
+            for i in range(20):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
@@ -200,8 +201,8 @@ class Robot:
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    input = np.array([self.input_v, self.input_w*3])
-                    sample = np.array([sampledVelocity, sampledAngularVelocity*3])
+                    input = np.array([self.input_v*weight[0], self.input_w*weight[1]])
+                    sample = np.array([sampledVelocity*weight[0], sampledAngularVelocity*weight[1]])
                     dist = np.linalg.norm(input - sample)
 
                     # If newly sampled value is closest to desired velocity, keep this one
@@ -221,8 +222,8 @@ class Robot:
     def check_validity(self, robot_list, testVelocity, testAngulaVelocity):
 
         # Check for collision 10 seconds into the future
-        time_horizon = 5
-        safety_margin = 1.2
+        time_horizon = 8
+        safety_margin = 1.5
 
         # Set collision to False in beginning
         collision = False
