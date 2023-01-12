@@ -15,7 +15,7 @@ class obstacleRectangle:
     Input:  x1, y1: bottom left corner of obstacle
             x2, y2: top right corner of obstacle
     '''
-    def __init__(self, x1, y1, x2, y2, margin=0.2):
+    def __init__(self, x1, y1, x2, y2, margin=0.5):
         self.type = 'rectangle'
         self.x1 = x1
         self.y1 = y1

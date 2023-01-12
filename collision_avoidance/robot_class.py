@@ -22,19 +22,13 @@ class Robot:
 
         # Input given to the robot at initialization
         self.input_v = v
-        self.input_vx = np.cos(theta + w*self.dt) * v
-        self.input_vy = np.sin(theta + w*self.dt) * v
         self.input_w = w
 
         # Set previous and output equal to input for the first timestep
         self.previous_v = self.input_v
-        self.previous_vx = self.input_vx
-        self.previous_vy = self.input_vy
         self.previous_w = self.input_w
 
         self.output_v = self.input_v
-        self.output_vx = self.input_vx
-        self.output_vy = self.input_vy
         self.output_w = self.input_w
 
         # Init orientation and if it is the to-be-controlled robot
@@ -52,29 +46,21 @@ class Robot:
         Output: None but all the variables of self are updated in this function
         """""
 
-        # Init position and radius of robot
+        # Update position and orientation
         self.x = x
         self.y = y
+        self.theta = theta
 
-        # Input given to the robot at update
+        # Update input v and w
         self.input_v = v
         self.input_w = w
-        self.input_vx = np.cos(theta + w*self.dt) * v
-        self.input_vy = np.sin(theta + w*self.dt) * v
 
         # Set previous and output equal to input
         self.previous_v = self.input_v
         self.previous_w = self.input_w
-        self.previous_vx = self.input_vx
-        self.previous_vy = self.input_vy
 
         self.output_v = self.input_v
         self.output_w = self.input_w
-        self.output_vx = self.input_vx
-        self.output_vy = self.input_vy
-
-        # Init orientation and if it is the to-be-controlled robot
-        self.theta = theta
 
     def update_our(self, x, y, v, w, theta, robot_list):
         """""
@@ -94,8 +80,6 @@ class Robot:
         self.theta = theta
         self.input_v = v
         self.input_w = w
-        self.input_vx = np.cos(theta + w*self.dt) * v
-        self.input_vy = np.sin(theta + w*self.dt) * v
 
         # Plot the current velocity obstacles
         if self.plotting:
@@ -121,22 +105,16 @@ class Robot:
         # If no collision is found with desired velocity, continue with desired velocity
         if not self.check_validity(close_robot_list, self.input_v, self.input_w):
             self.output_v = self.input_v
-            self.output_vx = self.input_vx
-            self.output_vy = self.input_vy
             self.output_w = self.input_w
+
+        # # If collision is found with desired velocity, check for previous velocity
+        # elif not self.check_validity(close_robot_list, half_half[0], half_half[1]) and self.previous_v != 0:
+        #     self.output_v = half_half[0]
+        #     self.output_w = half_half[1]
 
         # If collision is found with desired velocity, check for previous velocity
         elif not self.check_validity(close_robot_list, self.previous_v, self.previous_w) and self.previous_v != 0:
             self.output_v = self.previous_v
-            self.output_vx = self.previous_vx
-            self.output_vy = self.previous_vy
-            self.output_w = self.previous_w
-
-        # If collision is found with desired velocity, check for previous velocity
-        elif not self.check_validity(close_robot_list, half_half[0], half_half[1]) and self.previous_v != 0:
-            self.output_v = self.previous_v
-            self.output_vx = self.previous_vx
-            self.output_vy = self.previous_vy
             self.output_w = self.previous_w
 
         # Else sample a new velocity with gvo
@@ -145,8 +123,6 @@ class Robot:
 
         # Save current output for next timestep
         self.previous_v = self.output_v
-        self.previous_vx = self.output_vx
-        self.previous_vy = self.output_vy
         self.previous_w = self.output_w
 
         if self.plotting:
@@ -155,7 +131,7 @@ class Robot:
                 robot.draw()
 
             # Show and close plot
-            # plt.show(block=False)
+            # plt.show(block=False) # Uncomment to show plot
             # plt.pause(0.1)
             plt.savefig(f'plotnumber_{self.plot_number}')
             self.plot_number += 1
@@ -176,7 +152,7 @@ class Robot:
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
-        min_velocity = -4
+        min_velocity = 0.5
         max_velocity = 6
         max_w = 3
         weight = [1, 1]
@@ -187,10 +163,8 @@ class Robot:
         # While no collsion free velocity is found, keep sampling
         while not found:
 
-            print("HIERRRRRR")
-
             # Try 40 times to find a new velocity
-            for i in range(40):
+            for i in range(20):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
                 sampledVelocity = random.uniform(min_velocity, max_velocity)
@@ -205,7 +179,7 @@ class Robot:
                     # Calc distance to desired velocity with a weight to a high angular velocity
                     input = np.array([self.input_v*weight[0], self.input_w*weight[1]])
                     sample = np.array([sampledVelocity*weight[0], sampledAngularVelocity*weight[1]])
-                    dist = np.linalg.norm(sample - input)
+                    dist = np.linalg.norm(input - sample)
 
                     # If newly sampled value is closest to desired velocity, keep this one
                     if dist < closest_distance:
@@ -215,9 +189,6 @@ class Robot:
         # # Set output of our robot to newly sampled velocity
         self.output_v = new_velocity[0]
         self.output_w = new_velocity[1]
-        self.output_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
-        self.output_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
-        print()
 
     def check_validity(self, robot_list, testVelocity, testAngulaVelocity):
 
