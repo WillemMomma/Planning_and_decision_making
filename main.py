@@ -18,7 +18,7 @@ def behaviour():
     # Choose your map
     # map = 0 -> test map
     # map = 1 -> warehouse multiple robots
-    map = 0
+    map = 1
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -26,15 +26,13 @@ def behaviour():
 
     # Settings for the running loop
     state = 0
-    run = True
     timestep = 0
 
     # Running loop
-    # while run == True: # Change to this condition eventually This requires coordination between @Jasper van Leuven & @Willem Momma
-    while timestep < 3000:
-        if state == 0: 
+    while timestep < 5000: # This is to freeze the final situation for reference of the user
+        if state == 0:
 
-            # For the first iteration we have to create a Map of the enviroment and a path to the goal and init the robot_list
+            # For the first iteration we have to create a Map of the enviroment and a path to the goal
             if timestep == 0:
                 velocity = np.float64(0)
                 angularVelocity = np.float64(0)
@@ -60,6 +58,7 @@ def behaviour():
                 # Create the Enviroment 
                 env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
                 currentVelocities = np.zeros((m,))
+                currentAngularVelocities = np.zeros((m,))
                 
 
 
@@ -78,7 +77,7 @@ def behaviour():
                                                 currentPositions[i, 1],
                                                 radius,
                                                 currentVelocities[i],
-                                                0,
+                                                currentAngularVelocities[i],
                                                 currentOrientations[i],
                                                 False))
 
@@ -98,9 +97,7 @@ def behaviour():
             """
 
             currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
-            #if timestep % 10 == 0:
-                #print('currentVelocitie = ',currentVelocities[0])
-                #print('position = ',currentPositions[0,:])
+
             # @Godert Notten
             """
                 INPUT
@@ -126,7 +123,7 @@ def behaviour():
                     robot_list[i].update_other(currentPositions[i, 0],
                                                 currentPositions[i, 1],
                                                 currentVelocities[i],
-                                                0,
+                                                currentAngularVelocities[i],
                                                 currentOrientations[i])
 
              # For our robot
@@ -170,24 +167,18 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
-
-            # Below is the pseudocode provided
-            # Please import simulation as well
-            # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
+            currentPositions, currentAngularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
 
             # Check if the final position has been reached
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
                state = 1
                print("We have reached our goal")
-               run = False
-
 
             timestep += 1
 
         # This state signifies that we have finished
         if state == 1:
-            run = False
+            continue
 
 
 '''

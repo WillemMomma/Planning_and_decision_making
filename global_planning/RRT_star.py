@@ -335,7 +335,7 @@ def main(obstacles, start=None):
         obstacleList.append(obstacle)
 
     start = start
-    goal = [-8, 6]
+    goal = [-6, 6]
     randArea = [-10, 10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     path = rrt.planning()

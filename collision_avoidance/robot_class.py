@@ -176,15 +176,18 @@ class Robot:
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
-        min_velocity = 0.5
-        max_velocity = 3
-        max_w = 1
+        min_velocity = -4
+        max_velocity = 6
+        max_w = 3
+        weight = [1, 1]
 
         # Plot and found toggle
         found = False
 
         # While no collsion free velocity is found, keep sampling
         while not found:
+
+            print("HIERRRRRR")
 
             # Try 40 times to find a new velocity
             for i in range(40):
@@ -200,29 +203,27 @@ class Robot:
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    input = np.array([self.input_v, self.input_w*3])
-                    sample = np.array([sampledVelocity, sampledAngularVelocity*3])
-                    dist = np.linalg.norm(input - sample)
+                    input = np.array([self.input_v*weight[0], self.input_w*weight[1]])
+                    sample = np.array([sampledVelocity*weight[0], sampledAngularVelocity*weight[1]])
+                    dist = np.linalg.norm(sample - input)
 
                     # If newly sampled value is closest to desired velocity, keep this one
                     if dist < closest_distance:
                         closest_distance = dist
                         new_velocity = [sampledVelocity, sampledAngularVelocity]
 
-            # If no collision free velocity is found, increase the search area
-            max_w += 0.5
-
         # # Set output of our robot to newly sampled velocity
         self.output_v = new_velocity[0]
         self.output_w = new_velocity[1]
         self.output_vx = np.cos(self.theta + self.output_w * self.dt) * self.output_v
         self.output_vy = np.sin(self.theta + self.output_w * self.dt) * self.output_v
+        print()
 
     def check_validity(self, robot_list, testVelocity, testAngulaVelocity):
 
         # Check for collision 10 seconds into the future
         time_horizon = 5
-        safety_margin = 1.2
+        safety_margin = 1.5
 
         # Set collision to False in beginning
         collision = False
