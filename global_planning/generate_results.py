@@ -150,7 +150,7 @@ class RRT_star:
             print("Goal Reached!")
             goalReached = True
         else:
-            print("Goal not reached, try increasing maxIter")
+            print("Goal not reached, try increasing maxIter or max expansion distance")
             goalReached = False
         path = self.finalPath(finalNode)
         self.pathLength = len(path)
@@ -333,17 +333,9 @@ class RRT_star:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='dodgerblue', linestyle='-')
             plt.plot(node.x,node.y, color = 'orange', marker = 'o', markersize = 6)
 
-        plt.figtext(0.5, 0.01, 'cost (m) = ' + str(round(self.cost(finalNode),2)) + ' time (s) = ' +str(round(totalTime, 2)) + ' nodes: ' + str(len(self.nodeList)), wrap=True, horizontalalignment='center', fontsize=12)
+        plt.figtext(0.5, 0, 'cost (m) = ' + str(round(self.cost(finalNode),2)) + ' time (s) = ' +str(round(totalTime, 2)) + ' nodes: ' + str(len(self.nodeList)), wrap=True, horizontalalignment='center', fontsize=12)
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
-        plt.legend
-        redBox = Patch(color='darkred', label='Obstacle')
-        bluePath = Patch(color='dodgerblue', label='Edges goalpath')
-        orangeNodes = Patch(color='orange', label='Vertices goalpath')
-        greyNodes = Patch(color='darkgrey', label='Tree')
-        greenStart = Patch(color='green', label='Start/Goal')
-        handles = [redBox, bluePath, orangeNodes, greyNodes, greenStart]
-        plt.legend(handles=handles, bbox_to_anchor=(1,1), borderaxespad=0.)
-        #plt.tight_layout()
+        plt.tight_layout()
         plt.grid(False)
         plt.pause(0.01)
 
@@ -369,8 +361,9 @@ def maindf(obstacles,start=None,goal=None, maxIter = 1200, maxExpansion = 1, pro
     costList = []
     timeList = []
     nodesList = []
-    print('Starting generating results with 20 iterations')
-    for i in range(20):
+    iter = 100
+    print('Starting generating results with' + str(iter)+' iterations')
+    for i in range(iter):
         goal, cost, time = rrt.planning(animation=False, plotter=False)
         iterationList.append(i)
         goalList.append(goal)
@@ -400,24 +393,27 @@ for x in range(5, 51, 10):
     obstacleList.append(obstacleRectangle(x, 0, x+2, 20))
 for y in range(30, 51, 10):
     obstacleList.append(obstacleRectangle(20, y, 50, y+2))
-#circles for obstacles
+#circles for obstacles 
 obstacleList.append(obstacleCircle(11, 36, 6))
 obstacleList.append(obstacleRectangle(20, 46.5, 22, 50))
 # obstacleList.append(obstacleRectangle(30, 46, 32, 50))
 
-# main(obstacleList, start, goal,
-#                 maxIter = 1000, maxExpansion = 5, probGoal = 0.05, threshold = 0.5, searchGamma = 20)
+main(obstacleList, start, goal,
+                maxIter = 1000, maxExpansion = 15, probGoal = 0.05, threshold = 0.5, searchGamma = 20)
 
-# quick = maindf(obstacleList, start, goal,
+# #time optimized 
+# fast = maindf(obstacleList, start, goal,
 #                 maxIter = 1000, maxExpansion = 15, probGoal = 0.05, threshold = 0.5, searchGamma = 20)
-# quick.to_excel('quick.xlsx')
+# fast.to_excel('fast.xlsx')
 
-# medium = maindf(obstacleList, start, goal,
-#                 maxIter = 1200, maxExpansion = 7, probGoal = 0.05, threshold = 0.5, searchGamma = 40)
-# medium.to_excel('medium.xlsx')
+# #balance between time and optimal path 
+# balanced = maindf(obstacleList, start, goal,
+#                 maxIter = 2000, maxExpansion = 12, probGoal = 0.05, threshold = 0.5, searchGamma = 40)
+# balanced.to_excel('balanced.xlsx')
 
+# #path optimized
 # optimal = maindf(obstacleList, start, goal,
-#                 maxIter = 2500, maxExpansion = 5, probGoal = 0.05, threshold = 0.5, searchGamma = 60)
+#                 maxIter = 4000, maxExpansion = 2, probGoal = 0.05, threshold = 0.5, searchGamma = 70)
 # optimal.to_excel('optimal.xlsx')
 
 # testmap compared to RRT* from AtsushiSakai
@@ -431,13 +427,12 @@ obstacle_list = [
     (30, 10, 7),
     (45, 30, 4),
     (36,28,3)
-]  # [x,y,size(radius)]
+] 
 obstacleList = []
 for obs in obstacle_list:
     obstacleList.append(obstacleCircle(obs[0], obs[1], obs[2]))
-
 start = [1, 1]
 goal = [50, 50]
-comparisonPythonRobotics = maindf(obstacleList, start, goal,
-                                    maxIter = 1500, maxExpansion = 7, probGoal = 0.05, threshold = 0.5, searchGamma = 40)
-comparisonPythonRobotics.to_excel('comparisonPythonRobotics.xlsx')
+# comparisonPythonRobotics = maindf(obstacleList, start, goal,
+#                                     maxIter = 1500, maxExpansion = 7, probGoal = 0.05, threshold = 0.5, searchGamma = 40)
+# comparisonPythonRobotics.to_excel('forcomparison.xlsx')

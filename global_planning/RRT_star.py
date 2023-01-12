@@ -288,14 +288,6 @@ class RRT_star:
 
         plt.figtext(0.5, 0.01, 'cost (m) = ' + str(round(self.cost(finalNode),2)) + ' time (s) = ' +str(round(totalTime, 2)) + ' nodes: ' + str(len(self.nodeList)), wrap=True, horizontalalignment='center', fontsize=12)
         plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
-        plt.legend
-        redBox = Patch(color='darkred', label='Obstacle')
-        bluePath = Patch(color='dodgerblue', label='Edges goalpath')
-        orangeNodes = Patch(color='orange', label='Vertices goalpath')
-        greyNodes = Patch(color='darkgrey', label='Tree')
-        greenStart = Patch(color='green', label='Start/Goal')
-        handles = [redBox, bluePath, orangeNodes, greyNodes, greenStart]
-        plt.legend(handles=handles, bbox_to_anchor=(1,1), borderaxespad=0.)
         plt.tight_layout()
         plt.grid(False)
         plt.pause(0.01)
@@ -359,4 +351,4 @@ def main(obstacles, start=None):
                 trajectory.append(np.array([x[i], y[i]]))
     return trajectory[::-1]
 
-test(maxIter = 2000, maxExpansion = 7, searchGamma = 60, plotter = True)
+test(maxIter = 1000, maxExpansion = 7, searchGamma = 60, plotter = True)
