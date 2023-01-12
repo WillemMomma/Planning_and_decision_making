@@ -178,7 +178,7 @@ def behaviour():
             # print("currentPositions[0]", currentPositions[0])
             # print("trajectory[-1]", trajectory[-1])
             # print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0]]) - trajectory[-1]))
-            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 2:
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.01:
                state = 1
                print("We have reached our goal")
                print(state)
