@@ -399,7 +399,7 @@ obstacleList.append(obstacleRectangle(20, 46.5, 22, 50))
 # obstacleList.append(obstacleRectangle(30, 46, 32, 50))
 
 main(obstacleList, start, goal,
-                maxIter = 1000, maxExpansion = 15, probGoal = 0.05, threshold = 0.5, searchGamma = 20)
+                maxIter = 4000, maxExpansion = 2, probGoal = 0.05, threshold = 0.5, searchGamma = 70)
 
 # #time optimized 
 # fast = maindf(obstacleList, start, goal,
