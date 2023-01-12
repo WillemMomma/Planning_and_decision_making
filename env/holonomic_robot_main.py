@@ -5,20 +5,20 @@ from urdfenvs.robots.generic_urdf import GenericUrdfReacher
 from MotionPlanningEnv.dynamicSphereObstacle import DynamicSphereObstacle
 
 
-def initMap(maps, start_postition):
-    if maps == 0:
-        mountPositions = np.array([(0, 0, 0)])
-        obstacles = ([(100, 100, 100, 100)])
+def initMap(otherrobots, maps, start_position):
     if maps == 1:
-
-        mountPositions = np.array(
-            [
-                (start_postition[0], start_postition[1], 0), (6, -8, 0), (-6, 8, 0), (4, 0.5, 0), (-6, -0.5, 0), (-12, -0.5, 0), (12, 0.5, 0)
-                # (0,0,0), (0,0,0),   (0,0,0), (0,0,0),  (0,0,0),    (0,0,0) ,    (0,0,0)
-
-            ]
-        )
-
+        if otherrobots == True:
+            mountPositions = np.array(
+                [
+                    (start_position[0], start_position[1], 0), (6, -8, 0), (-6, 8, 0), (4, 0.5, 0), (-6, -0.5, 0), (-12, -0.5, 0), (12, 0.5, 0)
+                ]
+            )
+        else:
+            mountPositions = np.array(
+                [
+                    (0, 0, 0)
+                ]
+            )
         result = []
         from env.gym_envs_urdf.scene_objects.obstacles import walls1
 
@@ -32,10 +32,13 @@ def initMap(maps, start_postition):
 
         obstacles = list(itertools.chain(*result))
 
+    if maps == 0:
+        mountPositions = np.array([(0, 0, 0)])
+        obstacles = ([(100, 100, 100, 100)])
     return mountPositions, obstacles
 
 
-def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=0.01):
+def initEnv(mountPositions, trajectory, goal=False, obstacles=False, otherrobots=False, maps=0, dt=0.01):
     try:
         x1 = trajectory[0, 0]
         y1 = trajectory[0, 1]
@@ -73,7 +76,7 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
             arr = np.tile(vector, (m, 1))
             return (arr)
 
-    if maps == 0:
+    if maps == 0 or otherrobots == False:
         robots = [
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel")
         ]
@@ -91,8 +94,8 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
         initialPositions[:, :2] = mountPositions[:, :2]
         steeringInput = np.zeros((3000))
         env.reset(pos=initialPositions, mount_positions=mountPositions)
-    if maps == 1:
 
+    if (maps == 1 or maps == 2) and otherrobots == True:
         robots = [
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel"),
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel"),
@@ -118,7 +121,9 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
         )
 
         mountPositions = mountPositions
-        env.reset(pos=initialPositions,mount_positions=mountPositions)
+        # initialPositions[:, :2] = mountPositions[:, :2]
+
+        env.reset(pos=initialPositions, mount_positions=mountPositions)
 
         arr1 = np.concatenate(
             [steering.straight(6, 6.5), steering.left(6, 1, 92), steering.straight(6, 9), steering.right(6, 2, 91),
@@ -157,11 +162,14 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
 
         steeringInput = np.concatenate([arr1, arr2, arr3, arr4, arr5, arr6], axis=1)
 
-        from env.gym_envs_urdf.scene_objects.obstacles import walls1
+    from env.gym_envs_urdf.scene_objects.obstacles import walls1  # walls2
 
+    if maps == 1 or otherrobots == True:
         for wall in walls1:
             env.add_shapes(shape_type=wall[0], dim=wall[1], poses_2d=wall[2])
-            
+    # elif maps == 2:
+    #     for wall in walls2:
+    #         env.add_shapes(shape_type=wall[0], dim=wall[1], poses_2d=wall[2])
 
     # n = env.n()
     # pos0 = np.zeros👎
@@ -258,8 +266,5 @@ def robotMain(mountPositions, m, pos, vel, current_orientations, omega, otherRob
     pos_new = pos_new.reshape((m, 2))
     if m > 1:
         pos_new += mountPositions[:, :2]
-
-    print("OUD", pos_new_oud[0:4])
-    print("NEW", pos_new[0:4])
 
     return pos_new, vel_rot_new, vel_new, orientation_new

@@ -6,6 +6,7 @@ from env.holonomic_robot_main import initMap, initEnv, robotMain
 
 # Importing libraries
 import numpy as np
+import random
 import matplotlib.pyplot as plt
 
 
@@ -28,8 +29,9 @@ def behaviour():
     # Settings for the running loop
     state = 0
     timestep = 0
-    start_position = [0, 0]
-    goal_position = [-8, 6]
+    start_position = [random.randrange(-10, 10+1, 2), random.randrange(-10, 10+1, 2)]
+    goal_position = [random.randrange(-10, 10+1, 2), random.randrange(-10, 10+1, 2)]
+    other_robots = True
 
     # Running loop
     while timestep < 5000:  # This is to freeze the final situation for reference of the user
@@ -50,12 +52,19 @@ def behaviour():
                 """
 
                 # Initialize the map
-                mountPositions, obstacles= initMap(map, start_position)
+                # Other robots, map_number, start_position
+                mountPositions, obstacles = initMap(other_robots, map, start_position)
                 # Create the trajectory 
                 trajectory = mainRRT(obstacles, mountPositions[0, 0:2], goal_position)
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
-                # Create the Enviroment 
-                env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
+                # Create the Enviroment
+
+                env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions,
+                                                                                       trajectory,
+                                                                                       goal=True,
+                                                                                       otherrobots=other_robots,
+                                                                                       maps=map,
+                                                                                       dt=0.01)
                 currentVelocities = np.zeros((m,))
                 currentAngularVelocities = np.zeros((m,))
 
