@@ -356,6 +356,3 @@ def main(obstacles, start=None):
             for i in range(len(x)):
                 trajectory.append(np.array([x[i], y[i]]))
     return trajectory[::-1]
-
-test(maxIter = 2000, maxExpansion = 7, searchGamma = 60, plotter = True)
-#test(maxIter = 1500, maxExpansion = 10, searchGamma = 50)
