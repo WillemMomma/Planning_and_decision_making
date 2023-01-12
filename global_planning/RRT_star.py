@@ -1,3 +1,7 @@
+"""
+Author: Willem Momma 
+Path planning using RRT star algorithm
+"""
 
 import random
 import math
@@ -352,5 +356,3 @@ def main(obstacles, start=None):
             for i in range(len(x)):
                 trajectory.append(np.array([x[i], y[i]]))
     return trajectory[::-1]
-
-#test(maxIter = 1500, maxExpansion = 10, searchGamma = 50)

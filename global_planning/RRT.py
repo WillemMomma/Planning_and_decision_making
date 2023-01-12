@@ -1,3 +1,7 @@
+"""
+Author: Willem Momma
+RRT planning algorith 
+"""
 
 import random 
 import math
