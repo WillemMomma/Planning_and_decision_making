@@ -15,7 +15,7 @@ class obstacleRectangle:
     Input:  x1, y1: bottom left corner of obstacle
             x2, y2: top right corner of obstacle
     '''
-    def __init__(self, x1, y1, x2, y2, margin=0.2):
+    def __init__(self, x1, y1, x2, y2, margin=0.4):
         self.type = 'rectangle'
         self.x1 = x1
         self.y1 = y1
@@ -313,7 +313,7 @@ def test(maxIter, maxExpansion, searchGamma):
     print('Number of nodes in final path: ', len(path))
     return None
 
-def main(obstacles, start=None):
+def main(obstacles, start, goal_position):
     '''
     Main function
     Specify start, goal, obstacles, and random area
@@ -335,12 +335,12 @@ def main(obstacles, start=None):
         obstacleList.append(obstacle)
 
     start = start
-    goal = [-6, 6]
+    goal = goal_position
     randArea = [-10, 10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     path = rrt.planning()
     trajectory = []
-    resolution = 0.05
+    resolution = 0.025
     for node in path:
         # fill spaces in between nodes with linear interpolation
         if node.parent:

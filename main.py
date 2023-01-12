@@ -27,6 +27,8 @@ def behaviour():
     # Settings for the running loop
     state = 0
     timestep = 0
+    start_position = [0, 0]
+    goal_position = [-8, 6]
 
     # Running loop
     while timestep < 5000: # This is to freeze the final situation for reference of the user
@@ -51,9 +53,10 @@ def behaviour():
                 """
 
                 # Initialize the map
-                mountPositions, obstacles= initMap(maps=map)
+
+                mountPositions, obstacles= initMap(map, start_position)
                 # Create the trajectory 
-                trajectory = mainRRT(obstacles, start=mountPositions[0,0:2])
+                trajectory = mainRRT(obstacles, mountPositions[0, 0:2], goal_position)
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
                 # Create the Enviroment 
                 env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
@@ -167,7 +170,7 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, currentAngularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(mountPositions, m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
 
             # Check if the final position has been reached
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
