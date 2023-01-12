@@ -17,8 +17,8 @@ def mpcControl(error, N, xInit, xTarget):
 
     """
     
-    weightInput = np.array([[1,0],[0,0.01]])    # Weight on the input
-    weightTracking = np.array([[10,0,0],[0,10,0],[0,0,10]]) # Weight on the tracking state
+    weightInput = 0.1*np.array([[1,0],[0,1]])    # Weight on the input
+    weightTracking = 100*np.array([[400,0,0],[0,4,0],[0,0,1]]) # Weight on the tracking state
     
     cost = 0.
     constraints = []
@@ -45,7 +45,7 @@ def mpcControl(error, N, xInit, xTarget):
         cost += cp.quad_form((x[:, k+1] ), weightTracking)
     
     # Terminal set
-    cost += cp.quad_form(x[:, N], weightTracking*10000)
+    cost += cp.quad_form(x[:, N], weightTracking*0)
 
     
     # Solves the problem
@@ -53,7 +53,7 @@ def mpcControl(error, N, xInit, xTarget):
     problem.solve(solver=cp.OSQP)
 
     # We return the MPC input and the next state (and also the plan for visualization)
-    return u[:, 0].value - error[3] , x[:, 1].value, x[:, :].value, None
+    return u[:, 0].value, x[:, 1].value, x[:, :].value, None
 
 
 def PID():

@@ -1,10 +1,6 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from model_predictive_control.uni_cycle_model import UniCycleModel 
-from model_predictive_control.controller import mpcControl, PID
-from model_predictive_control.testers import plot, testerMPC, testerUni
-
 def errorFunction(t,dt,  currentState , path, o):
     """
     Retruns the error matrix A, B for the error dynamics
@@ -39,6 +35,7 @@ def errorFunction(t,dt,  currentState , path, o):
     # angularVelocityBot = (previousAngleBot - currentAngleBot)*dt  
     xError = path[t,0] - currentState[len(currentState)-1,0] 
     yError = (path[t,1] - currentState[len(currentState)-1,1] ) 
+
 
     thetaError = anglePath - o
 
@@ -155,34 +152,105 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         else: 
             currentState = currentPostion
             states.append(currentState)
-            return input[0], input[1]
+            return input[0], input[1]   
 
 
-    if testing:
-        fig, ax = plt.subplots()
-        plot(ax,  np.array(states), target )
+    # if testing:
+    #     fig, ax = plt.subplots()
+    #     plot(ax,  np.array(states), target )
+
+def runTest(target,dt): 
+    uni = UniCycleModel(dt)
+    input = np.array([[0,0]])
+
+    for i in range(0,int(np.pi/dt)):
+        pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
+        currentTimePos = [pos[0][0],pos[0][1]]
+
+        if uni.X[2][0]  > 2*np.pi: 
+            uni.X[2][0]  = uni.X[2][0] - 2*np.pi
+        orientation = uni.X[2][0]
+
+        input = mainMPC(i, currentTimePos, orientation, target)
+        input = np.array(list(input))
+
+    return (np.array(states), target )
+
+def test():
+    dts = [0.05]
+
+    routes = []
+
+    for dt in dts:
+        print(f"this is dt: {dt}")
+        dummyDatag = np.arange(0 , np.pi ,dt)
+
+        dummyDataY = np.sin(dummyDatag)
+        dummyDataX = (dummyDatag) 
+
+        dummyDataY = (dummyDatag)
+        dummyDataX = np.zeros(len(dummyDataY))
+
+        target1 = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
+
+        # Segment 1
+        DataX1 = np.arange(0 , 0.5*np.pi ,dt)
+        DataY1 = np.linspace(0 , 1 ,len(DataX1))
+        placeholder1 = np.vstack((DataX1,DataY1))
+
+        # Segement 2
+        DataX2 = np.arange(0.5*np.pi , np.pi ,dt)
+        DataY2 = np.linspace(1 , 0 ,len(DataX2))
+        placeholder2 = np.vstack((DataX2,DataY2))
+        
+        target2 = np.hstack((placeholder1, placeholder2)).T
+
+        targets = [target1,target2]
+
+        # for target in targets:
+        #     input, target = runTest(target1, dt)
+        #     routes.append((input,target))
 
 
-# dummyDatag = np.arange(0 ,10 ,0.05)
-# dummyDataY = np.sin(dummyDatag)
-# dummyDataX = np.cos(dummyDatag) 
-# target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
-# uni = UniCycleModel(0.05)
-# input = np.array([[0,0]])
 
-# for i in range(0,190):
-#     pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
-#     currentTimePos = [pos[0][0],pos[0][1]]
+        input, target = runTest(target1, dt)
+        routes.append((input,target))
 
-#     if uni.X[2][0]  > 2*np.pi: 
-#        uni.X[2][0]  = uni.X[2][0] - 2*np.pi
-#     orientation = uni.X[2][0]
+    
+    fig, ax = plt.subplots()
+    ax.plot(input[:,0],input[:,1])
+    ax.plot(target[:,0],target[:,1])
 
-#     input = mainMPC(i, currentTimePos, orientation, target)
-#     input = np.array(list(input))
+    # fig, axs = plt.subplots(2, 2)
+    # axs[0, 0].plot(routes[0][0][:,0], routes[0][0][:,1])
+    # axs[0, 0].plot(routes[0][1][:,0], routes[0][1][:,1])
+    # axs[0, 0].set_title('Axis [0, 0]')
+    # axs[1, 0].plot(routes[1][0][:,0], routes[1][0][:,1])
+    # axs[1, 0].plot(routes[1][1][:,0], routes[1][1][:,1])
+
+    # axs[0, 1].plot(routes[2][0][:,0], routes[2][0][:,1])
+    # axs[0, 1].plot(routes[2][1][:,0], routes[2][1][:,1])
+    # axs[0, 1].set_title('Axis [0, 1]')
+    # axs[1, 1].plot(routes[3][0][:,0], routes[3][0][:,1])
+    # axs[1, 1].plot(routes[3][1][:,0], routes[3][1][:,1])
+
+    # for ax in axs.flat:
+    #     ax.set(xlabel='x-pos [m]', ylabel='y-pos [m]')
+
+    # # Hide x labels and tick labels for top plots and y ticks for right plots.
+    # for ax in axs.flat:
+    #     ax.label_outer()
+
+    plt.show()
 
 
-
-# fig, ax = plt.subplots()
-# plot(ax,  np.array(states), target )
-
+if __name__ == '__main__':
+    print("main")
+    from uni_cycle_model import UniCycleModel 
+    from controller import mpcControl, PID
+    from testers import plot, testerMPC, testerUni
+    test()
+else:
+    from model_predictive_control.uni_cycle_model import UniCycleModel 
+    from model_predictive_control.controller import mpcControl, PID
+    from model_predictive_control.testers import plot, testerMPC, testerUni

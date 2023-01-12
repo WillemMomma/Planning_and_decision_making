@@ -361,7 +361,7 @@ def main(obstacles, start=None):
         obstacleList.append(obstacle)
 
     start = start
-    goal = [4, -5]
+    goal = [0, 0]
     randArea = [-10, 10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     animation = False  # set to False to speed up calculation and get time results
