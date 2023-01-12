@@ -19,7 +19,7 @@ class obstacleRectangle:
     Input:  x1, y1: bottom left corner of obstacle
             x2, y2: top right corner of obstacle
     '''
-    def __init__(self, x1, y1, x2, y2, margin=0.2):
+    def __init__(self, x1, y1, x2, y2, margin=0.4):
         self.type = 'rectangle'
         self.x1 = x1
         self.y1 = y1
@@ -62,7 +62,7 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=100,
+                 maxIter=1500,
                  probGoal=0.05,
                  threshold=1,
                  maxExpansion=1,
@@ -157,11 +157,11 @@ class RRT_star:
 
     def getRandomPoint(self):
         '''
-        Samples random node from the collision free configuration space 
+        Samples random node from the collision free configuration space
         Input: None
         Output: q_rand: random node
         '''
-        if random.random() <= self.probGoal: 
+        if random.random() <= self.probGoal:
             qRand = self.end
             return qRand
         else:
@@ -269,7 +269,7 @@ class RRT_star:
             plt.plot(node.x,node.y, color = 'darkgrey', marker = 'o', markersize = 5)
             if node.parent:
                 plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='darkgrey', linestyle='-')
-        
+
         for obs in self.obstacleList:
             if obs.type == 'rectangle':
                 plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'darkred', ec='darkred'))
@@ -315,9 +315,9 @@ def test(maxIter, maxExpansion, searchGamma):
     path = rrt.planning()
     print('Number of nodes in final tree: ', len(rrt.nodeList))
     print('Number of nodes in final path: ', len(path))
-    return None 
+    return None
 
-def main(obstacles, start=None):
+def main(obstacles, start, goal_position):
     '''
     Main function
     Specify start, goal, obstacles, and random area
@@ -339,12 +339,12 @@ def main(obstacles, start=None):
         obstacleList.append(obstacle)
 
     start = start
-    goal = [-8, 6]
+    goal = goal_position
     randArea = [-10, 10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
     path = rrt.planning()
     trajectory = []
-    resolution = 0.05
+    resolution = 0.025
     for node in path:
         # fill spaces in between nodes with linear interpolation
         if node.parent:

@@ -8,6 +8,7 @@ from env.holonomic_robot_main import initMap, initEnv, robotMain
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def behaviour():
     """
     Start the enviroment and run the algorithms
@@ -26,20 +27,16 @@ def behaviour():
 
     # Settings for the running loop
     state = 0
-    run = True
     timestep = 0
+    start_position = [0, 0]
+    goal_position = [-8, 6]
 
     # Running loop
-    # while run == True: # Change to this condition eventually This requires coordination between @Jasper van Leuven & @Willem Momma
-    while timestep < 3000:
-        if state == 0: 
+    while timestep < 5000:  # This is to freeze the final situation for reference of the user
+        if state == 0:
 
-            # For the first iteration we have to create a Map of the enviroment and a path to the goal and init the robot_list
+            # For the first iteration we have to create a Map of the environment and a path to the goal
             if timestep == 0:
-                velocity = np.float64(0)
-                angularVelocity = np.float64(0)
-
-                # Willem Kolff
                 """
                 INPUT : 
                 velocity -> np.float : 0.0
@@ -53,16 +50,14 @@ def behaviour():
                 """
 
                 # Initialize the map
-                mountPositions, obstacles= initMap(maps=map)
+                mountPositions, obstacles= initMap(map, start_position)
                 # Create the trajectory 
-                trajectory = mainRRT(obstacles, start=mountPositions[0,0:2])
+                trajectory = mainRRT(obstacles, mountPositions[0, 0:2], goal_position)
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
                 # Create the Enviroment 
-                env, m, currentPositions, currentOrientations, steeringInput = initEnv( mountPositions, trajectory, goal=True, maps=map, dt=0.01)
+                env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
                 currentVelocities = np.zeros((m,))
-                
-
-
+                currentAngularVelocities = np.zeros((m,))
 
                 for i in range(m):
                     if i == 0:
@@ -70,7 +65,7 @@ def behaviour():
                                                 currentPositions[i, 1],
                                                 radius,
                                                 currentVelocities[i],
-                                                angularVelocity,
+                                                currentAngularVelocities[i],
                                                 currentOrientations[i],
                                                 True))
                     else:
@@ -78,11 +73,10 @@ def behaviour():
                                                 currentPositions[i, 1],
                                                 radius,
                                                 currentVelocities[i],
-                                                0,
+                                                currentAngularVelocities[i],
                                                 currentOrientations[i],
                                                 False))
 
-            # @Jasper van Leuven
             """
             Returns the desired velocity and angular velocity 
 
@@ -97,65 +91,51 @@ def behaviour():
             angularVelocity -> np.float: 0.0
             """
 
-            currentVelocities[0], angularVelocity = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
-            #if timestep % 10 == 0:
-                #print('currentVelocitie = ',currentVelocities[0])
-                #print('position = ',currentPositions[0,:])
-            # @Godert Notten
+            currentVelocities[0], currentAngularVelocities[0] = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
+
             """
-                INPUT
+            INPUT
 
-                m = number of robots in env including our own robot !!!
+            m = number of robots in env including our own robot !!!
 
-                robot_list : list of length m filled with Robot objects
-                # positions -> np.array() : shape -> (m, 2)
-                # velocities -> np.array() : shape -> (m,)
-                # angularVelocities -> np.float: 0.0
-                # orientations -> np.array() : shape -> (m,)
+            robot_list : list of length m filled with Robot objects
+            # positions -> np.array() : shape -> (m, 2)
+            # velocities -> np.array() : shape -> (m,)
+            # angularVelocities -> np.float: 0.0
+            # orientations -> np.array() : shape -> (m,)
 
-                #cOUTPUT
-                #robot_list : list of length m filled with Robot objects
-                # velocities -> np.float : 0
-                # angularVelocities -> np.float() : 0 
+            #cOUTPUT
+            #robot_list : list of length m filled with Robot objects
+            # velocities -> np.float : 0
+            # angularVelocities -> np.float() : 0 
             """
 
-             # First update the other robots
+            # First update the other robots
             for i in range(len(robot_list)):
                 if not robot_list[i].our:
                     # Update the position and velocity of the other robots
                     robot_list[i].update_other(currentPositions[i, 0],
                                                 currentPositions[i, 1],
                                                 currentVelocities[i],
-                                                0,
+                                                currentAngularVelocities[i],
                                                 currentOrientations[i])
 
-             # For our robot
+            # For our robot
             for i in range(len(robot_list)):
                if robot_list[i].our:
 
-                     # Update our robot and check for collision
+                    # Update our robot and check for collision
                     robot_list[i].update_our(currentPositions[i, 0],
                                               currentPositions[i, 1],
                                               currentVelocities[i],
-                                              angularVelocity,
+                                              currentAngularVelocities[0],
                                               currentOrientations[i],
                                               robot_list)
 
-                     # Update the velocity and angular_velocity to be collision free
+                    # Update the velocity and angular_velocity to be collision free
                     currentVelocities[0] = robot_list[i].output_v
-                    angularVelocity = robot_list[i].output_w
+                    currentAngularVelocities[0] = robot_list[i].output_w
 
-
-            # This is now how we update the positions of the robots but this block of code should be replaced
-            # in function by the environment @Willem Kolff
-            # godert_input = np.array([currentVelocities[0], angularVelocity])
-            # xytheta = uni.nextX(godert_input.reshape((1,2)))
-            # xy = xytheta[:2]
-            # jasperPositions.append(xy.reshape(1,2))
-            # currentPositions[0,:] = xy.flatten()
-            # currentOrientations[0] = xytheta[2]
-
-            # @Willem Kolff
             """
             INPUT : 
             currentPositions : np.array() : shape -> (m, 2)
@@ -170,36 +150,18 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(mountPositions, m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
-
-            # Below is the pseudocode provided
-            # Please import simulation as well
-            # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
+            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(mountPositions, m, currentPositions, currentVelocities[0], currentOrientations, currentAngularVelocities[0], steeringInput[timestep], env)
 
             # Check if the final position has been reached
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
                state = 1
                print("We have reached our goal")
-               run = False
-
 
             timestep += 1
 
         # This state signifies that we have finished
         if state == 1:
-            run = False
+            continue
 
-
-'''
-    print("jasperPositions")
-    print(np.array(jasperPositions)[0,:],np.array(jasperPositions)[1,:])
-    print(np.sum(np.array(jasperPositions), axis = 1 )[:,0])
-
-    plt.scatter(placeholderPos[:, 0], placeholderPos[:, 1], 400)
-    plt.plot(np.sum(np.array(jasperPositions), axis = 1 )[:,0],np.sum(np.array(jasperPositions), axis = 1 )[:,1])
-    # plt.plot(target[:100,:])
-    plt.show()
-
-'''
 
 behaviour()

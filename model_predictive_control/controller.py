@@ -17,43 +17,43 @@ def mpcControl(error, N, xInit, xTarget):
 
     """
     
-    weightInput = np.array([[1,0],[0,0.01]])    # Weight on the input
-    weightTracking = np.array([[10,0,0],[0,10,0],[0,0,10]]) # Weight on the tracking state
-    
+    weightInput = 1*np.array([[1,0],[0,1]])    # Weight on the input
+    weightTracking = 100*np.array([[10,0,0],[0,10,0],[0,0,1]]) # Weight on the tracking state
+
     cost = 0.
     constraints = []
-    
+
     # Create the optimization variables
     x = cp.Variable((3, N + 1)) # cp.Variable((dim_1, dim_2))
     u = cp.Variable((2, N))
 
 
     # Initialize the current error
-    constraints += [x[:, 0] == error[1].reshape((3,))]  
-        
+    constraints += [x[:, 0] == error[1].reshape((3,))]
+
     for k in range(N):
-        
-        nextError = error[0].reshape((3,3))@x[:,k] + error[2].reshape((3,2))@(u[:, k])
+
+        nextError = error[0].reshape((3,3))@x[:,k] + error[2].reshape((3,2))@(u[:, k]- error[3])
 
         # constraints
         constraints += [x[:, k+1] == nextError]
-        constraints += [u[:, k] <= [6,3]]
-        constraints += [u[:, k] >= [-4,-3]]
+        constraints += [u[:, k] <= [6, 3]]
+        constraints += [u[:, k] >= [0, -3]]
 
         # Minimize the cost function
         cost += cp.quad_form(u[:, k], weightInput)
         cost += cp.quad_form((x[:, k+1] ), weightTracking)
-    
-    # Terminal set
-    cost += cp.quad_form(x[:, N], weightTracking*10000)
 
-    
+    # Terminal set
+    cost += cp.quad_form(x[:, N], weightTracking*100)
+
+
     # Solves the problem
     problem = cp.Problem(cp.Minimize(cost), constraints)
     problem.solve(solver=cp.OSQP)
 
     # We return the MPC input and the next state (and also the plan for visualization)
-    return u[:, 0].value - error[3] , x[:, 1].value, x[:, :].value, None
+    return u[:, 0].value, x[:, 1].value, x[:, :].value, None
 
 
 def PID():
