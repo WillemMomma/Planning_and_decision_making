@@ -1,9 +1,9 @@
 import matplotlib.pyplot as plt
 import numpy as np
 
-from model_predictive_control.uni_cycle_model import UniCycleModel 
-from model_predictive_control.controller import mpcControl, PID
-from model_predictive_control.testers import plot, testerMPC, testerUni
+from uni_cycle_model import UniCycleModel 
+from controller import mpcControl, PID
+from testers import plot, testerMPC, testerUni
 
 def errorFunction(t,dt,  currentState , path, o):
     """
@@ -45,9 +45,7 @@ def errorFunction(t,dt,  currentState , path, o):
     if thetaError < -2:
         thetaError = -0.03
 
-    print(f"this is the total error: {thetaError}")
-    print(f"this is the angle path: {anglePath}")
-    print(f"this is the orientation: {o}")
+
 
 
     errorAmatrix = np.array([[1,dt*angularVelocityPath,0],
@@ -162,26 +160,26 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         plot(ax,  np.array(states), target )
 
 
-# dummyDatag = np.arange(0 ,10 ,0.05)
-# dummyDataY = np.sin(dummyDatag)
-# dummyDataX = (dummyDatag) 
-# target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
-# uni = UniCycleModel(0.1)
-# input = np.array([[0,0]])
+dummyDatag = np.arange(0 ,10 ,0.05)
+dummyDataY = (dummyDatag)
+dummyDataX = np.zeros(len(dummyDatag) )
+target = np.vstack((dummyDataX,dummyDataY)).T   # Test trajectory
+uni = UniCycleModel(0.1)
+input = np.array([[0,0]])
 
-# for i in range(0,190    ):
-#     pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
-#     currentTimePos = [pos[0][0],pos[0][1]]
+for i in range(0,190    ):
+    pos = uni.nextX(input.reshape((1,2)))[:2].reshape((1,2))
+    currentTimePos = [pos[0][0],pos[0][1]]
 
-#     if uni.X[2][0]  > 2*np.pi: 
-#        uni.X[2][0]  = uni.X[2][0] - 2*np.pi
-#     orientation = uni.X[2][0]
+    if uni.X[2][0]  > 2*np.pi: 
+       uni.X[2][0]  = uni.X[2][0] - 2*np.pi
+    orientation = uni.X[2][0]
 
-#     input = mainMPC(i, currentTimePos, orientation, target)
-#     input = np.array(list(input))
+    input = mainMPC(i, currentTimePos, orientation, target)
+    input = np.array(list(input))
 
 
 
-# fig, ax = plt.subplots()
-# plot(ax,  np.array(states), target )
+fig, ax = plt.subplots()
+plot(ax,  np.array(states), target )
 

@@ -8,7 +8,7 @@ class UniCycleModel:
     def __init__(self, dt):
         # Euler discretization
         self.A = np.eye(3)
-        self.X = np.array([[1],[0],[np.pi/2]])
+        self.X = np.array([[0],[0],[np.pi/4]])
         self.B = np.array([ [np.cos(self.X[2])[0],0],
                             [0,np.sin(self.X[2])[0]],
                             [0,1]])
