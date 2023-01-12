@@ -15,8 +15,10 @@ def behaviour():
     Input -> None : None
     Ouput -> None : None
     """
-    # Init for the enviroment
-    map = 1
+    # Choose your map
+    # map = 0 -> test map
+    # map = 1 -> warehouse multiple robots
+    map = 0
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -128,26 +130,20 @@ def behaviour():
                                                 currentOrientations[i])
 
              # For our robot
-            #for i in range(len(robot_list)):
-            #    if robot_list[i].our:
+            for i in range(len(robot_list)):
+               if robot_list[i].our:
 
-                     # Can be changed to show plotting of the velocity obstacles
-                     # if abs(robot_list[0].x - robot_list[1].x) < 0:
-                     #     robot_list[i].plotting = True
-                     # else:
-                     #     robot_list[i].plotting = False
+                     # Update our robot and check for collision
+                    robot_list[i].update_our(currentPositions[i, 0],
+                                              currentPositions[i, 1],
+                                              currentVelocities[i],
+                                              angularVelocity,
+                                              currentOrientations[i],
+                                              robot_list)
 
-                    #  # Update our robot and check for collision
-                    # robot_list[i].update_our(currentPositions[i, 0],
-                    #                           currentPositions[i, 1],
-                    #                           currentVelocities[i],
-                    #                           angularVelocity,
-                    #                           currentOrientations[i],
-                    #                           robot_list)
-
-                    #  # Update the velocity and angular_velocity to be collision free
-                    # currentVelocities[0] = robot_list[i].output_v
-                    # angularVelocity = robot_list[i].output_w
+                     # Update the velocity and angular_velocity to be collision free
+                    currentVelocities[0] = robot_list[i].output_v
+                    angularVelocity = robot_list[i].output_w
 
 
             # This is now how we update the positions of the robots but this block of code should be replaced
@@ -160,34 +156,30 @@ def behaviour():
             # currentOrientations[0] = xytheta[2]
 
             # @Willem Kolff
-            # """
-            # INPUT : 
-            # currentPositions : np.array() : shape -> (m, 2)
-            # currentOrientations : np.array() : shape -> (m,)
-            # velocity -> np.float : 0.0
-            # angularVelocity -> np.float : 0.0
-            # env -> gym.wrappers.order_enforcing.OrderEnforcing
+            """
+            INPUT : 
+            currentPositions : np.array() : shape -> (m, 2)
+            currentOrientations : np.array() : shape -> (m,)
+            velocity -> np.float : 0.0
+            angularVelocity -> np.float : 0.0
+            env -> gym.wrappers.order_enforcing.OrderEnforcing
             
-            # OUTPUT 
-            # Map -> UNKNOWN
-            # currentPositions : np.array() : shape -> (m, 2)
-            # currentVelocities : np.array() : shape -> (m,)
-            # currentOrientations : np.array() : shape -> (m,)
-            # """
+            OUTPUT 
+            Map -> UNKNOWN
+            currentPositions : np.array() : shape -> (m, 2)
+            currentVelocities : np.array() : shape -> (m,)
+            currentOrientations : np.array() : shape -> (m,)
+            """
             currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
-            print("H",angularVelocities)
+
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
-            # print("currentPositions[0]", currentPositions[0])
-            # print("trajectory[-1]", trajectory[-1])
-            # print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0]]) - trajectory[-1]))
-            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 1:
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
                state = 1
                print("We have reached our goal")
-               print(state)
                run = False
 
 
@@ -196,6 +188,7 @@ def behaviour():
         # This state signifies that we have finished
         if state == 1:
             run = False
+
 
 '''
     print("jasperPositions")
