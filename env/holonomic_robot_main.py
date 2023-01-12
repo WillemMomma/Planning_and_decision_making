@@ -13,9 +13,11 @@ def initMap(maps=0):
         mountPositions = np.array(
             [
                 (0,0,0), (6,-8,0), (-6,8,0), (4,0.5,0),(-6,-0.5,0),(-12,-0.5,0),(12,0.5,0)
-                
+                #(0,0,0), (0,0,0),   (0,0,0), (0,0,0),  (0,0,0),    (0,0,0) ,    (0,0,0)
+
             ]
         )
+
 
         result = []
         from env.gym_envs_urdf.scene_objects.obstacles import walls1
@@ -82,7 +84,8 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
             [
                 (0,0,angle-np.deg2rad(90))
             ]
-        )   
+        )
+        initialPositions[:, :2] = mountPositions[:, :2]
         steeringInput = np.zeros((3000))
         env.reset(pos=initialPositions,mount_positions=mountPositions)
     if maps == 1:
@@ -107,9 +110,16 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
         initialPositions = np.array(
             [
                 (0,0,angle-np.deg2rad(90)), (0,0,0), (0,0,np.pi), (0,0,np.deg2rad(90)),(0,0,np.deg2rad(270)),(0,0,np.deg2rad(270)),(0,0,np.deg2rad(90))
+                #(0,0,angle-np.deg2rad(90)), (6,-8,0), (-6,8,np.pi), (4,0.5,np.deg2rad(90)),(-6,-0.5,np.deg2rad(270)),(-12,-0.5,np.deg2rad(270)),(12,0.5,np.deg2rad(90))
+                
+        
             ]
         )    
+
         mountPositions = mountPositions
+        #initialPositions[:, :2] = mountPositions[:, :2]
+
+
         env.reset(pos=initialPositions,mount_positions=mountPositions)
 
         arr1 = np.concatenate([steering.straight(6, 6.5), steering.left(6,1,92), steering.straight(6, 9), steering.right(6,2,91),steering.straight(6, 0.1),steering.left(6, 2, 25),steering.right(6, 2, 25),steering.straight(6, 2),steering.right(6, 2, 25),steering.left(6, 2, 25),steering.left(6, 1, 180),steering.straight(6, 14),steering.left(6, 1, 91),steering.straight(6, 10),steering.left(6, 1, 91),steering.straight(6, 6), steering.right(6,2,91), steering.straight(6, 3)])
@@ -143,10 +153,12 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
 
     return env , m, mountPositions[:,:2], initialPositions[:,2]+np.deg2rad(90), steeringInput
     
+def rotationMatrix(theta):
+    return np.array([[np.cos(theta), -np.sin(theta)],
+                     [np.sin(theta), np.cos(theta)]])
 
 
-
-def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.01):
+def robotMain(mountPositions, m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.01):
     x = pos[0][0]
     y = pos[0][1]
     theta = current_orientations[0]
@@ -157,7 +169,7 @@ def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.0
     rotation_matrix = np.array([[np.cos(theta), -np.sin(theta)],
                                 [np.sin(theta), np.cos(theta)]])
     # Rotate the velocity vector
-    v_rotated = rotation_matrix @ v_vector
+    v_rotated = rotationMatrix(theta) @ v_vector
     
     # Calculate the new position and orientation
     x_new = x + v_rotated[0] * dt
@@ -165,10 +177,10 @@ def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.0
     theta_new = theta + omega * dt
     
     # Create the new position and orientation arrays
-    vel_new = np.array([vel])
+    vel_new_oud = np.array([vel])
     vel_rot_new = np.array([omega])
     pos_new = np.array([[x_new, y_new]])
-    orientation_new = np.array([theta_new])
+    orientation_new_oud = np.array([theta_new])
 
     # Create the action array for the current robot
     action_new = np.append(v_rotated, omega)
@@ -195,18 +207,43 @@ def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.0
             y_new = y + v_rotated[1] * dt
             theta_new = theta + omega * dt
             
-            vel_new = np.append(vel_new, result[i][0])
-            vel_rot_new = np.append(vel_rot_new, omega)
-            pos_new = np.append(pos_new, x_new)
-            pos_new = np.append(pos_new, y_new)
-            orientation_new = np.append(orientation_new, theta_new)
+            # pos_new = np.append(pos_new, x_new)
+            # pos_new = np.append(pos_new, y_new)
+            orientation_new_oud = np.append(orientation_new_oud, theta_new)
             
             action_new = np.append(action_new, v_rotated)
             action_new = np.append(action_new, omega)
     
-    pos_new = pos_new.reshape((m,2))        
+    # pos_new = pos_new.reshape((m,2))        
     
     # Step the environment and return the new position, velocity, and orientation
     ob, _, _, _ = env.step(action_new)
-    return pos_new, vel_rot_new, vel_new, orientation_new
+    pos_new = []
+    vel_new = []
+    orientation_new = []
+    vel_rot_news = []
+    #print(ob)
+    for robot_data in ob.items():
+        position = robot_data[1]['joint_state']['position']
+        pos_new = np.append(pos_new, position[0:2])
+        orientation_new = np.append(orientation_new, position[2])
+        
+        vel_rot_news = np.append(vel_rot_news, robot_data[1]['joint_state']['velocity'][2])
+        velocity = robot_data[1]['joint_state']['velocity'][0:2]
+        velocity = (velocity[0]**2+velocity[1]**2)**0.5
+        vel_new = np.append(vel_new, velocity)
+
+
+    # print("Oud",vel)
+    # print("NEW",velocity)
+    orientation_new = orientation_new+np.deg2rad(90)
+    pos_new = pos_new.reshape((m,2))
+    if m > 1:
+        pos_new += mountPositions[:,:2]
+
+
+    print("OUD", orientation_new_oud[0:4])
+    print("NEW", orientation_new[0:4])
+
+    return pos_new, vel_rot_news, vel_new, orientation_new
 

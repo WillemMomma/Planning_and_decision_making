@@ -31,7 +31,7 @@ class obstacleCircle:
     Input:  x, y: center of obstacle
             radius: radius of obstacle
     '''
-    def __init__(self, x, y, radius, margin=1):
+    def __init__(self, x, y, radius, margin=0):
         self.type = 'circle'
         self.x = x
         self.y = y
@@ -58,7 +58,7 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=2500,
+                 maxIter=100,
                  probGoal=0.05,
                  threshold=1,
                  maxExpansion=1,

@@ -18,7 +18,7 @@ def behaviour():
     # Choose your map
     # map = 0 -> test map
     # map = 1 -> warehouse multiple robots
-    map = 0
+    map = 1
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -58,7 +58,7 @@ def behaviour():
                 trajectory = mainRRT(obstacles, start=mountPositions[0,0:2])
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
                 # Create the Enviroment 
-                env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
+                env, m, currentPositions, currentOrientations, steeringInput = initEnv( mountPositions, trajectory, goal=True, maps=map, dt=0.01)
                 currentVelocities = np.zeros((m,))
                 
 
@@ -170,7 +170,7 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(mountPositions, m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
 
             # Below is the pseudocode provided
             # Please import simulation as well
