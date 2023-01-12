@@ -2,7 +2,7 @@
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.robot_class import Robot
-from env.holonomic_robot_main import initEnv, robotMain
+from env.holonomic_robot_main import initMap, initEnv, robotMain
 
 # Importing libraries
 import numpy as np
@@ -15,6 +15,10 @@ def behaviour():
     Input -> None : None
     Ouput -> None : None
     """
+    # Choose your map
+    # map = 0 -> test map
+    # map = 1 -> warehouse multiple robots
+    map = 0
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -49,12 +53,16 @@ def behaviour():
                 """
 
                 # Initialize the map
-                env, m, currentPositions, currentOrientations, obstacles, steeringInput = initEnv(goal=True, maps=1, dt=0.01)
-                currentVelocities = np.zeros((m,))
-
-                # Create the trajectory
-                trajectory = mainRRT(obstacles, start=currentPositions[0])
+                mountPositions, obstacles= initMap(maps=map)
+                # Create the trajectory 
+                trajectory = mainRRT(obstacles, start=mountPositions[0,0:2])
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
+                # Create the Enviroment 
+                env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
+                currentVelocities = np.zeros((m,))
+                
+
+
 
                 for i in range(m):
                     if i == 0:
@@ -111,38 +119,31 @@ def behaviour():
                 # angularVelocities -> np.float() : 0 
             """
 
-            # # First update the other robots
-            # for i in range(len(robot_list)):
-            #     if not robot_list[i].our:
+             # First update the other robots
+            for i in range(len(robot_list)):
+                if not robot_list[i].our:
+                    # Update the position and velocity of the other robots
+                    robot_list[i].update_other(currentPositions[i, 0],
+                                                currentPositions[i, 1],
+                                                currentVelocities[i],
+                                                0,
+                                                currentOrientations[i])
 
-            #         # Update the position and velocity of the other robots
-            #         robot_list[i].update_other(currentPositions[i, 0],
-            #                                    currentPositions[i, 1],
-            #                                    currentVelocities[i],
-            #                                    0,
-            #                                    currentOrientations[i])
+             # For our robot
+            for i in range(len(robot_list)):
+               if robot_list[i].our:
 
-            # # For our robot
-            # for i in range(len(robot_list)):
-            #     if robot_list[i].our:
+                     # Update our robot and check for collision
+                    robot_list[i].update_our(currentPositions[i, 0],
+                                              currentPositions[i, 1],
+                                              currentVelocities[i],
+                                              angularVelocity,
+                                              currentOrientations[i],
+                                              robot_list)
 
-            #         # Can be changed to show plotting of the velocity obstacles
-            #         # if abs(robot_list[0].x - robot_list[1].x) < 0:
-            #         #     robot_list[i].plotting = True
-            #         # else:
-            #         #     robot_list[i].plotting = False
-
-            #         # Update our robot and check for collision
-            #         robot_list[i].update_our(currentPositions[i, 0],
-            #                                  currentPositions[i, 1],
-            #                                  currentVelocities[i],
-            #                                  angularVelocity,
-            #                                  currentOrientations[i],
-            #                                  robot_list)
-
-            #         # Update the velocity and angular_velocity to be collision free
-            #         currentVelocities[0] = robot_list[i].output_v
-            #         angularVelocity = robot_list[i].output_w
+                     # Update the velocity and angular_velocity to be collision free
+                    currentVelocities[0] = robot_list[i].output_v
+                    angularVelocity = robot_list[i].output_w
 
 
             # This is now how we update the positions of the robots but this block of code should be replaced
@@ -169,19 +170,16 @@ def behaviour():
             currentVelocities : np.array() : shape -> (m,)
             currentOrientations : np.array() : shape -> (m,)
             """
-            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
 
             # Check if the final position has been reached
-            # print("currentPositions[0]", currentPositions[0])
-            # print("trajectory[-1]", trajectory[-1])
-            # print("Hierooo = ",np.linalg.norm(np.array([currentPositions[0]]) - trajectory[-1]))
-            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 2:
+            if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
                state = 1
                print("We have reached our goal")
-               print(state)
                run = False
 
 
@@ -190,6 +188,7 @@ def behaviour():
         # This state signifies that we have finished
         if state == 1:
             run = False
+
 
 '''
     print("jasperPositions")

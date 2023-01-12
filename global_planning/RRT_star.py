@@ -19,7 +19,7 @@ class obstacleRectangle:
     Input:  x1, y1: bottom left corner of obstacle
             x2, y2: top right corner of obstacle
     '''
-    def __init__(self, x1, y1, x2, y2, margin=1):
+    def __init__(self, x1, y1, x2, y2, margin=0.2):
         self.type = 'rectangle'
         self.x1 = x1
         self.y1 = y1
@@ -62,11 +62,11 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=500,
+                 maxIter=2500,
                  probGoal=0.05,
                  threshold=1,
-                 maxExpansion=5,
-                 searchGamma=40
+                 maxExpansion=1,
+                 searchGamma=8
                  ):
         '''
         Initialize the class variables
@@ -91,13 +91,12 @@ class RRT_star:
         self.searchGamma = searchGamma # gamma parameter for RRT* optimilization search radius
 
 
-    def planning(self, plotter=False):
+    def planning(self):
         '''
         Path planning using RRT star algorithm
         Uses class methods to generate a path from start to goal
         Samples random points, finds nearest node, steers towards random point, checks for collision
         If no collision, finds neighbors in radius neighbor_radius, chooses parent, rewire tree, add node to node list
-        Input:  plotter: boolean to plot the tree and path
         Output: path as a list of nodes [[x1, y1], [x2, y2], ...]
         '''
         start = time.time()
@@ -134,8 +133,7 @@ class RRT_star:
             print("Goal not reached, try increasing maxIter")
 
         path = self.finalPath(finalNode)
-        if plotter:
-            self.plotFinalTree(finalNode, path, totalTime)
+        self.plotFinalTree(finalNode, path, totalTime)
         plt.show()
         return path
 
@@ -300,7 +298,7 @@ class RRT_star:
         plt.grid(False)
         plt.pause(0.01)
 
-def test(maxIter, maxExpansion, searchGamma, plotter):
+def test(maxIter, maxExpansion, searchGamma):
     randArea = [0,50]
     start = [40,1]
     goal = [47,47]
@@ -314,7 +312,7 @@ def test(maxIter, maxExpansion, searchGamma, plotter):
     obstacleList.append(obstacleCircle(11, 36, 6))
     obstacleList.append(obstacleRectangle(20, 46.5, 22, 50))
     rrt = RRT_star(start, goal, obstacleList, randArea, maxIter=maxIter, maxExpansion=maxExpansion, probGoal=0.05, threshold=1, searchGamma=searchGamma)
-    path = rrt.planning(plotter)
+    path = rrt.planning()
     print('Number of nodes in final tree: ', len(rrt.nodeList))
     print('Number of nodes in final path: ', len(path))
     return None 
@@ -341,12 +339,12 @@ def main(obstacles, start=None):
         obstacleList.append(obstacle)
 
     start = start
-    goal = [4, -5]
+    goal = [-8, 6]
     randArea = [-10, 10]
     rrt = RRT_star(start, goal, obstacleList, randArea)
-    path = rrt.planning(plotter = True)
+    path = rrt.planning()
     trajectory = []
-    resolution = 0.03
+    resolution = 0.05
     for node in path:
         # fill spaces in between nodes with linear interpolation
         if node.parent:
@@ -360,3 +358,4 @@ def main(obstacles, start=None):
     return trajectory[::-1]
 
 test(maxIter = 2000, maxExpansion = 7, searchGamma = 60, plotter = True)
+#test(maxIter = 1500, maxExpansion = 10, searchGamma = 50)
