@@ -1,3 +1,7 @@
+"""
+Author: Willem Momma 
+Path planning using RRT star algorithm
+"""
 
 import random
 import math
@@ -145,7 +149,6 @@ class RRT_star:
         euclideanDistances = [self.euclideanDistance(node, newNode) for node in allNodes]
         neighborList = []
         searchRadius = self.searchGamma * (math.log(len(allNodes)) / len(allNodes)) ** (1/3)
-        print(searchRadius)
         #searchRadius = 10
         for i in range(len(euclideanDistances)):
             if euclideanDistances[i] < searchRadius:
@@ -356,4 +359,4 @@ def main(obstacles, start=None):
                 trajectory.append(np.array([x[i], y[i]]))
     return trajectory[::-1]
 
-test(maxIter = 1800, maxExpansion = 7, searchGamma = 60, plotter = True)
+test(maxIter = 2000, maxExpansion = 7, searchGamma = 60, plotter = True)
