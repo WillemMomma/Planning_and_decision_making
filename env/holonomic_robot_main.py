@@ -5,11 +5,14 @@ from urdfenvs.robots.generic_urdf import GenericUrdfReacher
 from MotionPlanningEnv.dynamicSphereObstacle import DynamicSphereObstacle
 
 def initMap(maps=0):
+    if maps == 0:
+        mountPositions = np.array([(0,0,0)])
+        obstacles = ([(100,100,100,100)])
     if maps == 1:
 
         mountPositions = np.array(
             [
-                (-1.5,-0.4,0), (6,-8,0), (-6,8,0), (4,0.5,0),(-6,-0.5,0),(-12,-0.5,0),(12,0.5,0)
+                (0,0,0), (6,-8,0), (-6,8,0), (4,0.5,0),(-6,-0.5,0),(-12,-0.5,0),(12,0.5,0)
                 
             ]
         )
@@ -25,19 +28,21 @@ def initMap(maps=0):
                             coordinates[0] + 0.5 * dimensions[0] , coordinates[1] + 0.5 * dimensions[1]] for coordinates in coordinates])
             
         obstacles = list(itertools.chain(*result))
-    else:
-        mountPositions = np.array([(0,0,0)])
-        obstacles = ([100,100,100,100])
+
     return mountPositions, obstacles
 
 
-def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=0.01):   
-    x1 = trajectory[0,0]
-    y1 = trajectory[0,1]
-    x2 = trajectory[1,0]
-    y2 = trajectory[1,1]
+def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=0.01):
+    try:
+        x1 = trajectory[0,0]
+        y1 = trajectory[0,1]
+        x2 = trajectory[1,0]
+        y2 = trajectory[1,1]
+        angle = np.arctan2(y2 - y1, x2 - x1)
+    except:
+        print("No trajectory found")
+        angle = 0
 
-    angle = np.arctan2(y2 - y1, x2 - x1)
     class steering:
         def straight(v,n):
             vector = np.array([v,0,0])      
@@ -62,10 +67,19 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
             m = int((1/dt) * t)
             arr = np.tile(vector, (m, 1))
             return(arr)        
-            
+
+    if maps == 0:   
+        robots = [
+            GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel")
+        ]
+        m = len(robots)
+        env = gym.make(
+            "urdf-env-v0",
+            dt=dt, robots=robots, render=True
+        )
 
     if maps == 1:
-        result = []
+
         robots = [
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel"),
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel"),
@@ -75,24 +89,19 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel"),
             GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel")
         ]
-        
         m = len(robots)
         env = gym.make(
             "urdf-env-v0",
             dt=dt, robots=robots, render=True
         )
-        
-        n = env.n()       
-        pos0 = np.zeros(n)
-        pos0[1] = -0.0
+
+
 
         initialPositions = np.array(
             [
                 (0,0,angle-np.deg2rad(90)), (0,0,0), (0,0,np.pi), (0,0,np.deg2rad(90)),(0,0,np.deg2rad(270)),(0,0,np.deg2rad(270)),(0,0,np.deg2rad(90))
             ]
         )    
-     
-        
         mountPositions = mountPositions
         env.reset(pos=initialPositions,mount_positions=mountPositions)
 
@@ -116,14 +125,13 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
         
         from env.gym_envs_urdf.scene_objects.obstacles import walls1
 
-    
         for wall in walls1:
             env.add_shapes(shape_type=wall[0], dim=wall[1], poses_2d=wall[2])
             
 
-    else:
-
-        pass
+    # n = env.n()       
+    # pos0 = np.zeros(n)
+    # pos0[1] = 0.0
 
 
     return env , m, mountPositions[:,:2], initialPositions[:,2]+np.deg2rad(90), steeringInput

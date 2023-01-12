@@ -52,13 +52,16 @@ def behaviour():
 
                 # Initialize the map
                 mountPositions, obstacles= initMap(maps=map)
+                print("HHHHHHHHHHHHHHHIIIIIIIIIEEEEEEEEEEERRRRRRRR",mountPositions[0,0:2])
+                print("HHHHHHHHHHHHHHHIIIIIIIIIEEEEEEEEEEERRRRRRRR",obstacles)
+                # Create the trajectory 
                 trajectory = mainRRT(obstacles, start=mountPositions[0,0:2])
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
+                # Create the Enviroment 
                 env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions, trajectory, goal=True, maps=map, dt=0.01)
                 currentVelocities = np.zeros((m,))
                 
 
-                # Create the trajectory
 
 
                 for i in range(m):
@@ -119,7 +122,7 @@ def behaviour():
              # First update the other robots
             for i in range(len(robot_list)):
                 if not robot_list[i].our:
-                     # Update the position and velocity of the other robots
+                    # Update the position and velocity of the other robots
                     robot_list[i].update_other(currentPositions[i, 0],
                                                 currentPositions[i, 1],
                                                 currentVelocities[i],
@@ -127,8 +130,8 @@ def behaviour():
                                                 currentOrientations[i])
 
              # For our robot
-            for i in range(len(robot_list)):
-                if robot_list[i].our:
+            #for i in range(len(robot_list)):
+            #    if robot_list[i].our:
 
                      # Can be changed to show plotting of the velocity obstacles
                      # if abs(robot_list[0].x - robot_list[1].x) < 0:
@@ -136,17 +139,17 @@ def behaviour():
                      # else:
                      #     robot_list[i].plotting = False
 
-                     # Update our robot and check for collision
-                    robot_list[i].update_our(currentPositions[i, 0],
-                                              currentPositions[i, 1],
-                                              currentVelocities[i],
-                                              angularVelocity,
-                                              currentOrientations[i],
-                                              robot_list)
+                    #  # Update our robot and check for collision
+                    # robot_list[i].update_our(currentPositions[i, 0],
+                    #                           currentPositions[i, 1],
+                    #                           currentVelocities[i],
+                    #                           angularVelocity,
+                    #                           currentOrientations[i],
+                    #                           robot_list)
 
-                     # Update the velocity and angular_velocity to be collision free
-                    currentVelocities[0] = robot_list[i].output_v
-                    angularVelocity = robot_list[i].output_w
+                    #  # Update the velocity and angular_velocity to be collision free
+                    # currentVelocities[0] = robot_list[i].output_v
+                    # angularVelocity = robot_list[i].output_w
 
 
             # This is now how we update the positions of the robots but this block of code should be replaced
@@ -159,20 +162,20 @@ def behaviour():
             # currentOrientations[0] = xytheta[2]
 
             # @Willem Kolff
-            """
-            INPUT : 
-            currentPositions : np.array() : shape -> (m, 2)
-            currentOrientations : np.array() : shape -> (m,)
-            velocity -> np.float : 0.0
-            angularVelocity -> np.float : 0.0
-            env -> gym.wrappers.order_enforcing.OrderEnforcing
+            # """
+            # INPUT : 
+            # currentPositions : np.array() : shape -> (m, 2)
+            # currentOrientations : np.array() : shape -> (m,)
+            # velocity -> np.float : 0.0
+            # angularVelocity -> np.float : 0.0
+            # env -> gym.wrappers.order_enforcing.OrderEnforcing
             
-            OUTPUT 
-            Map -> UNKNOWN
-            currentPositions : np.array() : shape -> (m, 2)
-            currentVelocities : np.array() : shape -> (m,)
-            currentOrientations : np.array() : shape -> (m,)
-            """
+            # OUTPUT 
+            # Map -> UNKNOWN
+            # currentPositions : np.array() : shape -> (m, 2)
+            # currentVelocities : np.array() : shape -> (m,)
+            # currentOrientations : np.array() : shape -> (m,)
+            # """
             currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
             # Below is the pseudocode provided
             # Please import simulation as well
