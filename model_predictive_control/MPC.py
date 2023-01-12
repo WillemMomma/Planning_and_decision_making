@@ -177,7 +177,7 @@ def runTest(target,dt):
     return (np.array(states), target )
 
 def test():
-    dts = [0.05]
+    dts = [0.1]
 
     routes = []
 
