@@ -77,6 +77,12 @@ def initEnv(mountPositions, trajectory, goal=False, obstacles=False, maps=0, dt=
             "urdf-env-v0",
             dt=dt, robots=robots, render=True
         )
+        initialPositions = np.array(
+            [
+                (0,0,angle-np.deg2rad(90))
+            ]
+        )   
+        steeringInput = np.zeros((3000))
 
     if maps == 1:
 
@@ -159,6 +165,7 @@ def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.0
     
     # Create the new position and orientation arrays
     vel_new = np.array([vel])
+    vel_rot_new = np.array([omega])
     pos_new = np.array([[x_new, y_new]])
     orientation_new = np.array([theta_new])
 
@@ -186,6 +193,7 @@ def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.0
         theta_new = theta + omega * dt
         
         vel_new = np.append(vel_new, result[i][0])
+        vel_rot_new = np.append(vel_rot_new, omega)
         pos_new = np.append(pos_new, x_new)
         pos_new = np.append(pos_new, y_new)
         orientation_new = np.append(orientation_new, theta_new)
@@ -197,5 +205,5 @@ def robotMain(m, pos, vel, current_orientations, omega, otherRobots, env, dt=0.0
     
     # Step the environment and return the new position, velocity, and orientation
     ob, _, _, _ = env.step(action_new)
-    return pos_new, vel_new, orientation_new
+    return pos_new, vel_rot_new, vel_new, orientation_new
 

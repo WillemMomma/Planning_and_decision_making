@@ -52,8 +52,6 @@ def behaviour():
 
                 # Initialize the map
                 mountPositions, obstacles= initMap(maps=map)
-                print("HHHHHHHHHHHHHHHIIIIIIIIIEEEEEEEEEEERRRRRRRR",mountPositions[0,0:2])
-                print("HHHHHHHHHHHHHHHIIIIIIIIIEEEEEEEEEEERRRRRRRR",obstacles)
                 # Create the trajectory 
                 trajectory = mainRRT(obstacles, start=mountPositions[0,0:2])
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
@@ -176,7 +174,8 @@ def behaviour():
             # currentVelocities : np.array() : shape -> (m,)
             # currentOrientations : np.array() : shape -> (m,)
             # """
-            currentPositions, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(m, currentPositions, currentVelocities[0], currentOrientations, angularVelocity, steeringInput[timestep], env)
+            print("H",angularVelocities)
             # Below is the pseudocode provided
             # Please import simulation as well
             # map, currentPositions, currentVelocities, currentOrientations = simulation(velocity, angularVelocity)
