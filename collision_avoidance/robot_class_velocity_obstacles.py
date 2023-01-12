@@ -148,7 +148,7 @@ class Robot:
         if self.plotting:
             # Draw and move the robots for this timestep
             for robot in robot_list:
-                robot.draw(plt)
+                robot.draw()
 
             # Show and close plot
             # plt.show(block=False)
@@ -322,7 +322,7 @@ class Robot:
 
         return collision
 
-    def draw(self, plt):
+    def draw(self):
         """""
         Input: plt -> Plot from matplotlib 
         Output: None
