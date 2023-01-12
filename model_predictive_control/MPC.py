@@ -33,16 +33,15 @@ def errorFunction(t,dt,  currentState , path, o):
     currentAngleBot = o
     
     # angularVelocityBot = (previousAngleBot - currentAngleBot)*dt  
-    xError = path[t,0] - currentState[len(currentState)-1,0] 
-    yError = (path[t,1] - currentState[len(currentState)-1,1] ) 
-
+    xError = path[t,0] - currentState[len(currentState)-1,0]
+    yError = (path[t,1] - currentState[len(currentState)-1,1] )
 
     thetaError = anglePath - o
 
 
     if thetaError < -6.28:
         thetaError = thetaError - 2*np.pi
-    
+
     if -6.28 <thetaError < -2:
         thetaError = 0.0375
 
@@ -61,7 +60,7 @@ def errorFunction(t,dt,  currentState , path, o):
     errorUmatrix = np.array([velocityPath*np.cos(thetaError),
                                 angularVelocityPath])
 
-    return (errorAmatrix, currentError,  errorBmatrix,errorUmatrix )
+    return (errorAmatrix, currentError,  errorBmatrix)
 
 # State placeholders
 states = []
@@ -87,7 +86,7 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
     testing = False
     global states
     global inputs
-    dt = 0.01
+    dt = 0.1
 
    
     # Check if we are in testing mode
@@ -152,7 +151,7 @@ def mainMPC(t, currentPostion = None, currentOrtientation = None, trajectory = N
         else: 
             currentState = currentPostion
             states.append(currentState)
-            return input[0], input[1]   
+            return input[0], input[1]
 
 
     # if testing:
@@ -177,7 +176,7 @@ def runTest(target,dt):
     return (np.array(states), target )
 
 def test():
-    dts = [0.1]
+    dts = [0.05]
 
     routes = []
 
@@ -186,7 +185,7 @@ def test():
         dummyDatag = np.arange(0 , np.pi ,dt)
 
         dummyDataY = np.sin(dummyDatag)
-        dummyDataX = (dummyDatag) 
+        dummyDataX = -(dummyDatag) 
 
         dummyDataY = (dummyDatag)
         dummyDataX = np.zeros(len(dummyDataY))
@@ -216,7 +215,7 @@ def test():
         input, target = runTest(target1, dt)
         routes.append((input,target))
 
-    
+
     fig, ax = plt.subplots()
     ax.plot(input[:,0],input[:,1])
     ax.plot(target[:,0],target[:,1])
