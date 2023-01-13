@@ -94,7 +94,7 @@ class Robot:
         half_half = np.array([self.input_v + self.previous_v, self.input_w + self.previous_w])/2
 
         # Only consider the close robots in the list
-        min_dist = 10
+        min_dist = 4
         close_robot_list = []
 
         for robot in robot_list:
@@ -195,7 +195,7 @@ class Robot:
 
     def check_validity(self, robot_list, testVelocity, testAngulaVelocity):
 
-        # Check for collision 10 seconds into the future
+        # Check for collision 2.5 seconds into the future
         time_horizon = 2.5
         safety_margin = 1.1
 

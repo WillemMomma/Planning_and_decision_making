@@ -20,7 +20,25 @@ def behaviour():
     # Choose your map
     # map = 0 -> test map
     # map = 1 -> warehouse multiple robots
-    map = 1
+    # map = 2 -> warehouse with more space between racks
+    # map = 3 -> only robots
+    map = 0
+
+    # Setup per map
+    if map == 2:
+        x_positions = [-7, -3, 1, 5, 9]
+        start_position = [random.choice(x_positions), random.randrange(-10, 10 + 1, 2)]
+        goal_position = [random.choice(x_positions), random.randrange(-10, 10 + 1, 2)]
+        margin = 0.8
+    else:
+        start_position = [random.randrange(-10, 10 + 1, 2), random.randrange(-10, 10 + 1, 2)]
+        goal_position = [random.randrange(-10, 10 + 1, 2), random.randrange(-10, 10 + 1, 2)]
+        margin = 0.4
+
+    if map == 3:
+        start_position = [random.randrange(-5, 5 + 1, 2), -7]
+        goal_position = [random.randrange(-5, 5 + 1, 2), 7]
+    other_robots = True
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2
@@ -29,9 +47,6 @@ def behaviour():
     # Settings for the running loop
     state = 0
     timestep = 0
-    start_position = [random.randrange(-10, 10+1, 2), random.randrange(-10, 10+1, 2)]
-    goal_position = [random.randrange(-10, 10+1, 2), random.randrange(-10, 10+1, 2)]
-    other_robots = True
 
     # Running loop
     while timestep < 5000:  # This is to freeze the final situation for reference of the user
@@ -55,13 +70,12 @@ def behaviour():
                 # Other robots, map_number, start_position
                 mountPositions, obstacles = initMap(other_robots, map, start_position)
                 # Create the trajectory 
-                trajectory = mainRRT(obstacles, mountPositions[0, 0:2], goal_position)
+                trajectory = mainRRT(obstacles, mountPositions[0, 0:2], goal_position, margin)
                 trajectory = np.array(trajectory).reshape((len(trajectory), 2))
                 # Create the Enviroment
 
                 env, m, currentPositions, currentOrientations, steeringInput = initEnv(mountPositions,
                                                                                        trajectory,
-                                                                                       goal=True,
                                                                                        otherrobots=other_robots,
                                                                                        maps=map,
                                                                                        dt=0.01)
