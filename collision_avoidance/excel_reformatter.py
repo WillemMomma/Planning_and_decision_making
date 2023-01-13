@@ -1,8 +1,5 @@
 import openpyxl
 
-# Write a function that reads in an excel file. It must read data from a cel, parse that data with a space as a parser and write it back to the cell and cells next to it
-# The function must be able to read in a file and write to a file
-# It must be abled to read from multiple sheets in the excel file
 def read_excel_file(file_name, sheet_number, cell_location):
     # Read in the excel file
     wb = openpyxl.load_workbook(file_name)
