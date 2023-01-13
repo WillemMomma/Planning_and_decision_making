@@ -5,67 +5,77 @@ import numpy as np
 
 import os
 
+# Walls
+poseStorage = [
 
-#Walls
-poseStorage  = [
+    [-1, -4, 0],
+    [-3, -4, 0],
+    [-5, -4, 0],
+    [-7, -4, 0],
+    [-9, -4, 0],
+    [-1, 4, 0],
+    [-3, 4, 0],
+    [-5, 4, 0],
+    [-7, 4, 0],
+    [-9, 4, 0],
+    [1, 4, 0],
+    [1, -4, 0],
+    [3, -4, 0],
+    [5, -4, 0],
+    [7, -4, 0],
+    [9, -4, 0],
+    [3, 4, 0],
+    [5, 4, 0],
+    [7, 4, 0],
+    [9, 4, 0]
 
-              [-1, -4, 0],
-              [-3, -4, 0],
-              [-5, -4, 0],
-              [-7, -4, 0],
-              [-9, -4, 0],
-              [-1, 4, 0],
-              [-3, 4, 0],
-              [-5, 4, 0],
-              [-7, 4, 0],
-              [-9, 4, 0],
-              [1, 4, 0],              
-              [1, -4, 0],              
-              [3, -4, 0],
-              [5, -4, 0],
-              [7, -4, 0],
-              [9, -4, 0],
-              [3, 4, 0],
-              [5, 4, 0],
-              [7, 4, 0],
-              [9, 4, 0]
+]
 
-        ]
+poseWall2 = [
 
-poseWall1  = [
-          [-7.75, 1.25, 0]
+    [-1, -4.5, 0],
+    #             [-3, -4, 0],
+    [-5, -4.5, 0],
+    #              [-7, -4, 0],
+    [-9, -4.5, 0],
+    [-1, 4.5, 0],
+    #             [-3, 4, 0],
+    [-5, 4.5, 0],
+    #             [-7, 4, 0],
+    [-9, 4.5, 0],
+    #             [1, 4, 0],
+    #             [1, -4, 0],
+    [3, -4.5, 0],
+    #             [5, -4, 0],
+    [7, -4.5, 0],
+    #             [9, -4, 0],
+    [3, 4.5, 0],
+    #             [5, 4, 0],
+    [7, 4.5, 0],
+    #             [9, 4, 0]
+]
 
-    ]
+poseWallboxes = [
+    [-3, -1.5, 0],
+    [-6, -1.5, 0],
+    [-3, -3, 0],
+    [-6, -3, 0],
 
-poseWall2  = [
-          [-4, 7.1, np.pi * 0.5]
+]
 
-    ]
-    
-poseWallboxes  = [
-          [-3, -1.5, 0],
-          [-6, -1.5, 0],
-          [-3, -3, 0],
-          [-6, -3, 0],
-
-    ]
-
-    
-walls1 = [["GEOM_BOX", [0.4, 6, 0.25], poseStorage],["GEOM_BOX", [0.2, 11.5, 1], poseWall1],["GEOM_BOX", [0.2, 8.35, 1], poseWall2]]
+# walls1 = [["GEOM_BOX", [0.4, 6, 0.25], poseStorage],["GEOM_BOX", [0.2, 11.5, 1], poseWall1],["GEOM_BOX", [0.2, 8.35, 1], poseWall2]]
 
 walls1 = [["GEOM_BOX", [0.4, 6, 0.25], poseStorage]]
+walls2 = [["GEOM_BOX", [1, 6, 0.25], poseWall2]]
 
+# Boxes
+# shape_type="GEOM_BOX", dim=[0.2, 0.2, 0.2],mass = 0.3, poses_2d=poseWallboxes , place_height = 0.9
 
+boxes1 = [["GEOM_BOX", [0.4, 0.4, 0.4], 0.3, poseWallboxes, 0.5],
+          ["GEOM_BOX", [0.3, 0.3, 0.2], 0.3, poseWallboxes, 0.9],
+          ["GEOM_BOX", [0.2, 0.2, 0.3], 0.3, poseWallboxes, 1.5]]
 
-
-#Boxes
-#shape_type="GEOM_BOX", dim=[0.2, 0.2, 0.2],mass = 0.3, poses_2d=poseWallboxes , place_height = 0.9
-
-boxes1 = [["GEOM_BOX", [0.4, 0.4, 0.4], 0.3, poseWallboxes, 0.5],["GEOM_BOX", [0.3, 0.3, 0.2], 0.3, poseWallboxes, 0.9],["GEOM_BOX", [0.2, 0.2, 0.3], 0.3, poseWallboxes, 1.5]]
-
-
-
-#Obstacles:
+# Obstacles:
 obst1Dict = {
     "type": "sphere",
     "geometry": {"position": [2.0, 2.0, 1.0], "radius": 1.0},
@@ -94,7 +104,6 @@ dynamicObst2Dict = {
 }
 dynamicSphereObst2 = DynamicSphereObstacle(name="simpleSphere", content_dict=dynamicObst2Dict)
 
-
 splineDict = {'degree': 2, 'controlPoints': [[0.0, 1.0, 1.0], [1.0, 1.0, 1.0], [1.0, 1.0, 0.0]], 'duration': 10}
 dynamicObst3Dict = {
     "type": "splineSphere",
@@ -108,8 +117,4 @@ dynamicObst4Dict = {
 }
 dynamicSphereObst4 = DynamicSphereObstacle(name="simpleSphere", content_dict=dynamicObst4Dict)
 
-
-
 obstacles1 = [dynamicSphereObst2, dynamicSphereObst4]
-
-

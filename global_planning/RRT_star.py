@@ -317,7 +317,7 @@ def test(maxIter, maxExpansion, searchGamma):
     print('Number of nodes in final path: ', len(path))
     return None
 
-def main(obstacles, start, goal_position):
+def main(obstacles, start, goal_position, margin):
     '''
     Main function
     Specify start, goal, obstacles, and random area
@@ -335,7 +335,7 @@ def main(obstacles, start, goal_position):
     obstacleList = []
     for i in range(len(obstacles)):
         obstacle = obstacleRectangle(
-            obstacles[i][0], obstacles[i][1], obstacles[i][2], obstacles[i][3])
+            obstacles[i][0], obstacles[i][1], obstacles[i][2], obstacles[i][3], margin)
         obstacleList.append(obstacle)
 
     start = start
