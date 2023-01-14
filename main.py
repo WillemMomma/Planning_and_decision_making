@@ -1,4 +1,6 @@
 # Importing libraries
+import time
+
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
 from collision_avoidance.robot_class import Robot
@@ -100,6 +102,8 @@ def behaviour():
                                                 currentOrientations[i],
                                                 False))
 
+                start_time = time.perf_counter()
+
             """
             Returns the desired velocity and angular velocity 
 
@@ -186,8 +190,11 @@ def behaviour():
 
             # Check if the final position has been reached
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
-               state = 1
-               print("We have reached our goal")
+                state = 1
+                print("We have reached our goal")
+
+                stop_time = time.perf_counter()
+                print(f"Run time elapsed: {stop_time - start_time:0.4f} seconds and Simulated time: ", timestep * 0.01)
 
             timestep += 1
 
