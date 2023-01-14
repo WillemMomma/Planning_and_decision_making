@@ -163,7 +163,7 @@ class Robot:
         # While no collsion free velocity is found, keep sampling
         while not found:
 
-            # Try 40 times to find a new velocity
+            # Try 10 times to find a new velocity
             for i in range(10):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
@@ -196,7 +196,7 @@ class Robot:
     def check_validity(self, robot_list, testVelocity, testAngulaVelocity):
 
         # Check for collision 2.5 seconds into the future
-        time_horizon = 2.5
+        time_horizon = 1
         safety_margin = 1.1
 
         # Set collision to False in beginning
@@ -218,14 +218,15 @@ class Robot:
             # Init our positions and other positions
             our_positions = []
             other_positions = []
+            dt_check = self.dt
 
             # Init two unicycle objects
-            our_uni = UniCycleModel(self.dt, self.x, self.y, self.theta)
-            other_uni = UniCycleModel(robot.dt, robot.x, robot.y, robot.theta)
+            our_uni = UniCycleModel(dt_check, self.x, self.y, self.theta)
+            other_uni = UniCycleModel(dt_check, robot.x, robot.y, robot.theta)
 
             # Update positions for time horizon and check closest distance
             if not robot.our:
-                steps = int(time_horizon//self.dt)
+                steps = int(time_horizon//dt_check)
                 for i in range(steps):
                     ourNewPosition = np.array([testVelocity, testAngulaVelocity])
                     xytheta = our_uni.nextX(ourNewPosition.reshape((1, 2)))
@@ -256,7 +257,7 @@ class Robot:
 
         if plot_gvo:
             plt.show(block=False)
-            plt.pause(0.1)
+            plt.pause(0.25)
             plt.close(fig)
 
         return collision

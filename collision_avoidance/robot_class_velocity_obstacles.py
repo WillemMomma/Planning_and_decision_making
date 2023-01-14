@@ -12,9 +12,10 @@ class Robot:
 
     def __init__(self, x, y, r, v, w, theta, our):
 
-        self.dt = 0.1
+        self.dt = 0.01
         self.plotting = False
         self.plot_number = 0
+        self.conservative = False
 
         # Init position and radius of robot
         self.x = x
@@ -112,8 +113,6 @@ class Robot:
         # Check for collision with any of the obstacles for desired velocity
         input_velocity = Point(self.x + self.input_vx, self.y + self.input_vy)
         previous_velocity = Point(self.x + self.previous_vx, self.y + self.previous_vy)
-        half_half = Point((self.x + self.input_vx + self.x + self.previous_vx) / 2,
-                          (self.y + self.input_vy + self.y + self.previous_vy) / 2)
 
         # If no collision is found with desired velocity, continue with desired velocity
         if not self.collision_check(input_velocity, cones):
@@ -121,12 +120,6 @@ class Robot:
             self.output_vx = self.input_vx
             self.output_vy = self.input_vy
             self.output_w = self.input_w
-
-        elif not self.collision_check(half_half, cones):
-            self.output_v = self.previous_v
-            self.output_vx = self.previous_vx
-            self.output_vy = self.previous_vy
-            self.output_w = self.previous_w
 
         # If collision is found with desired velocity, check for previous velocity
         elif not self.collision_check(previous_velocity, cones) and self.previous_v != 0:
@@ -167,7 +160,10 @@ class Robot:
 
         # Hyper parameters
         cone_size = 1000
-        safety_factor = 1.8
+        if self.conservative:
+            safety_factor = 1.8
+        else:
+            safety_factor = 1.1
         threshold_distance = 10
 
         # Init our robot and cones list
@@ -195,11 +191,10 @@ class Robot:
                     p2 = polar2cart(cone_distance, angle + cone_angle)
 
                     # Move collision free velocity space away from obstacle for extra safety
-                    if dist < 1:
+                    if self.conservative and dist < 1:
                         scaler = (1 / dist - 1)
                         center = [self.x + robot.input_vx - p_rel[0] * scaler,
                                   self.y + robot.input_vy - p_rel[1] * scaler]
-                        # center = [self.x + robot.input_vx, self.y + robot.input_vy]
                     else:
                         center = [self.x + robot.input_vx, self.y + robot.input_vy]
                     # Offset the cone with velocity of other robot and plot the cone and get three points for triangle
@@ -231,8 +226,8 @@ class Robot:
         new_velocity = [0, 0]
 
         # Range in which to sample for new velocities
-        min_velocity = -0.1
-        max_velocity = 1.5
+        min_velocity = 0
+        max_velocity = 6
         max_w = 1
 
         # Desired velocity without angular velocity
@@ -295,7 +290,8 @@ class Robot:
                 plt.close(fig)
 
             # If no collision free velocity is found, increase the search area
-            max_w += 0.5
+            max_w += 1
+            min_velocity -= 1
 
         # # Set output of our robot to newly sampled velocity
         self.output_v = new_velocity[0]

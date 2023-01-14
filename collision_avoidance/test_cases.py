@@ -7,6 +7,7 @@ def cases(case_index, n_robots):
     currentOrientations = None
     angularVelocity = None
     trajectory = None
+    resolution = 0.025
 
     # Number 1
     if case_index == 1:
@@ -26,27 +27,27 @@ def cases(case_index, n_robots):
             currentOrientations[1] = -np.pi / 2
 
         if n_robots > 2:
-            currentPositions[2, :] = [6, 3]
-            currentVelocities[2] = 0
+            currentPositions[2, :] = [5, 3]
+            currentVelocities[2] = 1e-9
             currentOrientations[2] = -np.pi / 2
 
         if n_robots > 3:
-            currentPositions[3, :] = [-5, 7]
+            currentPositions[3, :] = [-5, 5]
             currentVelocities[3] = 2
             currentOrientations[3] = 0
 
         # Trajectory
-        steps = 30
         low = 1
         high = 5
+
+        # Same as in final implementation
+        steps = int((high - low) / resolution)
         dummyDataX = np.linspace(low, high, steps)
         dummyDataX = np.append(dummyDataX, np.linspace(high, high, steps)[1:])
         dummyDataX = np.append(dummyDataX, np.linspace(high, -high, steps * 2)[1:])
-        # dummyDataX = np.append(dummyDataX, np.linspace(low, low, steps)[1:])
         dummyDataY = np.linspace(low, low, steps)
         dummyDataY = np.append(dummyDataY, np.linspace(low, high, steps)[1:])
         dummyDataY = np.append(dummyDataY, np.linspace(high, high, steps * 2)[1:])
-        # dummyDataY = np.append(dummyDataY, np.linspace(high, low, steps)[1:])
         trajectory = np.vstack((dummyDataX, dummyDataY)).T  # Test trajectory
 
     # Number 2
@@ -71,8 +72,12 @@ def cases(case_index, n_robots):
         angularVelocity = np.float64(0)
 
         # Trajectory
-        steps = 80
-        dummyDataX = np.linspace(1, 20, steps)
+        high = 10
+        low = 1
+        # Same as in final implementation
+        steps = int((high - low) / resolution)
+
+        dummyDataX = np.linspace(low, high, steps)
         dummyDataY = np.linspace(5, 5, steps)
         trajectory = np.vstack((dummyDataX, dummyDataY)).T  # Test trajectory
 
@@ -102,8 +107,12 @@ def cases(case_index, n_robots):
         currentPositions[:, 1] += 4
 
         # Trajectory
-        steps = 80
-        dummyDataX = np.linspace(1, 20, steps)
+        high = 10
+        low = 1
+        # Same as in final implementation
+        steps = int((high - low) / resolution)
+
+        dummyDataX = np.linspace(low, high, steps)
         dummyDataY = np.linspace(5, 5, steps)
         trajectory = np.vstack((dummyDataX, dummyDataY)).T  # Test trajectory
 
@@ -119,18 +128,26 @@ def cases(case_index, n_robots):
         # Position
         currentPositions = np.ones((n_robots, 2))
         if n_robots > 1:
-            currentPositions[1, :] = [9, 1]
+            currentPositions[1, :] = [6, 1]
             currentOrientations[1] = np.pi/2
-            currentVelocities[1] = 3
+            currentVelocities[1] = 2
         if n_robots > 2:
-            currentPositions[2, :] = [5, 1]
+            currentPositions[2, :] = [4, 1]
             currentOrientations[2] = np.pi/2
-            currentVelocities[2] = 3
+            currentVelocities[2] = 2
+        if n_robots > 3:
+            currentPositions[3, :] = [8, 1]
+            currentOrientations[3] = np.pi/2
+            currentVelocities[3] = 2
         currentPositions[:, 1] += 4
 
         # Trajectory
-        steps = 80
-        dummyDataX = np.linspace(1, 20, steps)
+        high = 10
+        low = 1
+        # Same as in final implementation
+        steps = int((high - low) / resolution)
+
+        dummyDataX = np.linspace(low, high, steps)
         dummyDataY = np.linspace(5, 5, steps)
         trajectory = np.vstack((dummyDataX, dummyDataY)).T  # Test trajectory
 

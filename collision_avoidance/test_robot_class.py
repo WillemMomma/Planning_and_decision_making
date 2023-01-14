@@ -4,6 +4,7 @@ from collision_avoidance.robot_class import Robot as RobotGVO
 from collision_avoidance.robot_class_velocity_obstacles import Robot as RobotVO
 from collision_avoidance.uni_cycle_test import UniCycleModel
 from collision_avoidance.test_cases import cases
+from excel_reformatter import reformat_excel_file, write_excel_file
 
 # Importing libraries
 import numpy as np
@@ -11,7 +12,7 @@ import time
 import matplotlib.pyplot as plt
 
 
-def testCollisionAvoidance(plotter, data, GVO):
+def testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots):
     """"
     Start the enviroment and run the algorithms
     Input -> None : None
@@ -19,9 +20,7 @@ def testCollisionAvoidance(plotter, data, GVO):
     """""
 
     # Initialization of all robots positions, velocities and orientations
-    test_case = 2
-    n_robots = 5
-    dt = 0.05
+    dt = 0.01
 
     currentPositions, currentVelocities, currentOrientations, angularVelocity, trajectory = cases(test_case, n_robots)
 
@@ -66,6 +65,8 @@ def testCollisionAvoidance(plotter, data, GVO):
                                         angularVelocity,
                                         currentOrientations[i],
                                         True))
+                if conservative:
+                    robot_list[0].conservative = True
             else:
                 robot_list.append(RobotVO(currentPositions[i, 0],
                                         currentPositions[i, 1],
@@ -78,13 +79,19 @@ def testCollisionAvoidance(plotter, data, GVO):
 
     if test_case == 4:
         if n_robots > 1:
-            robot_list[1].output_w = 2
+            robot_list[1].output_w = 4
         if n_robots > 2:
-            robot_list[2].output_w = -2
+            robot_list[2].output_w = 4
+        if n_robots > 3:
+            robot_list[3].output_w = 4
 
     # For data collection
     averageVelocity = 0
     averageDistance = 0
+    previousv = 0
+    previousw = 0
+    largest_dv = float("-Inf")
+    largest_dw = float("-Inf")
     collision = False
     start = time.perf_counter()
 
@@ -175,14 +182,22 @@ def testCollisionAvoidance(plotter, data, GVO):
                 currentPositions[index, :] = xy.flatten()
                 currentOrientations[index] = xytheta[2]
 
-        if data:
-            averageVelocity += currentVelocities[0]
-            dist = np.linalg.norm(currentPositions[0] - trajectory[timestep])
-            averageDistance += dist
-            for index, currentPosition in enumerate(currentPositions):
-                if index != 0:
-                    if np.linalg.norm(currentPosition - currentPositions[0]) < (robot_list[index].r + robot_list[0].r):
-                        collision = True
+        averageVelocity += currentVelocities[0]
+        dist = np.linalg.norm(currentPositions[0] - trajectory[timestep])
+        averageDistance += dist
+        for index, currentPosition in enumerate(currentPositions):
+            if index != 0:
+                if np.linalg.norm(currentPosition - currentPositions[0]) < (robot_list[index].r + robot_list[0].r):
+                    collision = True
+
+        if timestep == 0:
+            largest_dv = max(largest_dv, abs(robot_list[0].output_v - robot_list[0].previous_v))
+            largest_dw = max(largest_dw, abs(robot_list[0].output_w - robot_list[0].previous_w))
+        else:
+            largest_dv = max(largest_dv, abs(robot_list[0].output_v - previousv))
+            largest_dw = max(largest_dw, abs(robot_list[0].output_w - previousw))
+        previousv = robot_list[0].output_v
+        previousw = robot_list[0].output_w
 
     stop = time.perf_counter()
 
@@ -201,23 +216,35 @@ def testCollisionAvoidance(plotter, data, GVO):
         #     robot.draw()
         step = 1
         plt.scatter(np.sum(np.array(previousPositions), axis=1)[::1, 0][::step],
-                    np.sum(np.array(previousPositions), axis=1)[::1, 1][::step], s=150, edgecolors='navy', facecolors='blue')
+                    np.sum(np.array(previousPositions), axis=1)[::1, 1][::step], s=120, edgecolors='navy', facecolors='blue')
         for i in range(n_robots):
             if i != 0:
-                plt.scatter(otherPositions[i, 0][::step], otherPositions[i, 1][::step], s=150, edgecolors='darkred', facecolors='red')
+                plt.scatter(otherPositions[i, 0][::step], otherPositions[i, 1][::step], s=120, edgecolors='darkred', facecolors='red')
 
         plt.show()
 
     averageVelocity /= len(trajectory)
     averageDistance /= len(trajectory)
     total_time = stop-start
-    return averageVelocity, averageDistance, collision, total_time
+    return averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw
 
-plotter = True
-data = True
-GVO = True
 
-averageVelocity, averageDistance, collision, total_time = testCollisionAvoidance(plotter, data, GVO)
+plotter = False  # Toggle for plotting
+write_excel = True  # Toggle for writing data to excel file
+GVO = True  # Toggle for the use GVO
+conservative = True  # Toggle for the use of conservative VO
+test_case = 2  # Specify test case
+n_robots = 5  # Number of robots in the environment
 
-if data:
-    print(averageVelocity, averageDistance, collision, total_time)
+averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw = \
+    testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots)
+
+if write_excel:
+    excel_input = [averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw]
+    # Specify the path to the excel file
+    file_name = "Resultaten_repaired.xlsx"
+    sheet_number = 0  # Set sheet number
+    cell_location = [63, 2]  # Set cell location
+    written_cell_location = write_excel_file(file_name, sheet_number, cell_location, excel_input)  # This writes to the excel file
+
+print(averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw)
