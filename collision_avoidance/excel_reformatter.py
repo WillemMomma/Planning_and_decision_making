@@ -1,6 +1,7 @@
 import openpyxl
 
-def read_excel_file(file_name, sheet_number, cell_location):
+
+def reformat_excel_file(file_name, sheet_number, cell_location):
     # Read in the excel file
     wb = openpyxl.load_workbook(file_name)
     # Read in the sheet
@@ -23,7 +24,53 @@ def read_excel_file(file_name, sheet_number, cell_location):
     else:
         return None
 
-for i in range(5, 46):
-    for k in range(1, 8):
-        j = 2
-        print(read_excel_file("Resultaten.xlsx", k, (i, j)))
+
+def write_excel_file(file_name, sheet_number, cell_location, input):
+    # Read in the excel file
+    wb = openpyxl.load_workbook(file_name)
+    # Read in the sheet
+    sheet = wb.worksheets[sheet_number]
+
+    # Set row and col variable
+    col = cell_location[1]
+    for row in range(cell_location[0], cell_location[0]+10):
+
+        # Read in the cell
+        data = sheet.cell(row=row, column=col).value
+        if data is not None:
+            continue
+        else:
+            sheet.cell(row=row, column=col).value = input
+            wb.save(file_name)
+            return [row, col]
+
+    return [-1, -1], None
+
+def turn_to_number(file_name, sheet_number, cell_location):
+    # Read in the excel file
+    wb = openpyxl.load_workbook(file_name)
+    # Read in the sheet
+    sheet = wb.worksheets[sheet_number]
+
+    # Set row and col variable
+    for row in range(cell_location[0], cell_location[0]+10):
+        for col in range(cell_location[1], cell_location[1] + 10):
+
+            # Read in the cell
+            try:
+                data = sheet.cell(row=row, column=col).value
+                data = float(data)
+                sheet.cell(row=row, column=col).value = data
+                wb.save(file_name)
+            except:
+                continue
+
+# For turning a cell into a number
+# turn_to_number("Resultaten.xlsx", 0, [79, 14])
+
+# # Just for reformatting the data based on col and row numbers
+# for i in range(5, 46):  # Row numbers
+#     for k in range(1, 8):  # sheet number
+#         j = 2  # column number
+#         print(reformat_excel_file("Resultaten.xlsx", k, (i, j)))
+

@@ -163,7 +163,7 @@ class Robot:
         # While no collsion free velocity is found, keep sampling
         while not found:
 
-            # Try 40 times to find a new velocity
+            # Try 10 times to find a new velocity
             for i in range(10):
 
                 # Sample velocity in more strictly taken range with angle and min/max vel
@@ -177,8 +177,8 @@ class Robot:
                     found = True
 
                     # Calc distance to desired velocity with a weight to a high angular velocity
-                    input = np.array([self.input_v*weight[0], self.input_w*weight[1]])
-                    sample = np.array([sampledVelocity*weight[0], sampledAngularVelocity*weight[1]])
+                    input = np.array([self.input_v*weight[0], self.input_w*weight[1]][::4])
+                    sample = np.array([sampledVelocity*weight[0], sampledAngularVelocity*weight[1]][::4])
                     dist = np.linalg.norm(input - sample)
 
                     # If newly sampled value is closest to desired velocity, keep this one
