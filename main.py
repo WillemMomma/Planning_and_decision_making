@@ -22,7 +22,7 @@ def behaviour():
     # map = 1 -> warehouse multiple robots
     # map = 2 -> warehouse with more space between racks
     # map = 3 -> only robots
-    map = 0
+    map = 2
 
     # Setup per map
     if map == 2:
@@ -114,7 +114,16 @@ def behaviour():
             angularVelocity -> np.float: 0.0
             """
 
-            currentVelocities[0], currentAngularVelocities[0] = mainMPC(timestep, currentPositions[0,:].tolist(),  currentOrientations[0], trajectory)
+            if timestep > len(trajectory):
+                currentVelocities[0], currentAngularVelocities[0] = mainMPC(len(trajectory),
+                                                                            currentPositions[0,:].tolist(),
+                                                                            currentOrientations[0],
+                                                                            trajectory)
+            else:
+                currentVelocities[0], currentAngularVelocities[0] = mainMPC(timestep,
+                                                                            currentPositions[0,:].tolist(),
+                                                                            currentOrientations[0],
+                                                                            trajectory)
 
             """
             INPUT
