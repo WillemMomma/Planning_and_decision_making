@@ -12,7 +12,7 @@ import time
 import matplotlib.pyplot as plt
 
 
-def testCollisionAvoidance(plotter, data, GVO, conservative, test_case, n_robots):
+def testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots):
     """"
     Start the enviroment and run the algorithms
     Input -> None : None
@@ -229,24 +229,22 @@ def testCollisionAvoidance(plotter, data, GVO, conservative, test_case, n_robots
     return averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw
 
 
-plotter = True  # Toggle for plotting
-data = False  # Toggle for data collection or not
+plotter = False  # Toggle for plotting
+write_excel = True  # Toggle for writing data to excel file
 GVO = True  # Toggle for the use GVO
 conservative = True  # Toggle for the use of conservative VO
 test_case = 2  # Specify test case
-n_robots = 4  # Number of robots in the environment
+n_robots = 5  # Number of robots in the environment
 
 averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw = \
-    testCollisionAvoidance(plotter, data, GVO, conservative, test_case, n_robots)
+    testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots)
 
-if data:
-    excel_input = str(averageVelocity) + " " + str(averageDistance) + " "  + str(collision) + " "  + str(total_time)\
-                  + " " + str(largest_dv) + " " + str(largest_dw)
+if write_excel:
+    excel_input = [averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw]
     # Specify the path to the excel file
-    file_name = "Resultaten.xlsx"
+    file_name = "Resultaten_repaired.xlsx"
     sheet_number = 0  # Set sheet number
-    cell_location = [79, 14]  # Set cell location
+    cell_location = [63, 2]  # Set cell location
     written_cell_location = write_excel_file(file_name, sheet_number, cell_location, excel_input)  # This writes to the excel file
-    parsed_data = reformat_excel_file(file_name, sheet_number, written_cell_location)  # This rewrites the excel file
-else:
-    print(averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw)
+
+print(averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw)

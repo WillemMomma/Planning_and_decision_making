@@ -40,8 +40,10 @@ def write_excel_file(file_name, sheet_number, cell_location, input):
         if data is not None:
             continue
         else:
-            sheet.cell(row=row, column=col).value = input
-            wb.save(file_name)
+            for index, ding in enumerate(input):
+                sheet.cell(row=row, column=col+index).value = ding
+                wb.save(file_name)
+
             return [row, col]
 
     return [-1, -1], None
@@ -64,13 +66,3 @@ def turn_to_number(file_name, sheet_number, cell_location):
                 wb.save(file_name)
             except:
                 continue
-
-# For turning a cell into a number
-# turn_to_number("Resultaten.xlsx", 0, [79, 14])
-
-# # Just for reformatting the data based on col and row numbers
-# for i in range(5, 46):  # Row numbers
-#     for k in range(1, 8):  # sheet number
-#         j = 2  # column number
-#         print(reformat_excel_file("Resultaten.xlsx", k, (i, j)))
-
