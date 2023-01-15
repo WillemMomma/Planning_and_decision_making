@@ -10,6 +10,8 @@ from excel_reformatter import reformat_excel_file, write_excel_file
 import numpy as np
 import time
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
+
 
 
 def testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots):
@@ -214,9 +216,18 @@ def testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots):
             plt.ylim(0, 10)
         # for robot in robot_list:
         #     robot.draw()
-        step = 1
+        step = 10
         plt.scatter(np.sum(np.array(previousPositions), axis=1)[::1, 0][::step],
                     np.sum(np.array(previousPositions), axis=1)[::1, 1][::step], s=120, edgecolors='navy', facecolors='blue')
+        plt.plot(np.sum(np.array(previousPositions), axis=1)[::1, 0],
+                    np.sum(np.array(previousPositions), axis=1)[::1, 1], color='blue')
+        plt.plot(trajectory[:, 0], trajectory[:, 1], linestyle="--", color="gray", label="Trajectory")
+        redBox = Patch(color='darkred', label='Other robots')
+        grayPath = Patch(color='gray', label='Trajectory')
+        redPath = Patch(color='navy', label='Our robot')
+        blueRobot = Patch(color='blue', label='Our path')
+        handles = [redBox, grayPath, redPath, blueRobot]
+        plt.legend(handles=handles, bbox_to_anchor=(1, 1), borderaxespad=0.)
         for i in range(n_robots):
             if i != 0:
                 plt.scatter(otherPositions[i, 0][::step], otherPositions[i, 1][::step], s=120, edgecolors='darkred', facecolors='red')
@@ -229,8 +240,8 @@ def testCollisionAvoidance(plotter, GVO, conservative, test_case, n_robots):
     return averageVelocity, averageDistance, collision, total_time, largest_dv, largest_dw
 
 
-plotter = False  # Toggle for plotting
-write_excel = True  # Toggle for writing data to excel file
+plotter = True  # Toggle for plotting
+write_excel = False  # Toggle for writing data to excel file
 GVO = True  # Toggle for the use GVO
 conservative = True  # Toggle for the use of conservative VO
 test_case = 2  # Specify test case
