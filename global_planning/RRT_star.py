@@ -7,7 +7,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString
-from obstacles import ObstacleRectangle, Plotter
+from global_planning.obstacles import ObstacleRectangle, Plotter
 import time
 class Node:
     '''
