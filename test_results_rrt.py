@@ -4,9 +4,9 @@ This file is used to generate results and test different configurations of RRT a
 Run the file
 
 """
-from obstacles import ObstacleRectangle, ObstacleCircle
-from RRT_star import RRT_star
-from RRT import RRT 
+from global_planning.obstacles import ObstacleRectangle, ObstacleCircle
+from global_planning.RRT_star import RRT_star
+from global_planning.RRT import RRT 
 
 def testEnvOne():
     '''

@@ -8,7 +8,7 @@ import math
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString
-from obstacles import Plotter 
+from global_planning.obstacles import Plotter 
 import time 
 
 class Node:
