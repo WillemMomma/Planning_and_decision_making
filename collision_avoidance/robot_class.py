@@ -270,10 +270,12 @@ class Robot:
 
         Plots the robots in a plot
         """""
-        circle = plt.Circle((self.x, self.y), self.r)
-        plt.gca().add_patch(circle)
 
         if self.our:
-            plt.title(f"Test case   with   robots")
-            circle = plt.Circle((self.x + np.cos(self.theta), self.y + np.sin(self.theta)), 0.05, color='green')
+            circle = plt.Circle((self.x, self.y), self.r, color="royalblue")
+            plt.gca().add_patch(circle)
+            circle = plt.Circle((self.x + 0.1*np.cos(self.theta), self.y + 0.1*np.sin(self.theta)), 0.05, color='green')
+            plt.gca().add_patch(circle)
+        else:
+            circle = plt.Circle((self.x, self.y), self.r, color="navy")
             plt.gca().add_patch(circle)

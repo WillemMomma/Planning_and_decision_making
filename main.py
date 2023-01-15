@@ -3,6 +3,7 @@ import time
 
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
+from global_planning.RRT_star import obstacleRectangle
 from collision_avoidance.robot_class import Robot
 from env.holonomic_robot_main import initMap, initEnv, robotMain
 
@@ -10,6 +11,7 @@ from env.holonomic_robot_main import initMap, initEnv, robotMain
 import numpy as np
 import random
 import matplotlib.pyplot as plt
+from matplotlib.patches import Patch
 
 
 def behaviour():
@@ -42,7 +44,8 @@ def behaviour():
         goal_position = [random.randrange(-5, 5 + 1, 2), 7]
     else:
         start_position = [0, 0]
-        goal_position = [9*np.cos(random.uniform(0, 2*np.pi)), 9*np.sin(random.uniform(0, 2*np.pi))]
+        distance = 8
+        goal_position = [distance*np.cos(random.uniform(0, 2*np.pi)), distance*np.sin(random.uniform(0, 2*np.pi))]
     other_robots = True
 
     # Init for collision avoidance @Godert Notten
@@ -53,8 +56,13 @@ def behaviour():
     state = 0
     timestep = 0
 
+    # For final plot
+    covered_path = []
+    plotting = True
+
     # Running loop
-    while timestep < 5000:  # This is to freeze the final situation for reference of the user
+    run = True
+    while run:
         if state == 0:
 
             # For the first iteration we have to create a Map of the environment and a path to the goal
@@ -191,6 +199,8 @@ def behaviour():
             """
             currentPositions, angularVelocities, currentVelocities, currentOrientations = robotMain(mountPositions, m, currentPositions, currentVelocities[0], currentOrientations, currentAngularVelocities[0], steeringInput[timestep], env)
 
+            covered_path.append(currentPositions[0].tolist())
+
             # Check if the final position has been reached
             if np.linalg.norm(np.array([currentPositions[0,:]]) - trajectory[-1]) < 0.5:
                 state = 1
@@ -198,6 +208,43 @@ def behaviour():
 
                 stop_time = time.perf_counter()
                 print(f"Run time elapsed: {stop_time - start_time:0.4f} for a simulated time of: {timestep * 0.01} seconds")
+
+                # Turn into array for plotting
+                covered_path = np.array(covered_path)
+
+                if plotting:
+                    obstacleList = []
+                    for i in range(len(obstacles)):
+                        obstacle = obstacleRectangle(
+                            obstacles[i][0], obstacles[i][1], obstacles[i][2], obstacles[i][3], margin)
+                        obstacleList.append(obstacle)
+
+                    # Plot
+                    plt.figure(figsize=(9, 9))
+                    plt.minorticks_on()
+                    plt.axis('equal')
+                    plt.plot(trajectory[:, 0], trajectory[:, 1], linestyle="--", color="gray", label="Trajectory")
+                    plt.plot(covered_path[:, 0], covered_path[:, 1], "red", label="Our path")
+                    plt.plot(start_position[0], start_position[1], color='green', marker='s', markersize=10, label="Start")
+                    plt.plot(goal_position[0], goal_position[1], color='green', marker='*', markersize=10, label="Goal")
+                    for robot in robot_list:
+                        robot.draw()
+                    for obs in obstacleList:
+                        if obs.type == 'rectangle':
+                            plt.gca().add_patch(
+                                plt.Rectangle((obs.x1, obs.y1), obs.width, obs.height, fc='darkred', ec='darkred'))
+                    redBox = Patch(color='darkred', label='Obstacle')
+                    grayPath = Patch(color='gray', label='Trajectory')
+                    redPath = Patch(color='red', label='Our path')
+                    blueRobot = Patch(color='navy', label='Robots')
+                    royalblue = Patch(color='royalblue', label='Our robot')
+                    greenStart = Patch(color='green', label='Start/Goal')
+                    handles = [redBox, grayPath, redPath, blueRobot, royalblue, greenStart]
+                    plt.legend(handles=handles, bbox_to_anchor=(1, 1), borderaxespad=0.)
+                    plt.show(block=False)
+                    plt.pause(10)
+
+                run = False
 
             timestep += 1
 
