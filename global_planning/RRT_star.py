@@ -30,7 +30,7 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=2000,
+                 maxIter=200,
                  probGoal=0.05,
                  threshold=1,
                  maxExpansion=10,
