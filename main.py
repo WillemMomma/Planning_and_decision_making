@@ -24,22 +24,25 @@ def behaviour():
     # map = 1 -> warehouse multiple robots
     # map = 2 -> warehouse with more space between racks
     # map = 3 -> only robots
-    map = 2
+    map = 3
+    margin = 0
 
     # Setup per map
-    if map == 2:
+    if map == 1:
+        start_position = [random.randrange(-10, 10 + 1, 2), random.randrange(-10, 10 + 1, 2)]
+        goal_position = [random.randrange(-10, 10 + 1, 2), random.randrange(-10, 10 + 1, 2)]
+        margin = 0.4
+    elif map == 2:
         x_positions = [-7, -3, 1, 5, 9]
         start_position = [random.choice(x_positions), random.randrange(-10, 10 + 1, 2)]
         goal_position = [random.choice(x_positions), random.randrange(-10, 10 + 1, 2)]
         margin = 0.8
-    else:
-        start_position = [random.randrange(-10, 10 + 1, 2), random.randrange(-10, 10 + 1, 2)]
-        goal_position = [random.randrange(-10, 10 + 1, 2), random.randrange(-10, 10 + 1, 2)]
-        margin = 0.4
-
-    if map == 3:
+    elif map == 3:
         start_position = [random.randrange(-5, 5 + 1, 2), -7]
         goal_position = [random.randrange(-5, 5 + 1, 2), 7]
+    else:
+        start_position = [0, 0]
+        goal_position = [9*np.cos(random.uniform(0, 2*np.pi)), 9*np.sin(random.uniform(0, 2*np.pi))]
     other_robots = True
 
     # Init for collision avoidance @Godert Notten
@@ -194,7 +197,7 @@ def behaviour():
                 print("We have reached our goal")
 
                 stop_time = time.perf_counter()
-                print(f"Run time elapsed: {stop_time - start_time:0.4f} seconds and Simulated time: ", timestep * 0.01)
+                print(f"Run time elapsed: {stop_time - start_time:0.4f} for a simulated time of: {timestep * 0.01} seconds")
 
             timestep += 1
 
