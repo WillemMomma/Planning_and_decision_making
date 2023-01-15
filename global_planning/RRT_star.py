@@ -2,45 +2,13 @@
 Author: Willem Momma 
 Path planning using RRT star algorithm
 """
-
 import random
 import math
 import numpy as np
 import matplotlib.pyplot as plt
 from shapely.geometry import LineString
-import shapely
+from global_planning.obstacles import ObstacleRectangle, Plotter
 import time
-from matplotlib.patches import Patch
-
-
-class obstacleRectangle:
-    '''
-    Class for rectangular obstacles used in RRT star planning
-    Input:  x1, y1: bottom left corner of obstacle
-            x2, y2: top right corner of obstacle
-    '''
-    def __init__(self, x1, y1, x2, y2, margin=0.4):
-        self.type = 'rectangle'
-        self.x1 = x1
-        self.y1 = y1
-        self.x2 = x2
-        self.y2 = y2
-        self.width = x2 - x1
-        self.height = y2 - y1
-        self.object = shapely.geometry.box(x1-margin, y1-margin, x2+margin, y2+margin)
-
-class obstacleCircle:
-    '''
-    Class for circular obstacles used in RRT star planning
-    Input:  x, y: center of obstacle
-            radius: radius of obstacle
-    '''
-    def __init__(self, x, y, radius, margin=0):
-        self.type = 'circle'
-        self.x = x
-        self.y = y
-        self.radius = radius
-        self.object = shapely.geometry.Point(x, y).buffer(radius+margin)
 class Node:
     '''
     Class to define the Nodes (i.e. vertices)
@@ -62,11 +30,11 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=2500,
+                 maxIter=200,
                  probGoal=0.05,
                  threshold=1,
                  maxExpansion=1,
-                 searchGamma=8
+                 searchGamma=30
                  ):
         '''
         Initialize the class variables
@@ -81,6 +49,7 @@ class RRT_star:
         self.end = Node(goal[0], goal[1])
         self.minRand = randArea[0]
         self.maxRand = randArea[1]
+        self.totalTime = 0
         self.obstacleList = obstacleList
 
         # behavior settings for RRT
@@ -123,19 +92,27 @@ class RRT_star:
                     if self.cost(newNode) + self.euclideanDistance(newNode, neighbor) < self.cost(neighbor):
                         neighbor.parent = newNode
         end = time.time()
-        totalTime = end - start
-        print("Time taken: ", totalTime)
+        self.totalTime = end - start
+        print("Time taken: ", self.totalTime)
 
         finalNode = self.getNearestNode(self.nodeList, self.end)
         if self.euclideanDistance(finalNode, self.end) < self.threshold:
             print("Goal Reached!")
         else:
-            print("Goal not reached, try increasing maxIter")
+            print("Goal not reached, try increasing maxIter and/or maxExpansion")
 
         path = self.finalPath(finalNode)
-        self.plotFinalTree(finalNode, path, totalTime)
+        Plotter.plotFinalTree(self, finalNode, path)
         plt.show()
         return path
+
+    def results(self):
+        '''
+        Returns the final path, total time taken and number of iterations
+        '''
+        finalNode = self.getNearestNode(self.nodeList, self.end)
+        path = self.finalPath(finalNode)
+        return path, self.totalTime, self.maxIter
 
     def findNeighbors(self, allNodes, newNode):
         '''
@@ -258,65 +235,6 @@ class RRT_star:
         path.append(self.start)
         return path
 
-    def plotFinalTree(self, finalNode, path, totalTime):
-        '''
-        Plot the final tree
-        Input:  nodeList: list of all nodes
-        Output: None
-        '''
-        plt.figure(figsize=(9,9))
-        for node in self.nodeList:
-            plt.plot(node.x,node.y, color = 'darkgrey', marker = 'o', markersize = 5)
-            if node.parent:
-                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='darkgrey', linestyle='-')
-
-        for obs in self.obstacleList:
-            if obs.type == 'rectangle':
-                plt.gca().add_patch(plt.Rectangle((obs.x1,obs.y1),obs.width,obs.height, fc = 'darkred', ec='darkred'))
-            elif obs.type == 'circle':
-                plt.gca().add_patch(plt.Circle((obs.x,obs.y),obs.radius, fc = 'darkred', ec='darkred'))
-
-        plt.plot([self.start.x], self.start.y, color = 'green', marker = 's', markersize = 20)
-        plt.plot([self.end.x],self.end.y, color = 'green', marker = '*', markersize = 20)
-
-        for node in path:
-            if node.parent:
-                plt.plot((node.parent.x,node.x), (node.parent.y,node.y), color='dodgerblue', linestyle='-')
-            plt.plot(node.x,node.y, color = 'orange', marker = 'o', markersize = 6)
-
-        plt.figtext(0.5, 0.01, 'cost (m) = ' + str(round(self.cost(finalNode),2)) + ' time (s) = ' +str(round(totalTime, 2)) + ' nodes: ' + str(len(self.nodeList)), wrap=True, horizontalalignment='center', fontsize=12)
-        plt.axis([self.minRand, self.maxRand, self.minRand, self.maxRand])
-        plt.legend
-        redBox = Patch(color='darkred', label='Obstacle')
-        bluePath = Patch(color='dodgerblue', label='Edges goalpath')
-        orangeNodes = Patch(color='orange', label='Vertices goalpath')
-        greyNodes = Patch(color='darkgrey', label='Tree')
-        greenStart = Patch(color='green', label='Start/Goal')
-        handles = [redBox, bluePath, orangeNodes, greyNodes, greenStart]
-        plt.legend(handles=handles, bbox_to_anchor=(1,1), borderaxespad=0.)
-        plt.tight_layout()
-        plt.grid(False)
-        plt.pause(0.01)
-
-def test(maxIter, maxExpansion, searchGamma):
-    randArea = [0,50]
-    start = [40,1]
-    goal = [47,47]
-    obstacleList = []
-    #lines for obstacles
-    for x in range(5, 51, 10):
-        obstacleList.append(obstacleRectangle(x, 0, x+2, 20))
-    for y in range(30, 51, 10):
-        obstacleList.append(obstacleRectangle(20, y, 50, y+2))
-    #circles for obstacles
-    obstacleList.append(obstacleCircle(11, 36, 6))
-    obstacleList.append(obstacleRectangle(20, 46.5, 22, 50))
-    rrt = RRT_star(start, goal, obstacleList, randArea, maxIter=maxIter, maxExpansion=maxExpansion, probGoal=0.05, threshold=1, searchGamma=searchGamma)
-    path = rrt.planning()
-    print('Number of nodes in final tree: ', len(rrt.nodeList))
-    print('Number of nodes in final path: ', len(path))
-    return None
-
 def main(obstacles, start, goal_position, margin):
     '''
     Main function
@@ -334,7 +252,7 @@ def main(obstacles, start, goal_position, margin):
     '''
     obstacleList = []
     for i in range(len(obstacles)):
-        obstacle = obstacleRectangle(
+        obstacle = ObstacleRectangle(
             obstacles[i][0], obstacles[i][1], obstacles[i][2], obstacles[i][3], margin)
         obstacleList.append(obstacle)
 

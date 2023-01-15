@@ -3,7 +3,7 @@ import time
 
 from model_predictive_control.MPC import mainMPC
 from global_planning.RRT_star import main as mainRRT
-from global_planning.RRT_star import obstacleRectangle
+from global_planning.obstacles import ObstacleRectangle
 from collision_avoidance.robot_class import Robot
 from env.holonomic_robot_main import initMap, initEnv, robotMain
 
@@ -215,7 +215,7 @@ def behaviour():
                 if plotting:
                     obstacleList = []
                     for i in range(len(obstacles)):
-                        obstacle = obstacleRectangle(
+                        obstacle = ObstacleRectangle(
                             obstacles[i][0], obstacles[i][1], obstacles[i][2], obstacles[i][3], margin)
                         obstacleList.append(obstacle)
 
