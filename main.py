@@ -26,7 +26,7 @@ def behaviour():
     # map = 1 -> warehouse multiple robots
     # map = 2 -> warehouse with more space between racks
     # map = 3 -> only robots
-    map = 3
+    map = 2
     margin = 0
 
     # Setup per map
