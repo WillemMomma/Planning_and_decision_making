@@ -102,9 +102,10 @@ def initEnv(mountPositions, trajectory, otherrobots=False, maps=0, dt=0.01):
 
     if maps == 0 or maps == 4 or otherrobots == False:
         robots = [
-            GenericUrdfReacher(urdf="pointRobot.urdf", mode="vel")
+            GenericUrdfReacher(urdf="pointRobot.urf", mode="vel")
         ]
         m = len(robots)
+        
         env = gym.make(
             "urdf-env-v0",
             dt=dt, robots=robots, render=True
