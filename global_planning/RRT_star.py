@@ -30,11 +30,11 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=1000,
+                 maxIter=2000,
                  probGoal=0.05,
                  threshold=1,
-                 maxExpansion=10,
-                 searchGamma=60
+                 maxExpansion=5,
+                 searchGamma=10
                  ):
         '''
         Initialize the class variables

@@ -107,14 +107,28 @@ def generateResultsExcel(maxIter, maxExpansionRRT, maxExpansion, searchGamma, en
     Creates dataframe with colummns: goal, cost, nodes, time and saves it to excel file
     The rows present the iterations of the algorithm
     '''
+    timesRRT = []
+    nodesRRT = []
+    costsRRT = []
+    timesRRTStar = []
+    nodesRRTStar = []
+    costsRRTStar = []
+    goals = []
+    
     for i in range(3):
         print('Iteration: ', i)
         totalTime, pathNodes, cost, goal = testRRT(maxIter, maxExpansion, env)
-        df = pd.DataFrame({'goal': goal, 'cost': cost, 'nodes': pathNodes, 'time': totalTime}, index=[i])
-        df.to_excel('results_rrt.xlsx')
+        timesRRT.append(totalTime)
+        nodesRRT.append(pathNodes)
+        costsRRT.append(cost)
         totalTime, pathNodes, cost, goal = testRRTStar(maxIter, maxExpansion, searchGamma, env)
-        df = pd.DataFrame({'goal': goal, 'cost': cost, 'nodes': pathNodes, 'time': totalTime}, index=[i])
-        df.to_excel('results_rrt_star.xlsx')
+        timesRRTStar.append(totalTime)
+        nodesRRTStar.append(pathNodes)
+        costsRRTStar.append(cost)
+        goals.append(goal)
+    
+    df = pd.DataFrame({'goal': goals, 'cost': costsRRTStar, 'nodes': nodesRRTStar, 'time': timesRRTStar})
+    df.to_excel('resultsRRTStar.xlsx', index=False)
     return None 
 
 print("Testing RRT star: ")
