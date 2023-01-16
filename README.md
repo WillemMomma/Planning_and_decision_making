@@ -1,5 +1,9 @@
 # Planning_and_decision_making
 Group 21, realizing movement since 2022
+Willem Momma
+Jasper van Leuven 
+Godert Notten 
+Willem Kolff
 
 
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
@@ -59,97 +63,111 @@ Group 21, realizing movement since 2022
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
+# insert GIF 
 
-![Navigation in a virual enviroment](https://i.imgur.com/zxS0Lqa.jpg)
-
-Insert description of the project
+The field of warehouse automation has seen significant advancements in recent years with the introduction of robots capable of performing various tasks such as pick and place, transportation, and inventory management. However, one of the key challenges in warehouse robotics is motion planning, which involves generating safe and efficient paths for the robot to navigate through the cluttered and dynamic environment. \cite{warehouse} This project proposes a motion planning pipeline for a unicycle warehouse robot. The pipeline contains a global planner, local planner and implements obstacle avoidance. Request the paper for more information. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
-### Built With
+### Built With - Willem Invullen 
 
-This section should list any major frameworks/libraries used to bootstrap your project. Leave any add-ons/plugins for the acknowledgements section. Here are a few examples.
+URDF library Max Spahn, see acknowledgements. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 
 <!-- GETTING STARTED -->
-## Getting Started
-
-This is an example of how you may give instructions on setting up your project locally.
-To get a local copy up and running follow these simple example steps.
-
-### Prerequisites
-
-This is an example of how to list things you need to use the software and how to install them.
-* npm
-  ```sh
-  npm install npm@latest -g
-  ```
+In this read.me, we will walk you through the process of setting up a local environment called "pd-final" and installing the necessary packages. We will assume that you already have Python 3.6 or above and that your python is below version 3.9 and pip already installed.
 
 ### Installation
+Open a terminal window and navigate to the directory where you want to create the pd-final environment.
 
-_Below is an example of how you can instruct your audience on installing and setting up your app. This template doesn't rely on any external dependencies or services._
+1. You first have to downlad the repository.
 
-1. Get a free API Key at [https://example.com](https://example.com)
-2. Clone the repo
-   ```sh
-   git clone https://github.com/your_username_/Project-Name.git
-   ```
-3. Install NPM packages
-   ```sh
-   npm install
-   ```
+``` {.sourceCode .bash}
+git clone git@github.com:WillemMomma/Planning_and_decision_making.git
+```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Setting up the pd-final environment
+The urdfenv requires Python >3.6, <3.9. Check which python version of python is currently active on your computer.
 
+``` {.sourceCode .bash}
+python --version
+```
 
+If your version is correct just start installation at step 1. Else scroll down to "Alternative setup way".
 
-<!-- USAGE EXAMPLES -->
-## Usage
+1. Run the following command to create the environment:
 
-Use this space to show useful examples of how a project can be used. Additional screenshots, code examples and demos work well in this space. You may also link to more resources.
+``` {.sourceCode .bash}
+python -m venv pd-final
+```
 
-_For more examples, please refer to the [Documentation](https://example.com)_
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
+2. Activate the enviroment with the following command:
 
 
-<!-- CONTRIBUTING -->
-## Contributing
+``` {.sourceCode .bash}
+# Windows
+pd-final\Scripts\activate
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+# Linux or macOS
+source pd-final/bin/activate
+```
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
+3. Verify that you have the required python version, the version needs to be between <3.6 and 3.8>.
 
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+``` {.sourceCode .bash}
+python --version
+```
 
 
+4. With the pd-final environment active, run the following command to install the cvxpy, shapely, motion-planning-scenes packages
 
-<!-- LICENSE -->
-## License
+``` {.sourceCode .bash}
+pip install cvxpy shapely motion-planning-scenes
+```
 
-Distributed under the MIT License. See `LICENSE.txt` for more information.
+5. Finally install urdfenvs package with the following command:
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+``` {.sourceCode .bash}
+pip install urdfenvs
+```
 
+6. Congratulations you have succesfully installed the URDFenviroment. To check if every thing works as it should run the following command in the "../planning_and_decision_making>" folder
 
+``` {.sourceCode .bash}
+python main.py
+```
+
+### Alternitive setup way.
+
+1. You have a python installed which is 3.5 or lower or 3.9 or higher. By running the following command you can check if you have other python versions installed on your computer. 
+
+``` {.sourceCode .bash}
+where python
+```
+If you do not have any compatible python installed use this link to install python 3.8.8 https://www.python.org/downloads/release/python-388/
+
+2. Run this command to create an enviroment with a compatible python version. For this example we use python 3.8.8.
+
+``` {.sourceCode .bash}
+conda create --name pd-final python==3.8.8  #replace 3.8.8 for your version of python
+```
+
+3. Activate the enviroment with the following command:
+``` {.sourceCode .bash}
+conda activate pd-final
+```
+
+4. To continue with the setup of the "pd-final" environment, please refer to step 3 in the "Setting up the pd-final environment" section of the guide.
 
 <!-- CONTACT -->
 ## Contact
 
-Your Name - [@your_twitter](https://twitter.com/your_username) - email@example.com
+Wi- [@your_twitter](https://twitter.com/your_username) - email@example.com
 
 Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
 
