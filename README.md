@@ -1,9 +1,5 @@
 # Planning_and_decision_making
-Group 21, realizing movement since 2022
-Willem Momma
-Jasper van Leuven 
-Godert Notten 
-Willem Kolff
+Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
 
 
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
