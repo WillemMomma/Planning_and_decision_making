@@ -30,7 +30,7 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=2000,
+                 maxIter=1000,
                  probGoal=0.05,
                  threshold=1,
                  maxExpansion=10,
@@ -103,8 +103,8 @@ class RRT_star:
             print("Goal not reached, try increasing maxIter and/or maxExpansion")
 
         path = self.finalPath(finalNode)
-        #Plotter.plotFinalTree(self, finalNode, path)
-        #plt.show()
+        Plotter.plotFinalTree(self, finalNode, path)
+        plt.show()
         return path
 
     def results(self):
