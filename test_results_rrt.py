@@ -7,6 +7,7 @@ Run the file
 from global_planning.obstacles import ObstacleRectangle, ObstacleCircle
 from global_planning.RRT_star import RRT_star
 from global_planning.RRT import RRT 
+import pandas as pd
 
 def testEnvOne():
     '''
@@ -65,11 +66,15 @@ def testRRTStar(maxIter, maxExpansion, searchGamma, env):
         randArea, start, goal, obstacleList = testEnvOne()
     elif env ==2:
         randArea, start, goal, obstacleList = testEnvTwo()
-    rrt = RRT_star(start, goal, obstacleList, randArea, maxIter=maxIter, maxExpansion=maxExpansion, probGoal=0.05, threshold=1, searchGamma=searchGamma)
+    rrt = RRT_star(start, goal, obstacleList, randArea, maxIter=maxIter, maxExpansion=maxExpansion, searchGamma=searchGamma)
     path = rrt.planning()
+    totalTime = rrt.totalTime
+    pathNodes = len(path)
+    cost = rrt.cost(path[-1])
+    goal = rrt.goalReached
     print('Number of nodes in final tree: ', len(rrt.nodeList))
     print('Number of nodes in final path: ', len(path))
-    return None
+    return totalTime, pathNodes, cost, goal
 
 def testRRT(maxIter, maxExpansion, env):
     '''
@@ -80,19 +85,39 @@ def testRRT(maxIter, maxExpansion, env):
             env: test environment
     Output: None
     '''
-
-    if env == 1:
+    if env ==1:
         randArea, start, goal, obstacleList = testEnvOne()
     elif env ==2:
         randArea, start, goal, obstacleList = testEnvTwo()
-
     rrt = RRT(start, goal, obstacleList, randArea, maxIter=maxIter, maxExpansion=maxExpansion)
     path = rrt.planning()
+    totalTime = rrt.totalTime
+    pathNodes = len(path)
+    cost = rrt.cost(path[-1])
+    goal = True
     print('Number of nodes in final tree: ', len(rrt.nodeList))
     print('Number of nodes in final path: ', len(path))
-    return None
+    print('time: ', totalTime)
+    return totalTime, pathNodes, cost, goal
 
-print("Testing RRT: ")
-testRRT(maxIter=2000, maxExpansion=1, env=1)
+
+def generateResultsExcel(maxIter, maxExpansionRRT, maxExpansion, searchGamma, env):
+    '''
+    Generate results for RRT star and RRT into an excel file
+    Creates dataframe with colummns: goal, cost, nodes, time and saves it to excel file
+    The rows present the iterations of the algorithm
+    '''
+    for i in range(3):
+        print('Iteration: ', i)
+        totalTime, pathNodes, cost, goal = testRRT(maxIter, maxExpansion, env)
+        df = pd.DataFrame({'goal': goal, 'cost': cost, 'nodes': pathNodes, 'time': totalTime}, index=[i])
+        df.to_excel('results_rrt.xlsx')
+        totalTime, pathNodes, cost, goal = testRRTStar(maxIter, maxExpansion, searchGamma, env)
+        df = pd.DataFrame({'goal': goal, 'cost': cost, 'nodes': pathNodes, 'time': totalTime}, index=[i])
+        df.to_excel('results_rrt_star.xlsx')
+    return None 
+
 print("Testing RRT star: ")
-testRRTStar(maxIter=1000, maxExpansion=25, searchGamma=40, env=1)
+time,nodes,cost, goal= testRRTStar(maxIter=1500, maxExpansion=15, searchGamma=40, env=2)
+# time,nodes,cost, goal = testRRT(maxIter=2000, maxExpansion=3, env=2)
+#generateResultsExcel(maxIter=1500, maxExpansionRRT=3, maxExpansion=15, searchGamma=40, env=2)
