@@ -29,16 +29,9 @@ Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
   <ol>
     <li>
       <a href="#about-the-project">About The Project</a>
-      <ul>
-        <li><a href="#built-with">Built With</a></li>
-      </ul>
     </li>
     <li>
       <a href="#getting-started">Getting Started</a>
-      <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
-      </ul>
     </li>
     <li>
       <a href="#getting-started">Nodes</a>
@@ -64,15 +57,6 @@ Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
 The field of warehouse automation has seen significant advancements in recent years with the introduction of robots capable of performing various tasks such as pick and place, transportation, and inventory management. However, one of the key challenges in warehouse robotics is motion planning, which involves generating safe and efficient paths for the robot to navigate through the cluttered and dynamic environment. This project proposes a motion planning pipeline for a unicycle warehouse robot. The pipeline contains a global planner, RRT*, local planner, MPC, and implements obstacle avoidance. The simulation is modelled in the URDF environment from: https://github.com/maxspahn/gym_envs_urdf/tree/master/docs. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-
-
-### Built With - Willem Invullen 
-
-URDF library Max Spahn, see acknowledgements. 
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- GETTING STARTED -->
@@ -159,16 +143,6 @@ conda activate pd-final
 ```
 
 4. To continue with the setup of the "pd-final" environment, please refer to step 3 in the "Setting up the pd-final environment" section of the guide.
-
-<!-- CONTACT -->
-## Contact
-
-Wi- [@your_twitter](https://twitter.com/your_username) - email@example.com
-
-Project Link: [https://github.com/your_username/repo_name](https://github.com/your_username/repo_name)
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
 
 
 <!-- ACKNOWLEDGMENTS -->
