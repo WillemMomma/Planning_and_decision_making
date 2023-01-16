@@ -2,6 +2,7 @@
 Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
 
 
+
 <!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
 <a name="readme-top"></a>
 <!--
@@ -56,8 +57,8 @@ Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-# insert GIF 
 
+<img src="https://user-images.githubusercontent.com/117392093/212757299-eca637d9-8dcd-4ed1-9850-4c3748bad603.gif" width="320" height="250"/>
 The field of warehouse automation has seen significant advancements in recent years with the introduction of robots capable of performing various tasks such as pick and place, transportation, and inventory management. However, one of the key challenges in warehouse robotics is motion planning, which involves generating safe and efficient paths for the robot to navigate through the cluttered and dynamic environment. This project proposes a motion planning pipeline for a unicycle warehouse robot. The pipeline contains a global planner, RRT*, local planner, MPC, and implements obstacle avoidance. The simulation is modelled in the URDF environment from: https://github.com/maxspahn/gym_envs_urdf/tree/master/docs. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
@@ -186,8 +187,8 @@ The "other_robots" variable can be set to true or false to enable or disable the
   <td> Empty test map </td>
  </tr>
  <tr>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212747602-149298b3-b88c-4b5b-ba71-b4dd1a91042f.png" width="250" height="250"/> </td>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212747672-a1034b7c-2105-4e90-bb96-df5ce7c9f965.png" width="250" height="250"/> </td>  
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212747602-149298b3-b88c-4b5b-ba71-b4dd1a91042f.png" width="320" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212755945-9f44ec11-0a1a-49fd-9a79-b75ee04a3698.png" width="260" height="250"/> </td>  
  </tr>
 </table>
 
@@ -197,8 +198,8 @@ The "other_robots" variable can be set to true or false to enable or disable the
   <td> Warehouse narrow racks.</td>
  </tr>
  <tr>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212751073-d0e1365a-56e8-4fc8-a91e-3554351b78d8.png" width="250" height="250"/> </td>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212751134-618ce24e-b97d-4344-8e93-8389774628d8.png" width="250" height="250"/> </td>  
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751073-d0e1365a-56e8-4fc8-a91e-3554351b78d8.png" width="320" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751134-618ce24e-b97d-4344-8e93-8389774628d8.png" width="260" height="250"/> </td>  
  </tr>
 </table>
 
@@ -208,8 +209,8 @@ The "other_robots" variable can be set to true or false to enable or disable the
   <td> Warehouse width racks.</td>
  </tr>
  <tr>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212751542-b5671d09-6a9a-4a7c-8321-72e3a11c77e6.png" width="250" height="250"/> </td>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212751697-cd879aff-9b8a-4874-af99-dcf5b6efc37d.png" width="250" height="250"/> </td>  
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751542-b5671d09-6a9a-4a7c-8321-72e3a11c77e6.png" width="320" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751697-cd879aff-9b8a-4874-af99-dcf5b6efc37d.png" width="260" height="250"/> </td>  
  </tr>
 </table>
 
@@ -219,8 +220,8 @@ The "other_robots" variable can be set to true or false to enable or disable the
   <td> Robots only.</td>
  </tr>
  <tr>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212752083-7b44a320-0840-49dd-a482-7a53bd63b172.png" width="250" height="250"/> </td>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212752320-ac2917ae-6fe6-4b22-a9eb-421f141cff59.png" width="250" height="250"/> </td>  
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752083-7b44a320-0840-49dd-a482-7a53bd63b172.png" width="320" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752320-ac2917ae-6fe6-4b22-a9eb-421f141cff59.png" width="260" height="250"/> </td>  
  </tr>
 </table>
 
@@ -230,8 +231,8 @@ The "other_robots" variable can be set to true or false to enable or disable the
   <td> The Maze </td>
  </tr>
  <tr>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212752436-a8f3666a-f1ab-48cb-8aff-da5e115a6f1f.png" width="250" height="250"/> </td>
-  <td> <img src="https://user-images.githubusercontent.com/117392093/212752949-bfd758b0-81ca-4918-a5b3-042930c0b8b3.png" width="250" height="250"/> </td>  
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752436-a8f3666a-f1ab-48cb-8aff-da5e115a6f1f.png" width="320" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752949-bfd758b0-81ca-4918-a5b3-042930c0b8b3.png" width="260" height="250"/> </td>  
  </tr>
 </table>
 
