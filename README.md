@@ -31,7 +31,13 @@ Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
       <a href="#about-the-project">About The Project</a>
     </li>
     <li>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#installation">Installation</a>
+    </li>
+    <li>
+      <a href="#how-to-use-the-code">How to use the code</a>
+    </li>
+    <li>
+      <a href="#different-enviroments">Different Enviroments</a>
     </li>
     <li>
       <a href="#getting-started">Nodes</a>
@@ -48,8 +54,6 @@ Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
   </ol>
 </details>
 
-
-
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 # insert GIF 
@@ -62,7 +66,7 @@ The field of warehouse automation has seen significant advancements in recent ye
 <!-- GETTING STARTED -->
 In this read.me, we will walk you through the process of setting up a local environment called "pd-final" and installing the necessary packages. We will assume that you already have Python 3.6 or above and that your python is below version 3.9 and pip already installed.
 
-### Installation
+## Installation
 Open a terminal window and navigate to the directory where you want to create the pd-final environment.
 
 1. You first have to downlad the repository.
@@ -143,6 +147,94 @@ conda activate pd-final
 ```
 
 4. To continue with the setup of the "pd-final" environment, please refer to step 3 in the "Setting up the pd-final environment" section of the guide.
+5. 
+<!-- HOW TO USE THE CODE -->
+## How to use the code
+In the main.py file of this repository, you can change the map by modifying the "map" variable at the top of the code. You can set it to one of the following options:
+
+This is how the main.py file will look like:
+``` {.sourceCode .bash}
+24  # Choose your map
+25    # map = 0 -> test map
+26    # map = 1 -> warehouse multiple robots
+27    # map = 2 -> warehouse with more space between racks
+28    # map = 3 -> only robots
+29    # map = 4 -> maze
+30    map = 3  **********Change this variable**********
+31    margin = 0
+32    other_robots = True  # is effective on map 1 and 2
+```
+
+0: test map
+
+1: warehouse with multiple robots
+
+2: warehouse with more space between racks
+
+3: only robots (obstacle avoidence)
+
+4: maze
+
+The "other_robots" variable can be set to true or false to enable or disable the presence of other robots in maps 1 and 2. Please make sure to save your changes and re-run the code for the changes to take effect.
+
+<!-- DIFFERENT ENVIROMENTS -->
+## Different Enviroments
+
+<table>
+ <tr>
+  <td> Map 0 </td>
+  <td> Empty test map </td>
+ </tr>
+ <tr>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212747602-149298b3-b88c-4b5b-ba71-b4dd1a91042f.png" width="250" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212747672-a1034b7c-2105-4e90-bb96-df5ce7c9f965.png" width="250" height="250"/> </td>  
+ </tr>
+</table>
+
+<table>
+ <tr>
+  <td> Map 1 </td>
+  <td> Warehouse narrow racks.</td>
+ </tr>
+ <tr>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751073-d0e1365a-56e8-4fc8-a91e-3554351b78d8.png" width="250" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751134-618ce24e-b97d-4344-8e93-8389774628d8.png" width="250" height="250"/> </td>  
+ </tr>
+</table>
+
+<table>
+ <tr>
+  <td> Map 2 </td>
+  <td> Warehouse width racks.</td>
+ </tr>
+ <tr>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751542-b5671d09-6a9a-4a7c-8321-72e3a11c77e6.png" width="250" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212751697-cd879aff-9b8a-4874-af99-dcf5b6efc37d.png" width="250" height="250"/> </td>  
+ </tr>
+</table>
+
+<table>
+ <tr>
+  <td> Map 3 </td>
+  <td> Robots only.</td>
+ </tr>
+ <tr>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752083-7b44a320-0840-49dd-a482-7a53bd63b172.png" width="250" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752320-ac2917ae-6fe6-4b22-a9eb-421f141cff59.png" width="250" height="250"/> </td>  
+ </tr>
+</table>
+
+<table>
+ <tr>
+  <td> Map 4 </td>
+  <td> The Maze </td>
+ </tr>
+ <tr>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752436-a8f3666a-f1ab-48cb-8aff-da5e115a6f1f.png" width="250" height="250"/> </td>
+  <td> <img src="https://user-images.githubusercontent.com/117392093/212752949-bfd758b0-81ca-4918-a5b3-042930c0b8b3.png" width="250" height="250"/> </td>  
+ </tr>
+</table>
+
 
 
 <!-- ACKNOWLEDGMENTS -->
