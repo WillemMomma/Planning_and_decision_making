@@ -79,8 +79,8 @@ class RRT:
         finalNode = self.nodeList[-1]
         endTime = time.time()
         self.totalTime = endTime - startTime
-        Plotter.plotFinalTree(self, finalNode, path)
-        plt.show()
+        # Plotter.plotFinalTree(self, finalNode, path)
+        # plt.show()
         return path
     
     def cost(self, node):

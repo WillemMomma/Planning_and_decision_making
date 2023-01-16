@@ -21,13 +21,15 @@ def behaviour():
     Input -> None : None
     Ouput -> None : None
     """
-    # Choose your map
+  # Choose your map
     # map = 0 -> test map
     # map = 1 -> warehouse multiple robots
     # map = 2 -> warehouse with more space between racks
     # map = 3 -> only robots
-    map = 3
+    # map = 4 -> maze
+    map = 4
     margin = 0
+    other_robots = True  # is effective on map 1 and 2
 
     # Setup per map
     if map == 1:
@@ -42,11 +44,16 @@ def behaviour():
     elif map == 3:
         start_position = [random.randrange(-5, 5 + 1, 2), -7]
         goal_position = [random.randrange(-5, 5 + 1, 2), 7]
+    elif map == 4:
+        x_positions = [-7.5, -4.5, -1.5, 1.5 , 4.5, 7.5]
+        y_positions = [-7.5, -4.5, -1.5, 1.5 , 4.5, 7.5]
+        start_position = [random.choice(x_positions), random.choice(y_positions)]
+        goal_position = [random.choice(x_positions), random.choice(y_positions)]
+        margin = 0.8
     else:
         start_position = [0, 0]
         distance = 8
         goal_position = [distance*np.cos(random.uniform(0, 2*np.pi)), distance*np.sin(random.uniform(0, 2*np.pi))]
-    other_robots = True
 
     # Init for collision avoidance @Godert Notten
     radius = 0.2

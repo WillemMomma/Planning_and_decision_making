@@ -30,7 +30,7 @@ class RRT_star:
     '''
 
     def __init__(self, start, goal, obstacleList, randArea,
-                 maxIter=2000,
+                 maxIter=1000,
                  probGoal=0.05,
                  threshold=1,
                  maxExpansion=10,
@@ -58,7 +58,7 @@ class RRT_star:
         self.threshold = threshold  # radius of accepted area within goal
         self.maxExpansion = maxExpansion  # max distance to expand each collision free step
         self.searchGamma = searchGamma # gamma parameter for RRT* optimilization search radius
-
+        self.goalReached = False
 
     def planning(self):
         '''
@@ -98,6 +98,7 @@ class RRT_star:
         finalNode = self.getNearestNode(self.nodeList, self.end)
         if self.euclideanDistance(finalNode, self.end) < self.threshold:
             print("Goal Reached!")
+            self.goalReached = True
         else:
             print("Goal not reached, try increasing maxIter and/or maxExpansion")
 
