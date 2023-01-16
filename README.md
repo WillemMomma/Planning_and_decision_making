@@ -61,7 +61,7 @@ Group 21: Willem Momma, Jasper van Leuven, Godert Notten, Willem Kolff
 ## About The Project
 # insert GIF 
 
-The field of warehouse automation has seen significant advancements in recent years with the introduction of robots capable of performing various tasks such as pick and place, transportation, and inventory management. However, one of the key challenges in warehouse robotics is motion planning, which involves generating safe and efficient paths for the robot to navigate through the cluttered and dynamic environment. \cite{warehouse} This project proposes a motion planning pipeline for a unicycle warehouse robot. The pipeline contains a global planner, local planner and implements obstacle avoidance. Request the paper for more information. 
+The field of warehouse automation has seen significant advancements in recent years with the introduction of robots capable of performing various tasks such as pick and place, transportation, and inventory management. However, one of the key challenges in warehouse robotics is motion planning, which involves generating safe and efficient paths for the robot to navigate through the cluttered and dynamic environment. This project proposes a motion planning pipeline for a unicycle warehouse robot. The pipeline contains a global planner, RRT*, local planner, MPC, and implements obstacle avoidance. The simulation is modelled in the URDF environment from: https://github.com/maxspahn/gym_envs_urdf/tree/master/docs. 
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
